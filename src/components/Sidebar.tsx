@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MessageCircle, Play, Video, Gamepad2, LogOut, Moon, Sun } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -14,6 +14,23 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Listen for theme changes
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    });
+    
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    // Set initial theme
+    setIsDarkMode(document.documentElement.classList.contains('dark'));
+
+    return () => observer.disconnect();
+  }, []);
 
   const menuItems = [
     { id: 'chats', icon: MessageCircle, label: 'Conversas' },
@@ -44,8 +61,8 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
   const getThemeColors = () => {
     if (isDarkMode) {
       return {
-        sidebarBg: 'bg-gray-900/95',
-        mobileBg: 'bg-gray-900/95',
+        sidebarBg: 'bg-gray-900/50', // 50% transparência no modo escuro
+        mobileBg: 'bg-gray-900/50',  // 50% transparência no modo escuro
         borderColor: 'border-gray-700',
         textPrimary: 'text-white',
         textSecondary: 'text-gray-300',
@@ -57,8 +74,8 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
       };
     } else {
       return {
-        sidebarBg: 'bg-white/90',
-        mobileBg: 'bg-white/95',
+        sidebarBg: 'bg-white/50',    // 50% transparência no modo claro
+        mobileBg: 'bg-white/50',     // 50% transparência no modo claro
         borderColor: 'border-gray-200',
         textPrimary: 'text-gray-800',
         textSecondary: 'text-gray-600',
