@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { MessageCircle, Users, Phone, Video } from 'lucide-react';
+import { MessageCircle, Home, Phone, Video } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SidebarProps {
@@ -11,7 +11,7 @@ interface SidebarProps {
 const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
   const menuItems = [
     { id: 'chats', icon: MessageCircle, label: 'Conversas' },
-    { id: 'status', icon: Users, label: 'Status' },
+    { id: 'feed', icon: Home, label: 'Feed' },
     { id: 'calls', icon: Phone, label: 'Chamadas' },
     { id: 'lives', icon: Video, label: 'Lives' },
   ];

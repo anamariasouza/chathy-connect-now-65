@@ -3,7 +3,7 @@ import { useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import ChatList from '@/components/ChatList';
 import ChatWindow from '@/components/ChatWindow';
-import StatusView from '@/components/StatusView';
+import FeedView from '@/components/FeedView';
 import CallsView from '@/components/CallsView';
 import LivesView from '@/components/LivesView';
 
@@ -30,8 +30,8 @@ const Index = () => {
             <ChatWindow chat={selectedChat} />
           </div>
         );
-      case 'status':
-        return <StatusView />;
+      case 'feed':
+        return <FeedView />;
       case 'calls':
         return <CallsView />;
       case 'lives':
