@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Heart, MessageCircle, Share, Play, Pause, Volume2, VolumeX, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { Carousel, CarouselContent, CarouselItem, CarouselApi } from '@/components/ui/carousel';
 
 interface FeedPost {
   id: string;
@@ -73,6 +73,8 @@ const FeedView = () => {
   const [currentPostIndex, setCurrentPostIndex] = useState(0);
   const [playingVideos, setPlayingVideos] = useState<Set<string>>(new Set());
   const [mutedVideos, setMutedVideos] = useState<Set<string>>(new Set());
+  const [carouselApis, setCarouselApis] = useState<Map<string, CarouselApi>>(new Map());
+  const [currentSlides, setCurrentSlides] = useState<Map<string, number>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -100,6 +102,19 @@ const FeedView = () => {
       return () => container.removeEventListener('scroll', handleScroll);
     }
   }, [currentPostIndex, posts.length]);
+
+  const setCarouselApi = (postId: string, api: CarouselApi) => {
+    if (!api) return;
+    
+    setCarouselApis(prev => new Map(prev.set(postId, api)));
+    
+    const updateCurrentSlide = () => {
+      setCurrentSlides(prev => new Map(prev.set(postId, api.selectedScrollSnap())));
+    };
+    
+    updateCurrentSlide();
+    api.on('select', updateCurrentSlide);
+  };
 
   const togglePlay = (postId: string) => {
     setPlayingVideos(prev => {
@@ -179,8 +194,11 @@ const FeedView = () => {
                   </div>
                 </div>
               ) : post.images && post.images.length > 0 ? (
-                <div className="w-full h-full max-w-md mx-auto">
-                  <Carousel className="w-full h-full">
+                <div className="w-full h-full max-w-md mx-auto relative">
+                  <Carousel 
+                    className="w-full h-full"
+                    setApi={(api) => setCarouselApi(post.id, api)}
+                  >
                     <CarouselContent className="h-full">
                       {post.images.map((image, imageIndex) => (
                         <CarouselItem key={imageIndex} className="h-full">
@@ -195,9 +213,23 @@ const FeedView = () => {
                         </CarouselItem>
                       ))}
                     </CarouselContent>
-                    <CarouselPrevious className="left-2 bg-black/50 text-white border-none hover:bg-black/70" />
-                    <CarouselNext className="right-2 bg-black/50 text-white border-none hover:bg-black/70" />
                   </Carousel>
+                  
+                  {/* Indicadores de ponto */}
+                  {post.images.length > 1 && (
+                    <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                      {post.images.map((_, dotIndex) => (
+                        <div
+                          key={dotIndex}
+                          className={`w-2 h-2 rounded-full transition-colors ${
+                            (currentSlides.get(post.id) || 0) === dotIndex
+                              ? 'bg-white'
+                              : 'bg-white/50'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               ) : null}
             </div>
