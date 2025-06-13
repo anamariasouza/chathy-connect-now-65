@@ -80,7 +80,7 @@ const Index = () => {
         if (window.innerWidth < 768) {
           if (showChatWindow && selectedChat) {
             return (
-              <div className="flex-1">
+              <div className="flex-1 pt-16">
                 <ChatWindow 
                   chat={selectedChat} 
                   onToggleChatList={handleBackToContacts}
@@ -91,7 +91,7 @@ const Index = () => {
             );
           } else {
             return (
-              <div className="flex-1">
+              <div className="flex-1 pt-16">
                 <ChatList onChatSelect={handleChatSelect} selectedChat={selectedChat} />
               </div>
             );
@@ -128,9 +128,17 @@ const Index = () => {
           </div>
         );
       case 'feed':
-        return <FeedView />;
+        return (
+          <div className="pt-16 md:pt-0">
+            <FeedView />
+          </div>
+        );
       case 'lives':
-        return <LivesView />;
+        return (
+          <div className="pt-16 md:pt-0">
+            <LivesView />
+          </div>
+        );
       case 'games':
         navigate('/games');
         return null;
@@ -172,7 +180,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex bg-gray-100 relative">
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
-      <div className="flex-1 md:ml-20 pt-16 md:pt-0 md:pl-0">
+      <div className="flex-1 md:ml-20 md:pt-0">
         {renderMainContent()}
       </div>
     </div>
