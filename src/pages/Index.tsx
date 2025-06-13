@@ -43,6 +43,9 @@ const Index = () => {
       attributeFilter: ['class']
     });
 
+    // Set initial theme
+    setIsDarkMode(document.documentElement.classList.contains('dark'));
+
     return () => observer.disconnect();
   }, []);
 
