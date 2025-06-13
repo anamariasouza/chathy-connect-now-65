@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Heart, MessageCircle, Share, Play, Pause, Volume2, VolumeX, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -72,7 +71,7 @@ const FeedView = () => {
       isLiked: true,
       timestamp: 'há 8 horas'
     }
-  ];
+  ]);
 
   const [currentPostIndex, setCurrentPostIndex] = useState(0);
   const [playingVideos, setPlayingVideos] = useState<Set<string>>(new Set());
