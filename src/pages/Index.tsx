@@ -21,6 +21,7 @@ interface Chat {
 const Index = () => {
   const [activeTab, setActiveTab] = useState('feed');
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
+  const [isChatListVisible, setIsChatListVisible] = useState(true);
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -39,8 +40,12 @@ const Index = () => {
       case 'chats':
         return (
           <div className="flex flex-1">
-            <ChatList onChatSelect={setSelectedChat} selectedChat={selectedChat} />
-            <ChatWindow chat={selectedChat} />
+            {isChatListVisible && <ChatList onChatSelect={setSelectedChat} selectedChat={selectedChat} />}
+            <ChatWindow 
+              chat={selectedChat} 
+              onToggleChatList={() => setIsChatListVisible(!isChatListVisible)}
+              isChatListVisible={isChatListVisible}
+            />
           </div>
         );
       case 'feed':
@@ -53,8 +58,12 @@ const Index = () => {
       default:
         return (
           <div className="flex flex-1">
-            <ChatList onChatSelect={setSelectedChat} selectedChat={selectedChat} />
-            <ChatWindow chat={selectedChat} />
+            {isChatListVisible && <ChatList onChatSelect={setSelectedChat} selectedChat={selectedChat} />}
+            <ChatWindow 
+              chat={selectedChat} 
+              onToggleChatList={() => setIsChatListVisible(!isChatListVisible)}
+              isChatListVisible={isChatListVisible}
+            />
           </div>
         );
     }

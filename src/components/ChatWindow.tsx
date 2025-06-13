@@ -1,6 +1,5 @@
-
 import { useState, useRef, useEffect } from 'react';
-import { Send, Phone, Video, MoreVertical, Paperclip, Smile } from 'lucide-react';
+import { Send, Phone, Video, MoreVertical, Paperclip, Smile, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -24,14 +23,16 @@ interface Chat {
 
 interface ChatWindowProps {
   chat: Chat | null;
+  onToggleChatList?: () => void;
+  isChatListVisible?: boolean;
 }
 
-const ChatWindow = ({ chat }: ChatWindowProps) => {
+const ChatWindow = ({ chat, onToggleChatList, isChatListVisible }: ChatWindowProps) => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Mock messages for demo
+  // useEffect for mock messages
   useEffect(() => {
     if (chat) {
       const mockMessages: Message[] = [
@@ -61,6 +62,7 @@ const ChatWindow = ({ chat }: ChatWindowProps) => {
     }
   }, [chat]);
 
+  // scrollToBottom and useEffect
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -69,6 +71,7 @@ const ChatWindow = ({ chat }: ChatWindowProps) => {
     scrollToBottom();
   }, [messages]);
 
+  // handleSendMessage and handleKeyPress
   const handleSendMessage = () => {
     if (message.trim() && chat) {
       const newMessage: Message = {
@@ -116,6 +119,16 @@ const ChatWindow = ({ chat }: ChatWindowProps) => {
       <div className="p-4 border-b border-gray-200 bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
+            {onToggleChatList && (
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={onToggleChatList}
+                className="mr-2"
+              >
+                <Menu size={20} />
+              </Button>
+            )}
             <div className="w-10 h-10 rounded-full bg-chathy-primary flex items-center justify-center text-white font-semibold">
               {chat.avatar}
             </div>
