@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -17,6 +16,7 @@ const Profile = () => {
   const [showFeedView, setShowFeedView] = useState(false);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState({
     name: 'Walter Silva',
@@ -31,6 +31,23 @@ const Profile = () => {
   });
   const [editProfile, setEditProfile] = useState(profile);
   const { toast } = useToast();
+
+  // Listen for theme changes
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    });
+    
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    // Set initial theme
+    setIsDarkMode(document.documentElement.classList.contains('dark'));
+
+    return () => observer.disconnect();
+  }, []);
 
   // Conteúdo do usuário com vídeos e carrossel
   const userContent = [
@@ -125,6 +142,28 @@ const Profile = () => {
     }
   }, []);
 
+  const getThemeColors = () => {
+    if (isDarkMode) {
+      return {
+        mainBg: 'bg-gray-900',
+        cardBg: 'bg-gray-800',
+        textPrimary: 'text-white',
+        textSecondary: 'text-gray-300',
+        borderColor: 'border-gray-700'
+      };
+    } else {
+      return {
+        mainBg: 'bg-gray-50',
+        cardBg: 'bg-white',
+        textPrimary: 'text-gray-900',
+        textSecondary: 'text-gray-600',
+        borderColor: 'border-gray-200'
+      };
+    }
+  };
+
+  const theme = getThemeColors();
+
   const handleSave = () => {
     setProfile(editProfile);
     localStorage.setItem('userProfile', JSON.stringify(editProfile));
@@ -187,12 +226,12 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen flex bg-gray-100 relative">
+    <div className={`min-h-screen flex ${theme.mainBg} relative transition-colors duration-300`}>
       <Sidebar activeTab="profile" onTabChange={() => {}} />
       
       <div className="flex-1 md:ml-20 pt-20 md:pt-0">
         {/* Header com botão voltar */}
-        <div className="fixed top-20 md:top-0 left-0 md:left-20 right-0 bg-white z-50 p-4 border-b">
+        <div className={`fixed top-20 md:top-0 left-0 md:left-20 right-0 ${theme.cardBg} z-50 p-4 ${theme.borderColor} border-b transition-colors duration-300`}>
           <div className="flex items-center gap-4">
             <Button 
               variant="ghost" 
@@ -202,13 +241,13 @@ const Profile = () => {
             >
               <ArrowLeft size={20} />
             </Button>
-            <h1 className="text-xl font-bold">{profile.name}</h1>
+            <h1 className={`text-xl font-bold ${theme.textPrimary}`}>{profile.name}</h1>
           </div>
         </div>
 
         <div className="pt-20 pb-4">
           {/* Header do Perfil */}
-          <Card className="mx-4 mb-4">
+          <Card className={`mx-4 mb-4 ${theme.cardBg} ${theme.borderColor} border transition-colors duration-300`}>
             <CardHeader>
               <div className="flex items-center gap-4">
                 <div className="relative">
@@ -241,7 +280,7 @@ const Profile = () => {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-4 mb-3">
-                    <h2 className="text-lg font-bold">{profile.name}</h2>
+                    <h2 className={`text-lg font-bold ${theme.textPrimary}`}>{profile.name}</h2>
                     {!isEditing ? (
                       <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
                         <Edit2 size={16} className="mr-2" />
@@ -264,20 +303,20 @@ const Profile = () => {
                   {/* Estatísticas */}
                   <div className="flex gap-6 mb-2">
                     <div className="text-center">
-                      <div className="font-bold">{profile.posts}</div>
-                      <div className="text-gray-600 text-xs">Posts</div>
+                      <div className={`font-bold ${theme.textPrimary}`}>{profile.posts}</div>
+                      <div className={`${theme.textSecondary} text-xs`}>Posts</div>
                     </div>
                     <div className="text-center">
-                      <div className="font-bold">{formatNumber(profile.followers)}</div>
-                      <div className="text-gray-600 text-xs">Seguidores</div>
+                      <div className={`font-bold ${theme.textPrimary}`}>{formatNumber(profile.followers)}</div>
+                      <div className={`${theme.textSecondary} text-xs`}>Seguidores</div>
                     </div>
                     <div className="text-center">
-                      <div className="font-bold">{profile.following}</div>
-                      <div className="text-gray-600 text-xs">Seguindo</div>
+                      <div className={`font-bold ${theme.textPrimary}`}>{profile.following}</div>
+                      <div className={`${theme.textSecondary} text-xs`}>Seguindo</div>
                     </div>
                   </div>
 
-                  <p className="text-gray-600 text-sm">{profile.bio}</p>
+                  <p className={`${theme.textSecondary} text-sm`}>{profile.bio}</p>
                 </div>
               </div>
             </CardHeader>
@@ -285,34 +324,37 @@ const Profile = () => {
 
           {/* Formulário de Edição */}
           {isEditing && (
-            <Card className="mx-4 mb-4">
+            <Card className={`mx-4 mb-4 ${theme.cardBg} ${theme.borderColor} border transition-colors duration-300`}>
               <CardContent className="pt-4">
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Nome</Label>
+                      <Label htmlFor="name" className={theme.textPrimary}>Nome</Label>
                       <Input
                         id="name"
                         value={editProfile.name}
                         onChange={(e) => setEditProfile({...editProfile, name: e.target.value})}
+                        className={`${theme.cardBg} ${theme.borderColor} border ${theme.textPrimary}`}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email" className={theme.textPrimary}>Email</Label>
                       <Input
                         id="email"
                         type="email"
                         value={editProfile.email}
                         onChange={(e) => setEditProfile({...editProfile, email: e.target.value})}
+                        className={`${theme.cardBg} ${theme.borderColor} border ${theme.textPrimary}`}
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="bio">Biografia</Label>
+                    <Label htmlFor="bio" className={theme.textPrimary}>Biografia</Label>
                     <Input
                       id="bio"
                       value={editProfile.bio}
                       onChange={(e) => setEditProfile({...editProfile, bio: e.target.value})}
+                      className={`${theme.cardBg} ${theme.borderColor} border ${theme.textPrimary}`}
                     />
                   </div>
                 </div>
