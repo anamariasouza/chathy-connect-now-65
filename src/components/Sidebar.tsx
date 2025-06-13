@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { MessageCircle, Home, Video, Gamepad2, LogOut, ChevronDown, ChevronUp } from 'lucide-react';
+import { MessageCircle, Home, Video, Gamepad2, LogOut, Moon, Sun } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -13,7 +13,7 @@ interface SidebarProps {
 const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const menuItems = [
     { id: 'chats', icon: MessageCircle, label: 'Conversas' },
@@ -34,11 +34,11 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
   const handleMenuClick = (itemId: string) => {
     navigate('/');
     onTabChange(itemId);
-    setIsMobileMenuOpen(false);
   };
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+    // Aqui você pode implementar a lógica de mudança de tema
   };
 
   return (
@@ -76,6 +76,13 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
             </button>
           ))}
           
+          <button
+            onClick={toggleTheme}
+            className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 text-gray-600 hover:bg-gray-100"
+          >
+            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+          
           <div className="border-t border-gray-200 w-8 mx-auto mt-4 pt-4">
             <button
               onClick={handleLogout}
@@ -87,101 +94,49 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
         </div>
       </div>
 
-      {/* Mobile Sidebar */}
-      <div className="md:hidden">
-        {/* Minimized Mobile Sidebar */}
-        <div className={`fixed left-2 top-4 z-50 bg-white/90 backdrop-blur-md shadow-2xl rounded-2xl border border-gray-200 transition-all duration-300 ${
-          isMobileMenuOpen ? 'w-48 h-auto' : 'w-14 h-20'
-        }`}>
-          {!isMobileMenuOpen ? (
-            /* Minimized state */
-            <div className="flex flex-col items-center py-3 space-y-2">
+      {/* Mobile Header */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-200 h-16">
+        <div className="flex items-center justify-between px-4 h-full">
+          <div className="flex items-center space-x-2">
+            <img 
+              src="/lovable-uploads/0e775d7a-2c40-49d5-83a9-620db5ffef64.png" 
+              alt="Chathy Logo" 
+              className="w-8 h-8"
+            />
+            <span className="text-lg font-semibold text-gray-800">Chathy</span>
+          </div>
+          
+          <div className="flex items-center space-x-1">
+            {menuItems.map((item) => (
               <button
-                onClick={toggleMobileMenu}
-                className="w-10 h-10 flex items-center justify-center"
+                key={item.id}
+                onClick={() => handleMenuClick(item.id)}
+                className={cn(
+                  "p-2 rounded-lg transition-all duration-200",
+                  activeTab === item.id
+                    ? "bg-chathy-primary text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                )}
               >
-                <img 
-                  src="/lovable-uploads/0e775d7a-2c40-49d5-83a9-620db5ffef64.png" 
-                  alt="Chathy Logo" 
-                  className="w-8 h-8"
-                />
+                <item.icon size={20} />
               </button>
-              
-              <button
-                onClick={toggleMobileMenu}
-                className="w-8 h-6 flex items-center justify-center text-gray-600 hover:text-chathy-primary transition-colors"
-              >
-                <ChevronDown size={16} />
-              </button>
-            </div>
-          ) : (
-            /* Expanded state */
-            <div className="bg-white/50 backdrop-blur-md p-4">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-3">
-                  <img 
-                    src="/lovable-uploads/0e775d7a-2c40-49d5-83a9-620db5ffef64.png" 
-                    alt="Chathy Logo" 
-                    className="w-8 h-8"
-                  />
-                  <span className="text-lg font-semibold text-gray-800">Chathy</span>
-                </div>
-                <button
-                  onClick={toggleMobileMenu}
-                  className="w-6 h-6 flex items-center justify-center text-gray-600 hover:text-chathy-primary transition-colors"
-                >
-                  <ChevronUp size={16} />
-                </button>
-              </div>
-              
-              <div className="space-y-2">
-                {menuItems.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => handleMenuClick(item.id)}
-                    className={cn(
-                      "w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200",
-                      activeTab === item.id
-                        ? "bg-chathy-primary text-white"
-                        : "text-gray-700 hover:bg-white/70"
-                    )}
-                  >
-                    <item.icon size={18} />
-                    <span className="text-sm font-medium">{item.label}</span>
-                  </button>
-                ))}
-                
-                <div className="border-t border-gray-300 my-3 pt-3">
-                  <button
-                    onClick={handleProfileClick}
-                    className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 text-gray-700 hover:bg-white/70"
-                  >
-                    <div className="w-5 h-5 bg-chathy-primary rounded-full flex items-center justify-center text-white font-bold text-xs">
-                      C
-                    </div>
-                    <span className="text-sm font-medium">Perfil</span>
-                  </button>
-                  
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 text-red-500 hover:bg-red-50/70 mt-1"
-                  >
-                    <LogOut size={18} />
-                    <span className="text-sm font-medium">Sair</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+            ))}
+            
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg transition-all duration-200 text-gray-600 hover:bg-gray-100"
+            >
+              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+            
+            <button
+              onClick={handleProfileClick}
+              className="w-8 h-8 bg-chathy-primary rounded-full flex items-center justify-center text-white font-bold text-sm ml-2"
+            >
+              C
+            </button>
+          </div>
         </div>
-
-        {/* Mobile Menu Backdrop */}
-        {isMobileMenuOpen && (
-          <div 
-            className="fixed inset-0 bg-black/20 z-40"
-            onClick={toggleMobileMenu}
-          />
-        )}
       </div>
     </>
   );

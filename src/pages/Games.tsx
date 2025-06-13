@@ -57,9 +57,9 @@ const Games = () => {
     return (
       <div className="min-h-screen flex bg-gray-100">
         <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
-        <div className="flex-1 md:ml-20 ml-0">
-          <div className="h-screen flex flex-col">
-            <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between md:ml-0">
+        <div className="flex-1 md:ml-20 pt-16 md:pt-0">
+          <div className="h-screen flex flex-col pt-16 md:pt-0">
+            <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <Button 
                   variant="ghost" 
@@ -80,7 +80,7 @@ const Games = () => {
                 <span className="hidden sm:inline">Abrir em Nova Aba</span>
               </Button>
             </div>
-            <div className="flex-1 md:ml-0">
+            <div className="flex-1">
               <iframe
                 src={selectedGame.url}
                 className="w-full h-full border-0"
@@ -97,7 +97,7 @@ const Games = () => {
   return (
     <div className="min-h-screen flex bg-gray-100">
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
-      <div className="flex-1 md:ml-20 ml-0 p-6 md:pl-6 pl-2">
+      <div className="flex-1 md:ml-20 pt-16 md:pt-0 p-6 md:pl-6 pl-4 pr-4">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <div>
