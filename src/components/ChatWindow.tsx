@@ -1,6 +1,6 @@
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Phone, Video, MoreVertical, Paperclip, Smile, ArrowLeft } from 'lucide-react';
+import { Send, Phone, Video, MoreVertical, Paperclip, Smile, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -121,16 +121,6 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
       <div className="p-4 border-b border-gray-200 bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            {showBackButton && (
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={onToggleChatList}
-                className="md:hidden"
-              >
-                <ArrowLeft size={20} />
-              </Button>
-            )}
             <div className="w-10 h-10 rounded-full bg-chathy-primary flex items-center justify-center text-white font-semibold">
               {chat.avatar}
             </div>
@@ -140,15 +130,25 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="hidden md:flex">
               <Phone size={20} />
             </Button>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="hidden md:flex">
               <Video size={20} />
             </Button>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="hidden md:flex">
               <MoreVertical size={20} />
             </Button>
+            {showBackButton && (
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={onToggleChatList}
+                className="md:hidden"
+              >
+                <X size={20} />
+              </Button>
+            )}
           </div>
         </div>
       </div>
