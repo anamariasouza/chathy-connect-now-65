@@ -190,9 +190,9 @@ const Profile = () => {
     <div className="min-h-screen flex bg-gray-100 relative">
       <Sidebar activeTab="profile" onTabChange={() => {}} />
       
-      <div className="flex-1 md:ml-20 pt-16 md:pt-0">
+      <div className="flex-1 md:ml-20 pt-20 md:pt-0">
         {/* Header com botão voltar */}
-        <div className="fixed top-16 md:top-0 left-0 md:left-20 right-0 bg-white z-50 p-4 border-b">
+        <div className="fixed top-20 md:top-0 left-0 md:left-20 right-0 bg-white z-50 p-4 border-b">
           <div className="flex items-center gap-4">
             <Button 
               variant="ghost" 

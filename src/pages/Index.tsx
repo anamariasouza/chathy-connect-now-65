@@ -80,7 +80,7 @@ const Index = () => {
         if (window.innerWidth < 768) {
           if (showChatWindow && selectedChat) {
             return (
-              <div className="flex-1 pt-16">
+              <div className="flex-1 pt-20">
                 <ChatWindow 
                   chat={selectedChat} 
                   onToggleChatList={handleBackToContacts}
@@ -91,7 +91,7 @@ const Index = () => {
             );
           } else {
             return (
-              <div className="flex-1 pt-16">
+              <div className="flex-1 pt-20">
                 <ChatList onChatSelect={handleChatSelect} selectedChat={selectedChat} />
               </div>
             );
@@ -129,13 +129,13 @@ const Index = () => {
         );
       case 'feed':
         return (
-          <div className="pt-16 md:pt-0">
+          <div className="pt-20 md:pt-0">
             <FeedView />
           </div>
         );
       case 'lives':
         return (
-          <div className="pt-16 md:pt-0">
+          <div className="pt-20 md:pt-0">
             <LivesView />
           </div>
         );
