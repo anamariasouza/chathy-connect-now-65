@@ -81,44 +81,48 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md shadow-2xl border-t border-gray-200">
-        <div className="flex items-center justify-around py-2 px-4">
-          {/* Profile Button */}
-          <button
-            onClick={handleProfileClick}
-            className="flex flex-col items-center p-2"
-          >
-            <div className="w-8 h-8 bg-chathy-primary rounded-full flex items-center justify-center text-white font-bold text-sm">
+      {/* Mobile Top Navigation */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200">
+        <div className="flex items-center justify-between py-3 px-4">
+          {/* Logo and Profile */}
+          <div className="flex items-center space-x-3">
+            <img 
+              src="/lovable-uploads/0e775d7a-2c40-49d5-83a9-620db5ffef64.png" 
+              alt="Chathy Logo" 
+              className="w-8 h-8"
+            />
+            <button
+              onClick={handleProfileClick}
+              className="w-8 h-8 bg-chathy-primary rounded-full flex items-center justify-center text-white font-bold text-sm"
+            >
               C
-            </div>
-            <span className="text-xs text-gray-600 mt-1">Perfil</span>
-          </button>
+            </button>
+          </div>
 
           {/* Menu Items */}
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => handleMenuClick(item.id)}
-              className={cn(
-                "flex flex-col items-center p-2 rounded-lg transition-all duration-300",
-                activeTab === item.id
-                  ? "text-chathy-primary"
-                  : "text-gray-600"
-              )}
-            >
-              <item.icon size={24} />
-              <span className="text-xs mt-1">{item.label}</span>
-            </button>
-          ))}
+          <div className="flex items-center space-x-4">
+            {menuItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => handleMenuClick(item.id)}
+                className={cn(
+                  "p-2 rounded-lg transition-all duration-300",
+                  activeTab === item.id
+                    ? "text-chathy-primary bg-chathy-primary/10"
+                    : "text-gray-600"
+                )}
+              >
+                <item.icon size={20} />
+              </button>
+            ))}
+          </div>
 
           {/* Logout Button */}
           <button
             onClick={handleLogout}
-            className="flex flex-col items-center p-2"
+            className="p-2 rounded-lg text-red-500 hover:bg-red-50"
           >
-            <LogOut size={24} className="text-red-500" />
-            <span className="text-xs text-red-500 mt-1">Sair</span>
+            <LogOut size={20} />
           </button>
         </div>
       </div>

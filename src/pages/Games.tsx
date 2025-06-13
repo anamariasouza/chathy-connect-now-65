@@ -55,9 +55,9 @@ const Games = () => {
 
   if (selectedGame) {
     return (
-      <div className="min-h-screen flex bg-gray-100">
+      <div className="min-h-screen flex bg-gray-100 pt-16 md:pt-0">
         <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
-        <div className="flex-1 ml-20">
+        <div className="flex-1 md:ml-20">
           <div className="h-screen flex flex-col">
             <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
               <div className="flex items-center space-x-4">
@@ -95,9 +95,9 @@ const Games = () => {
   }
 
   return (
-    <div className="min-h-screen flex bg-gray-100">
+    <div className="min-h-screen flex bg-gray-100 pt-16 md:pt-0">
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
-      <div className="flex-1 ml-20 p-6">
+      <div className="flex-1 md:ml-20 p-6">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <div>

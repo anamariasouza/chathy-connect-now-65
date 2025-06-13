@@ -129,7 +129,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-100 relative pb-20 md:pb-0">
+    <div className="min-h-screen flex bg-gray-100 relative pt-16 md:pt-0">
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
       <div className="flex-1 md:ml-20">
         {renderMainContent()}
