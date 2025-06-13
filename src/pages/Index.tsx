@@ -22,6 +22,7 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState('feed');
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [showMobileChatWindow, setShowMobileChatWindow] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -31,13 +32,26 @@ const Index = () => {
     }
   }, [isAuthenticated, navigate]);
 
+  // Listen for theme changes
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    });
+    
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   if (!isAuthenticated) {
     return null;
   }
 
   const handleChatSelect = (chat: Chat) => {
     setSelectedChat(chat);
-    // On mobile, show chat window as popup
     if (window.innerWidth < 768) {
       setShowMobileChatWindow(true);
     }
@@ -48,20 +62,40 @@ const Index = () => {
     setSelectedChat(null);
   };
 
+  const getThemeColors = () => {
+    if (isDarkMode) {
+      return {
+        mainBg: 'bg-gray-900',
+        windowBg: 'bg-gray-800',
+        borderColor: 'border-gray-700',
+        shadowColor: 'shadow-gray-900/50'
+      };
+    } else {
+      return {
+        mainBg: 'bg-gray-50',
+        windowBg: 'bg-white',
+        borderColor: 'border-gray-200',
+        shadowColor: 'shadow-lg'
+      };
+    }
+  };
+
+  const theme = getThemeColors();
+
   const renderMainContent = () => {
     switch (activeTab) {
       case 'chats':
         return (
-          <div className="flex-1 p-4 bg-gray-50">
+          <div className={`flex-1 p-4 ${theme.mainBg} transition-colors duration-300`}>
             {/* Desktop Layout */}
             <div className="hidden md:flex gap-4 h-full">
               {/* Contacts Window */}
-              <div className="w-1/3 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+              <div className={`w-1/3 ${theme.windowBg} rounded-xl ${theme.shadowColor} ${theme.borderColor} border overflow-hidden transition-colors duration-300`}>
                 <ChatList onChatSelect={handleChatSelect} selectedChat={selectedChat} />
               </div>
               
               {/* Messages Window */}
-              <div className="flex-1 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+              <div className={`flex-1 ${theme.windowBg} rounded-xl ${theme.shadowColor} ${theme.borderColor} border overflow-hidden transition-colors duration-300`}>
                 <ChatWindow 
                   chat={selectedChat} 
                   onToggleChatList={() => {}}
@@ -73,14 +107,14 @@ const Index = () => {
             {/* Mobile Layout */}
             <div className="md:hidden h-full relative">
               {/* Contacts Window - Full Width on Mobile */}
-              <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden h-full">
+              <div className={`${theme.windowBg} rounded-xl ${theme.shadowColor} ${theme.borderColor} border overflow-hidden h-full transition-colors duration-300`}>
                 <ChatList onChatSelect={handleChatSelect} selectedChat={null} />
               </div>
 
               {/* Messages Popup - Only visible when chat is selected */}
               {showMobileChatWindow && selectedChat && (
                 <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
-                  <div className="bg-white rounded-xl shadow-2xl border border-gray-200 w-full h-full max-w-md max-h-[80vh] overflow-hidden">
+                  <div className={`${theme.windowBg} rounded-xl shadow-2xl ${theme.borderColor} border w-full h-full max-w-md max-h-[80vh] overflow-hidden transition-colors duration-300`}>
                     <ChatWindow 
                       chat={selectedChat} 
                       onToggleChatList={handleCloseMobileChat}
@@ -121,7 +155,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-100 relative">
+    <div className={`min-h-screen flex ${theme.mainBg} relative transition-colors duration-300`}>
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
       <div className="flex-1 md:ml-20 md:pt-0">
         {renderMainContent()}

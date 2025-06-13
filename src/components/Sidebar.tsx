@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { MessageCircle, Home, Video, Gamepad2, LogOut, Moon, Sun } from 'lucide-react';
+import { MessageCircle, Play, Video, Gamepad2, LogOut, Moon, Sun } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -17,7 +17,7 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
 
   const menuItems = [
     { id: 'chats', icon: MessageCircle, label: 'Conversas' },
-    { id: 'feed', icon: Home, label: 'Feed' },
+    { id: 'feed', icon: Play, label: 'Feed' },
     { id: 'lives', icon: Video, label: 'Lives' },
     { id: 'games', icon: Gamepad2, label: 'Jogos' },
   ];
@@ -38,13 +38,48 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
-    // Aqui você pode implementar a lógica de mudança de tema
+    document.documentElement.classList.toggle('dark');
   };
+
+  const getThemeColors = () => {
+    if (isDarkMode) {
+      return {
+        sidebarBg: 'bg-gray-900/95',
+        mobileBg: 'bg-gray-900/95',
+        borderColor: 'border-gray-700',
+        textPrimary: 'text-white',
+        textSecondary: 'text-gray-300',
+        iconActive: 'bg-blue-600 text-white',
+        iconInactive: 'text-gray-300 hover:bg-gray-700',
+        profileBg: 'bg-blue-600',
+        logoutHover: 'hover:bg-red-900',
+        appBg: 'bg-gray-900'
+      };
+    } else {
+      return {
+        sidebarBg: 'bg-white/90',
+        mobileBg: 'bg-white/95',
+        borderColor: 'border-gray-200',
+        textPrimary: 'text-gray-800',
+        textSecondary: 'text-gray-600',
+        iconActive: 'bg-chathy-primary text-white',
+        iconInactive: 'text-chathy-primary hover:bg-chathy-primary/10',
+        profileBg: 'bg-chathy-primary',
+        logoutHover: 'hover:bg-red-50',
+        appBg: 'bg-gray-100'
+      };
+    }
+  };
+
+  const theme = getThemeColors();
+
+  // Apply background color to body
+  document.body.className = `${theme.appBg} transition-colors duration-300`;
 
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex fixed left-4 top-1/2 transform -translate-y-1/2 z-50 w-16 bg-white/90 backdrop-blur-md shadow-2xl rounded-2xl flex-col items-center py-4 space-y-4 border border-gray-200">
+      <div className={`hidden md:flex fixed left-4 top-1/2 transform -translate-y-1/2 z-50 w-16 ${theme.sidebarBg} backdrop-blur-md shadow-2xl rounded-2xl flex-col items-center py-4 space-y-4 ${theme.borderColor} border transition-all duration-300`}>
         <div className="flex flex-col items-center space-y-3">
           <img 
             src="/lovable-uploads/0e775d7a-2c40-49d5-83a9-620db5ffef64.png" 
@@ -54,7 +89,7 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
           
           <button
             onClick={handleProfileClick}
-            className="w-10 h-10 bg-chathy-primary rounded-full flex items-center justify-center text-white font-bold text-lg hover:scale-110 transition-all duration-300"
+            className={`w-10 h-10 ${theme.profileBg} rounded-full flex items-center justify-center text-white font-bold text-lg hover:scale-110 transition-all duration-300`}
           >
             C
           </button>
@@ -68,8 +103,8 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
               className={cn(
                 "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110",
                 activeTab === item.id
-                  ? "bg-chathy-primary text-white shadow-lg"
-                  : "text-chathy-primary hover:bg-chathy-primary/10"
+                  ? theme.iconActive + " shadow-lg"
+                  : theme.iconInactive
               )}
             >
               <item.icon size={20} />
@@ -78,15 +113,15 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
           
           <button
             onClick={toggleTheme}
-            className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 text-gray-600 hover:bg-gray-100"
+            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 ${theme.iconInactive}`}
           >
             {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
           </button>
           
-          <div className="border-t border-gray-200 w-8 mx-auto mt-4 pt-4">
+          <div className={`${theme.borderColor} border-t w-8 mx-auto mt-4 pt-4`}>
             <button
               onClick={handleLogout}
-              className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 text-red-500 hover:bg-red-50"
+              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 text-red-500 ${theme.logoutHover}`}
             >
               <LogOut size={20} />
             </button>
@@ -95,7 +130,7 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
       </div>
 
       {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-200 h-16">
+      <div className={`md:hidden fixed top-0 left-0 right-0 z-50 ${theme.mobileBg} backdrop-blur-md shadow-sm ${theme.borderColor} border-b h-16 transition-all duration-300`}>
         <div className="flex items-center justify-between px-4 h-full">
           <div className="flex items-center space-x-2">
             <img 
@@ -103,7 +138,7 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
               alt="Chathy Logo" 
               className="w-8 h-8"
             />
-            <span className="text-lg font-semibold text-gray-800">Chathy</span>
+            <span className={`text-lg font-semibold ${theme.textPrimary}`}>Chathy</span>
           </div>
           
           <div className="flex items-center space-x-1">
@@ -114,8 +149,8 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
                 className={cn(
                   "p-2 rounded-lg transition-all duration-200",
                   activeTab === item.id
-                    ? "bg-chathy-primary text-white"
-                    : "text-gray-600 hover:bg-gray-100"
+                    ? theme.iconActive
+                    : theme.iconInactive
                 )}
               >
                 <item.icon size={20} />
@@ -124,14 +159,14 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
             
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg transition-all duration-200 text-gray-600 hover:bg-gray-100"
+              className={`p-2 rounded-lg transition-all duration-200 ${theme.iconInactive}`}
             >
               {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
             
             <button
               onClick={handleProfileClick}
-              className="w-8 h-8 bg-chathy-primary rounded-full flex items-center justify-center text-white font-bold text-sm ml-2"
+              className={`w-8 h-8 ${theme.profileBg} rounded-full flex items-center justify-center text-white font-bold text-sm ml-2`}
             >
               C
             </button>
