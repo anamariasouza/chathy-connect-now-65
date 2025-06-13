@@ -72,14 +72,32 @@ const FeedView = () => {
       isLiked: true,
       timestamp: 'há 8 horas'
     }
-  ]);
+  ];
 
   const [currentPostIndex, setCurrentPostIndex] = useState(0);
   const [playingVideos, setPlayingVideos] = useState<Set<string>>(new Set());
   const [mutedVideos, setMutedVideos] = useState<Set<string>>(new Set());
   const [carouselApis, setCarouselApis] = useState<Map<string, CarouselApi>>(new Map());
   const [currentSlides, setCurrentSlides] = useState<Map<string, number>>(new Map());
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Listen for theme changes
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    });
+    
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    // Set initial theme
+    setIsDarkMode(document.documentElement.classList.contains('dark'));
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -151,8 +169,12 @@ const FeedView = () => {
     return num.toString();
   };
 
+  const getBackgroundColor = () => {
+    return isDarkMode ? 'bg-black' : 'bg-gray-300';
+  };
+
   return (
-    <div className="fixed inset-0 bg-black">
+    <div className={`fixed inset-0 ${getBackgroundColor()}`}>
       <div 
         ref={containerRef}
         className="h-full overflow-y-auto snap-y snap-mandatory scrollbar-hide"
