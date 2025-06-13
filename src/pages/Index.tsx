@@ -70,7 +70,10 @@ const Index = () => {
 
   const handleBackToContacts = () => {
     setShowChatWindow(false);
-    setSelectedChat(null);
+    // On mobile, also clear the selected chat to ensure we only show contacts
+    if (window.innerWidth < 768) {
+      setSelectedChat(null);
+    }
   };
 
   const renderMainContent = () => {
@@ -92,7 +95,7 @@ const Index = () => {
           } else {
             return (
               <div className="flex-1 pt-20">
-                <ChatList onChatSelect={handleChatSelect} selectedChat={selectedChat} />
+                <ChatList onChatSelect={handleChatSelect} selectedChat={null} />
               </div>
             );
           }
