@@ -1,6 +1,6 @@
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Phone, Video, MoreVertical, Paperclip, Smile } from 'lucide-react';
+import { Send, Phone, Video, MoreVertical, Paperclip, Smile, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -26,9 +26,10 @@ interface ChatWindowProps {
   chat: Chat | null;
   onToggleChatList?: () => void;
   isChatListVisible?: boolean;
+  showBackButton?: boolean;
 }
 
-const ChatWindow = ({ chat, onToggleChatList, isChatListVisible }: ChatWindowProps) => {
+const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton }: ChatWindowProps) => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -120,6 +121,16 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible }: ChatWindowPro
       <div className="p-4 border-b border-gray-200 bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
+            {showBackButton && (
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={onToggleChatList}
+                className="md:hidden"
+              >
+                <ArrowLeft size={20} />
+              </Button>
+            )}
             <div className="w-10 h-10 rounded-full bg-chathy-primary flex items-center justify-center text-white font-semibold">
               {chat.avatar}
             </div>

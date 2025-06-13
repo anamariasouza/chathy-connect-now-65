@@ -24,6 +24,7 @@ const Index = () => {
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [lastSelectedChat, setLastSelectedChat] = useState<Chat | null>(null);
   const [isChatListVisible, setIsChatListVisible] = useState(true);
+  const [showChatWindow, setShowChatWindow] = useState(false);
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -37,6 +38,10 @@ const Index = () => {
   useEffect(() => {
     if (selectedChat) {
       setLastSelectedChat(selectedChat);
+      // On mobile, show chat window when a chat is selected
+      if (window.innerWidth < 768) {
+        setShowChatWindow(true);
+      }
     }
   }, [selectedChat]);
 
@@ -55,14 +60,50 @@ const Index = () => {
     setIsChatListVisible(!isChatListVisible);
   };
 
+  const handleChatSelect = (chat: Chat) => {
+    setSelectedChat(chat);
+    // On mobile, hide chat list and show chat window
+    if (window.innerWidth < 768) {
+      setShowChatWindow(true);
+    }
+  };
+
+  const handleBackToContacts = () => {
+    setShowChatWindow(false);
+    setSelectedChat(null);
+  };
+
   const renderMainContent = () => {
     switch (activeTab) {
       case 'chats':
+        // Mobile: show either chat list or chat window
+        if (window.innerWidth < 768) {
+          if (showChatWindow && selectedChat) {
+            return (
+              <div className="flex-1">
+                <ChatWindow 
+                  chat={selectedChat} 
+                  onToggleChatList={handleBackToContacts}
+                  isChatListVisible={false}
+                  showBackButton={true}
+                />
+              </div>
+            );
+          } else {
+            return (
+              <div className="flex-1">
+                <ChatList onChatSelect={handleChatSelect} selectedChat={selectedChat} />
+              </div>
+            );
+          }
+        }
+        
+        // Desktop: show both side by side
         return (
           <div className="flex flex-1 relative">
             {isChatListVisible && (
               <div className="relative">
-                <ChatList onChatSelect={setSelectedChat} selectedChat={selectedChat} />
+                <ChatList onChatSelect={handleChatSelect} selectedChat={selectedChat} />
                 <ChatToggleButton 
                   isVisible={isChatListVisible}
                   onToggle={handleToggleChatList}
@@ -101,7 +142,7 @@ const Index = () => {
           <div className="flex flex-1 relative">
             {isChatListVisible && (
               <div className="relative">
-                <ChatList onChatSelect={setSelectedChat} selectedChat={selectedChat} />
+                <ChatList onChatSelect={handleChatSelect} selectedChat={selectedChat} />
                 <ChatToggleButton 
                   isVisible={isChatListVisible}
                   onToggle={handleToggleChatList}
@@ -131,7 +172,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex bg-gray-100 relative">
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
-      <div className="flex-1 md:ml-20 ml-0 pl-16 md:pl-0">
+      <div className="flex-1 md:ml-20 ml-0 md:pl-0">
         {renderMainContent()}
       </div>
     </div>
