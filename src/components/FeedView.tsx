@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Heart, MessageCircle, Share, Play, Pause, Volume2, VolumeX, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -158,7 +157,6 @@ const FeedView = () => {
           <div 
             key={post.id} 
             className="h-screen w-full snap-start relative flex items-center justify-center"
-            style={{ aspectRatio: '9/16' }}
           >
             {/* Conteúdo de Vídeo/Imagem */}
             <div className="absolute inset-0 flex items-center justify-center">
@@ -194,14 +192,14 @@ const FeedView = () => {
                   </div>
                 </div>
               ) : post.images && post.images.length > 0 ? (
-                <div className="w-full h-full max-w-md mx-auto relative">
+                <div className="w-full h-full relative">
                   <Carousel 
                     className="w-full h-full"
                     setApi={(api) => setCarouselApi(post.id, api)}
                   >
-                    <CarouselContent className="h-full">
+                    <CarouselContent className="h-full -ml-0">
                       {post.images.map((image, imageIndex) => (
-                        <CarouselItem key={imageIndex} className="h-full">
+                        <CarouselItem key={imageIndex} className="h-full pl-0 basis-full">
                           <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
                             <div className="text-white text-center">
                               <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-4 mx-auto">
@@ -217,7 +215,7 @@ const FeedView = () => {
                   
                   {/* Indicadores de ponto */}
                   {post.images.length > 1 && (
-                    <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                    <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
                       {post.images.map((_, dotIndex) => (
                         <div
                           key={dotIndex}
