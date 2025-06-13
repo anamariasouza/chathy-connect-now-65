@@ -70,10 +70,7 @@ const Index = () => {
 
   const handleBackToContacts = () => {
     setShowChatWindow(false);
-    // On mobile, also clear the selected chat to ensure we only show contacts
-    if (window.innerWidth < 768) {
-      setSelectedChat(null);
-    }
+    setSelectedChat(null);
   };
 
   const renderMainContent = () => {
