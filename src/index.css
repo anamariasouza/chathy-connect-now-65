@@ -125,3 +125,22 @@
 .animate-bounce-heart {
   animation: bounce-heart 0.3s ease-in-out;
 }
+
+/* Estilo para scroll snap e rolagem magnética */
+.snap-y {
+  scroll-snap-type: y mandatory;
+}
+
+.snap-start {
+  scroll-snap-align: start;
+}
+
+/* Remover scrollbar para melhor experiência */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
