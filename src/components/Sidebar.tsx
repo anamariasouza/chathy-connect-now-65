@@ -36,12 +36,20 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
 
   return (
     <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-50 w-16 bg-white/90 backdrop-blur-md shadow-2xl rounded-2xl flex flex-col items-center py-4 space-y-4 border border-gray-200">
-      <button
-        onClick={handleProfileClick}
-        className="w-10 h-10 bg-chathy-primary rounded-full flex items-center justify-center text-white font-bold text-lg hover:scale-110 transition-all duration-300"
-      >
-        C
-      </button>
+      <div className="flex flex-col items-center space-y-3">
+        <img 
+          src="/lovable-uploads/0e775d7a-2c40-49d5-83a9-620db5ffef64.png" 
+          alt="Chathy Logo" 
+          className="w-8 h-8"
+        />
+        
+        <button
+          onClick={handleProfileClick}
+          className="w-10 h-10 bg-chathy-primary rounded-full flex items-center justify-center text-white font-bold text-lg hover:scale-110 transition-all duration-300"
+        >
+          C
+        </button>
+      </div>
       
       <div className="flex flex-col space-y-3 mt-6">
         {menuItems.map((item) => (

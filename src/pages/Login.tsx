@@ -55,8 +55,12 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-chathy-primary to-chathy-secondary p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <div className="w-16 h-16 bg-chathy-primary rounded-full flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4">
-            C
+          <div className="flex flex-col items-center mb-4">
+            <img 
+              src="/lovable-uploads/c3048bc0-d027-4174-b4d7-175e6286480e.png" 
+              alt="Chathy Logo" 
+              className="w-32 h-auto mb-2"
+            />
           </div>
           <CardTitle className="text-2xl text-center">Entrar no Chathy</CardTitle>
           <CardDescription className="text-center">
