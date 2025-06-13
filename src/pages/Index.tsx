@@ -38,7 +38,7 @@ const Index = () => {
     switch (activeTab) {
       case 'chats':
         return (
-          <div className="flex flex-1 ml-20">
+          <div className="flex flex-1">
             <ChatList onChatSelect={setSelectedChat} selectedChat={selectedChat} />
             <ChatWindow chat={selectedChat} />
           </div>
@@ -48,12 +48,11 @@ const Index = () => {
       case 'lives':
         return <LivesView />;
       case 'profile':
-        // Redireciona para a rota /profile em vez de renderizar aqui
         navigate('/profile');
         return null;
       default:
         return (
-          <div className="flex flex-1 ml-20">
+          <div className="flex flex-1">
             <ChatList onChatSelect={setSelectedChat} selectedChat={selectedChat} />
             <ChatWindow chat={selectedChat} />
           </div>
@@ -64,7 +63,9 @@ const Index = () => {
   return (
     <div className="min-h-screen flex bg-gray-100 relative">
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
-      {renderMainContent()}
+      <div className="flex-1 ml-20">
+        {renderMainContent()}
+      </div>
     </div>
   );
 };
