@@ -1,6 +1,6 @@
 
-import { useState } from 'react';
-import { Play, Users, Heart, MessageCircle } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Play, Users, Heart, MessageCircle, Share, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Live {
@@ -37,73 +37,145 @@ const LivesView = () => {
       id: '3',
       name: 'Ana Costa',
       title: 'Tutorial de maquiagem',
-      viewers: 0,
+      viewers: 89,
       duration: '45:20',
       avatar: 'A',
       isLive: false
+    },
+    {
+      id: '4',
+      name: 'João Silva',
+      title: 'Treino na academia! 💪',
+      viewers: 67,
+      duration: '22:15',
+      avatar: 'J',
+      isLive: true
     }
   ]);
 
+  const [currentLiveIndex, setCurrentLiveIndex] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!containerRef.current) return;
+      
+      const container = containerRef.current;
+      const scrollTop = container.scrollTop;
+      const itemHeight = container.clientHeight;
+      const newIndex = Math.round(scrollTop / itemHeight);
+      
+      if (newIndex !== currentLiveIndex && newIndex >= 0 && newIndex < lives.length) {
+        setCurrentLiveIndex(newIndex);
+        // Rolagem magnética
+        container.scrollTo({
+          top: newIndex * itemHeight,
+          behavior: 'smooth'
+        });
+      }
+    };
+
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
+  }, [currentLiveIndex, lives.length]);
+
+  const formatNumber = (num: number) => {
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'k';
+    }
+    return num.toString();
+  };
+
   return (
-    <div className="flex-1 bg-white">
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800">Lives</h2>
-          <Button className="gradient-bg">
-            <Play size={16} className="mr-2" />
-            Iniciar Live
-          </Button>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {lives.map((live) => (
-            <div key={live.id} className="bg-gray-900 rounded-lg overflow-hidden relative group cursor-pointer">
-              {live.isLive && (
-                <div className="absolute top-3 left-3 z-10">
-                  <span className="bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold animate-pulse-green">
-                    AO VIVO
-                  </span>
-                </div>
-              )}
-              
-              <div className="aspect-video bg-gradient-to-br from-chathy-primary to-chathy-secondary flex items-center justify-center">
-                <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center text-white text-2xl font-bold">
-                  {live.avatar}
-                </div>
-              </div>
-              
-              <div className="p-4">
-                <h3 className="font-semibold text-white mb-2">{live.name}</h3>
-                <p className="text-gray-300 text-sm mb-3 line-clamp-2">{live.title}</p>
-                
-                <div className="flex items-center justify-between text-gray-400 text-sm">
-                  <div className="flex items-center space-x-3">
-                    <div className="flex items-center space-x-1">
-                      <Users size={14} />
-                      <span>{live.viewers}</span>
+    <div className="fixed inset-0 bg-black">
+      <div 
+        ref={containerRef}
+        className="h-full overflow-y-auto snap-y snap-mandatory scrollbar-hide"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {lives.map((live, index) => (
+          <div 
+            key={live.id} 
+            className="h-screen w-full snap-start relative flex items-center justify-center"
+            style={{ aspectRatio: '9/16' }}
+          >
+            {/* Conteúdo da Live */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative w-full h-full max-w-md mx-auto bg-gray-900 flex items-center justify-center">
+                <div className="w-full h-full bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center relative">
+                  {/* Badge AO VIVO */}
+                  {live.isLive && (
+                    <div className="absolute top-6 left-6 z-10">
+                      <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold animate-pulse-green flex items-center">
+                        <div className="w-2 h-2 bg-white rounded-full mr-2 animate-ping"></div>
+                        AO VIVO
+                      </span>
                     </div>
-                    <span>{live.duration}</span>
-                  </div>
+                  )}
                   
-                  <div className="flex items-center space-x-2">
-                    <button className="hover:text-red-400 transition-colors">
-                      <Heart size={16} />
-                    </button>
-                    <button className="hover:text-blue-400 transition-colors">
-                      <MessageCircle size={16} />
-                    </button>
+                  {/* Avatar da Live */}
+                  <div className="text-white text-center">
+                    <div className="w-32 h-32 bg-white/20 rounded-full flex items-center justify-center mb-4 mx-auto">
+                      <span className="text-4xl font-bold">{live.avatar}</span>
+                    </div>
+                    <div className="flex items-center justify-center space-x-2 mb-2">
+                      <Users size={20} />
+                      <span className="text-lg font-semibold">{formatNumber(live.viewers)} assistindo</span>
+                    </div>
+                    <p className="text-sm opacity-75">{live.duration}</p>
                   </div>
-                </div>
-              </div>
-              
-              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
-                  <Play size={24} className="text-white ml-1" />
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+
+            {/* Ações do Lado Direito */}
+            <div className="absolute right-4 bottom-32 flex flex-col space-y-6 z-10">
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-12 rounded-full bg-chathy-primary flex items-center justify-center text-white font-semibold mb-2">
+                  {live.avatar}
+                </div>
+                <div className="w-6 h-6 bg-chathy-primary rounded-full flex items-center justify-center -mt-3 border-2 border-black">
+                  <span className="text-black text-xs font-bold">+</span>
+                </div>
+              </div>
+              
+              <div className="flex flex-col items-center space-y-6">
+                <Button variant="ghost" size="sm" className="flex flex-col items-center space-y-1 text-white hover:scale-110 transition-transform">
+                  <Heart size={28} />
+                  <span className="text-xs font-semibold">{formatNumber(live.viewers * 3)}</span>
+                </Button>
+                
+                <Button variant="ghost" size="sm" className="flex flex-col items-center space-y-1 text-white hover:scale-110 transition-transform">
+                  <MessageCircle size={28} />
+                  <span className="text-xs font-semibold">{formatNumber(live.viewers / 2)}</span>
+                </Button>
+                
+                <Button variant="ghost" size="sm" className="flex flex-col items-center space-y-1 text-white hover:scale-110 transition-transform">
+                  <Share size={28} />
+                  <span className="text-xs font-semibold">{formatNumber(live.viewers / 5)}</span>
+                </Button>
+                
+                <Button variant="ghost" size="sm" className="text-white hover:scale-110 transition-transform">
+                  <MoreVertical size={28} />
+                </Button>
+              </div>
+            </div>
+
+            {/* Informações na Parte Inferior */}
+            <div className="absolute bottom-4 left-4 right-20 text-white z-10">
+              <div className="flex items-center space-x-2 mb-2">
+                <span className="font-bold text-lg">@{live.name.toLowerCase().replace(' ', '')}</span>
+                {live.isLive && (
+                  <span className="bg-red-500 px-2 py-1 rounded text-xs font-semibold">LIVE</span>
+                )}
+              </div>
+              <p className="text-sm mb-2 leading-relaxed">{live.title}</p>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
