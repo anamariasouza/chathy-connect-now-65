@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Heart, MessageCircle, Share, Play, Pause, Volume2, VolumeX, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -36,7 +37,11 @@ const FeedView = () => {
       user: 'Pedro Santos',
       avatar: 'P',
       description: 'Viagem incrível pelas montanhas! 🏔️',
-      images: ['image1.jpg', 'image2.jpg', 'image3.jpg'],
+      images: [
+        'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&h=711&fit=crop',
+        'https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=400&h=711&fit=crop',
+        'https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=400&h=711&fit=crop'
+      ],
       likes: 567,
       comments: 89,
       shares: 34,
@@ -161,7 +166,7 @@ const FeedView = () => {
             {/* Conteúdo de Vídeo/Imagem */}
             <div className="absolute inset-0 flex items-center justify-center">
               {post.videoUrl ? (
-                <div className="relative w-full h-full max-w-md mx-auto bg-gray-900 flex items-center justify-center">
+                <div className="relative h-full" style={{ width: 'calc(100vh * 9 / 16)', maxWidth: '100vw' }}>
                   <div className="w-full h-full bg-gradient-to-br from-chathy-primary to-chathy-secondary flex items-center justify-center">
                     <div className="text-white text-center">
                       <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-4 mx-auto">
@@ -192,7 +197,7 @@ const FeedView = () => {
                   </div>
                 </div>
               ) : post.images && post.images.length > 0 ? (
-                <div className="w-full h-full relative">
+                <div className="h-full relative" style={{ width: 'calc(100vh * 9 / 16)', maxWidth: '100vw' }}>
                   <Carousel 
                     className="w-full h-full"
                     setApi={(api) => setCarouselApi(post.id, api)}
@@ -200,12 +205,25 @@ const FeedView = () => {
                     <CarouselContent className="h-full -ml-0">
                       {post.images.map((image, imageIndex) => (
                         <CarouselItem key={imageIndex} className="h-full pl-0 basis-full">
-                          <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                            <div className="text-white text-center">
-                              <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-4 mx-auto">
-                                <span className="text-2xl font-bold">{imageIndex + 1}</span>
+                          <div className="w-full h-full relative">
+                            <img 
+                              src={image} 
+                              alt={`Imagem ${imageIndex + 1} de ${post.user}`}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                const fallback = target.nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = 'flex';
+                              }}
+                            />
+                            <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center" style={{ display: 'none' }}>
+                              <div className="text-white text-center">
+                                <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-4 mx-auto">
+                                  <span className="text-2xl font-bold">{imageIndex + 1}</span>
+                                </div>
+                                <p className="text-sm opacity-75">Imagem {imageIndex + 1} de {post.user}</p>
                               </div>
-                              <p className="text-sm opacity-75">Imagem {imageIndex + 1} de {post.user}</p>
                             </div>
                           </div>
                         </CarouselItem>
