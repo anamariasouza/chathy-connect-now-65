@@ -17,7 +17,11 @@ interface FeedPost {
   timestamp: string;
 }
 
-const FeedView = () => {
+interface FeedViewProps {
+  onViewProfile?: (contact: any) => void;
+}
+
+const FeedView = ({ onViewProfile }: FeedViewProps) => {
   const [posts] = useState<FeedPost[]>([
     {
       id: '1',
@@ -168,6 +172,17 @@ const FeedView = () => {
     return num.toString();
   };
 
+  const handleViewProfile = (post: FeedPost) => {
+    const contact = {
+      id: post.id,
+      name: post.user,
+      avatar: post.avatar,
+      username: post.user.toLowerCase().replace(' ', ''),
+      isOnline: true
+    };
+    onViewProfile?.(contact);
+  };
+
   const getBackgroundColor = () => {
     return isDarkMode ? 'bg-black' : 'bg-gray-300';
   };
@@ -274,9 +289,12 @@ const FeedView = () => {
             {/* Ações do Lado Direito */}
             <div className="absolute right-4 bottom-32 flex flex-col space-y-6 z-10">
               <div className="flex flex-col items-center">
-                <div className="w-12 h-12 rounded-full bg-chathy-primary flex items-center justify-center text-white font-semibold mb-2">
+                <button
+                  onClick={() => handleViewProfile(post)}
+                  className="w-12 h-12 rounded-full bg-chathy-primary flex items-center justify-center text-white font-semibold mb-2 hover:scale-110 transition-transform"
+                >
                   {post.avatar}
-                </div>
+                </button>
                 <div className="w-6 h-6 bg-chathy-primary rounded-full flex items-center justify-center -mt-3 border-2 border-black">
                   <span className="text-black text-xs font-bold">+</span>
                 </div>

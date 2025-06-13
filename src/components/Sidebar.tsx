@@ -13,7 +13,14 @@ interface SidebarProps {
 const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true); // Modo escuro como padrão
+
+  // Set dark mode as default on first load
+  useEffect(() => {
+    if (!document.documentElement.classList.contains('dark')) {
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
 
   // Listen for theme changes
   useEffect(() => {
@@ -61,9 +68,8 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
   const getThemeColors = () => {
     if (isDarkMode) {
       return {
-        sidebarBg: 'bg-gray-900/50', // 50% transparência no modo escuro
-        mobileBg: 'bg-gray-900/50',  // 50% transparência no modo escuro
-        borderColor: 'border-gray-700',
+        sidebarBg: 'bg-gray-900/50',
+        mobileBg: 'bg-gray-900/50',
         textPrimary: 'text-white',
         textSecondary: 'text-gray-300',
         iconActive: 'bg-blue-600 text-white',
@@ -74,9 +80,8 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
       };
     } else {
       return {
-        sidebarBg: 'bg-white/50',    // 50% transparência no modo claro
-        mobileBg: 'bg-white/50',     // 50% transparência no modo claro
-        borderColor: 'border-gray-200',
+        sidebarBg: 'bg-white/50',
+        mobileBg: 'bg-white/50',
         textPrimary: 'text-gray-800',
         textSecondary: 'text-gray-600',
         iconActive: 'bg-chathy-primary text-white',
@@ -96,7 +101,7 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className={`hidden md:flex fixed left-4 top-1/2 transform -translate-y-1/2 z-50 w-16 ${theme.sidebarBg} backdrop-blur-md shadow-2xl rounded-2xl flex-col items-center py-4 space-y-4 ${theme.borderColor} border transition-all duration-300`}>
+      <div className={`hidden md:flex fixed left-4 top-1/2 transform -translate-y-1/2 z-50 w-16 ${theme.sidebarBg} backdrop-blur-md shadow-2xl rounded-2xl flex-col items-center py-4 space-y-4 transition-all duration-300`}>
         <div className="flex flex-col items-center space-y-3">
           <img 
             src="/lovable-uploads/0e775d7a-2c40-49d5-83a9-620db5ffef64.png" 
@@ -135,7 +140,7 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
             {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
           </button>
           
-          <div className={`${theme.borderColor} border-t w-8 mx-auto mt-4 pt-4`}>
+          <div className="w-8 mx-auto mt-4 pt-4">
             <button
               onClick={handleLogout}
               className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 text-red-500 ${theme.logoutHover}`}
@@ -147,7 +152,7 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
       </div>
 
       {/* Mobile Header */}
-      <div className={`md:hidden fixed top-0 left-0 right-0 z-50 ${theme.mobileBg} backdrop-blur-md shadow-sm ${theme.borderColor} border-b h-16 transition-all duration-300`}>
+      <div className={`md:hidden fixed top-0 left-0 right-0 z-50 ${theme.mobileBg} backdrop-blur-md shadow-sm h-16 transition-all duration-300`}>
         <div className="flex items-center justify-between px-4 h-full">
           <div className="flex items-center space-x-2">
             <img 

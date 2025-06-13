@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Play, Users, Heart, MessageCircle, Share, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,11 @@ interface Live {
   isLive: boolean;
 }
 
-const LivesView = () => {
+interface LivesViewProps {
+  onViewProfile?: (contact: any) => void;
+}
+
+const LivesView = ({ onViewProfile }: LivesViewProps) => {
   const [lives] = useState<Live[]>([
     {
       id: '1',
@@ -100,6 +103,17 @@ const LivesView = () => {
     }
   }, [currentLiveIndex, lives.length]);
 
+  const handleViewProfile = (live: Live) => {
+    const contact = {
+      id: live.id,
+      name: live.name,
+      avatar: live.avatar,
+      username: live.name.toLowerCase().replace(' ', ''),
+      isOnline: live.isLive
+    };
+    onViewProfile?.(contact);
+  };
+
   const formatNumber = (num: number) => {
     if (num >= 1000) {
       return (num / 1000).toFixed(1) + 'k';
@@ -156,9 +170,12 @@ const LivesView = () => {
             {/* Ações do Lado Direito */}
             <div className="absolute right-4 bottom-32 flex flex-col space-y-6 z-10">
               <div className="flex flex-col items-center">
-                <div className="w-12 h-12 rounded-full bg-chathy-primary flex items-center justify-center text-white font-semibold mb-2">
+                <button
+                  onClick={() => handleViewProfile(live)}
+                  className="w-12 h-12 rounded-full bg-chathy-primary flex items-center justify-center text-white font-semibold mb-2 hover:scale-110 transition-transform"
+                >
                   {live.avatar}
-                </div>
+                </button>
                 <div className="w-6 h-6 bg-chathy-primary rounded-full flex items-center justify-center -mt-3 border-2 border-black">
                   <span className="text-black text-xs font-bold">+</span>
                 </div>
