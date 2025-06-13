@@ -26,11 +26,18 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
     navigate('/login');
   };
 
+  const handleProfileClick = () => {
+    navigate('/profile');
+  };
+
   return (
     <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-50 w-16 bg-white/90 backdrop-blur-md shadow-2xl rounded-2xl flex flex-col items-center py-4 space-y-4 border border-gray-200">
-      <div className="w-10 h-10 bg-chathy-primary rounded-full flex items-center justify-center text-white font-bold text-lg">
+      <button
+        onClick={handleProfileClick}
+        className="w-10 h-10 bg-chathy-primary rounded-full flex items-center justify-center text-white font-bold text-lg hover:scale-110 transition-all duration-300"
+      >
         C
-      </div>
+      </button>
       
       <div className="flex flex-col space-y-3 mt-6">
         {menuItems.map((item) => (
