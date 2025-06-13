@@ -70,7 +70,7 @@ const Index = () => {
               </div>
             )}
             {!isChatListVisible && (
-              <div className="absolute left-4 z-10" style={{ top: '200px' }}>
+              <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-10">
                 <ChatToggleButton 
                   isVisible={isChatListVisible}
                   onToggle={handleToggleChatList}
@@ -106,7 +106,7 @@ const Index = () => {
               </div>
             )}
             {!isChatListVisible && (
-              <div className="absolute left-4 z-10" style={{ top: '200px' }}>
+              <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-10">
                 <ChatToggleButton 
                   isVisible={isChatListVisible}
                   onToggle={handleToggleChatList}
