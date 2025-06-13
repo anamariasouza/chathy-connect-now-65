@@ -77,11 +77,13 @@ const Index = () => {
                 />
               </div>
             )}
-            <ChatWindow 
-              chat={selectedChat} 
-              onToggleChatList={handleToggleChatList}
-              isChatListVisible={isChatListVisible}
-            />
+            <div className={`flex-1 ${isChatListVisible ? 'ml-4' : ''}`}>
+              <ChatWindow 
+                chat={selectedChat} 
+                onToggleChatList={handleToggleChatList}
+                isChatListVisible={isChatListVisible}
+              />
+            </div>
           </div>
         );
       case 'feed':
@@ -111,11 +113,13 @@ const Index = () => {
                 />
               </div>
             )}
-            <ChatWindow 
-              chat={selectedChat} 
-              onToggleChatList={handleToggleChatList}
-              isChatListVisible={isChatListVisible}
-            />
+            <div className={`flex-1 ${isChatListVisible ? 'ml-4' : ''}`}>
+              <ChatWindow 
+                chat={selectedChat} 
+                onToggleChatList={handleToggleChatList}
+                isChatListVisible={isChatListVisible}
+              />
+            </div>
           </div>
         );
     }
