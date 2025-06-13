@@ -22,6 +22,7 @@ interface Chat {
 const Index = () => {
   const [activeTab, setActiveTab] = useState('feed');
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
+  const [lastSelectedChat, setLastSelectedChat] = useState<Chat | null>(null);
   const [isChatListVisible, setIsChatListVisible] = useState(true);
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -32,9 +33,27 @@ const Index = () => {
     }
   }, [isAuthenticated, navigate]);
 
+  // Store the last selected chat when a chat is selected
+  useEffect(() => {
+    if (selectedChat) {
+      setLastSelectedChat(selectedChat);
+    }
+  }, [selectedChat]);
+
+  // When chat list becomes visible and there's a last selected chat, restore it
+  useEffect(() => {
+    if (isChatListVisible && lastSelectedChat && !selectedChat) {
+      setSelectedChat(lastSelectedChat);
+    }
+  }, [isChatListVisible, lastSelectedChat, selectedChat]);
+
   if (!isAuthenticated) {
     return null;
   }
+
+  const handleToggleChatList = () => {
+    setIsChatListVisible(!isChatListVisible);
+  };
 
   const renderMainContent = () => {
     switch (activeTab) {
@@ -46,7 +65,7 @@ const Index = () => {
                 <ChatList onChatSelect={setSelectedChat} selectedChat={selectedChat} />
                 <ChatToggleButton 
                   isVisible={isChatListVisible}
-                  onToggle={() => setIsChatListVisible(!isChatListVisible)}
+                  onToggle={handleToggleChatList}
                 />
               </div>
             )}
@@ -54,13 +73,13 @@ const Index = () => {
               <div className="absolute top-1/2 -translate-y-1/2 left-4 z-10">
                 <ChatToggleButton 
                   isVisible={isChatListVisible}
-                  onToggle={() => setIsChatListVisible(!isChatListVisible)}
+                  onToggle={handleToggleChatList}
                 />
               </div>
             )}
             <ChatWindow 
               chat={selectedChat} 
-              onToggleChatList={() => setIsChatListVisible(!isChatListVisible)}
+              onToggleChatList={handleToggleChatList}
               isChatListVisible={isChatListVisible}
             />
           </div>
@@ -80,7 +99,7 @@ const Index = () => {
                 <ChatList onChatSelect={setSelectedChat} selectedChat={selectedChat} />
                 <ChatToggleButton 
                   isVisible={isChatListVisible}
-                  onToggle={() => setIsChatListVisible(!isChatListVisible)}
+                  onToggle={handleToggleChatList}
                 />
               </div>
             )}
@@ -88,13 +107,13 @@ const Index = () => {
               <div className="absolute top-1/2 -translate-y-1/2 left-4 z-10">
                 <ChatToggleButton 
                   isVisible={isChatListVisible}
-                  onToggle={() => setIsChatListVisible(!isChatListVisible)}
+                  onToggle={handleToggleChatList}
                 />
               </div>
             )}
             <ChatWindow 
               chat={selectedChat} 
-              onToggleChatList={() => setIsChatListVisible(!isChatListVisible)}
+              onToggleChatList={handleToggleChatList}
               isChatListVisible={isChatListVisible}
             />
           </div>

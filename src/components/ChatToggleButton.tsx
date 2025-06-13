@@ -14,12 +14,12 @@ const ChatToggleButton = ({ isVisible, onToggle }: ChatToggleButtonProps) => {
         variant="ghost"
         size="sm"
         onClick={onToggle}
-        className="absolute top-1/2 -translate-y-1/2 -right-4 z-10 bg-white border border-gray-200 shadow-md hover:bg-gray-50 w-8 h-16 p-0 rounded-r-lg"
+        className="absolute top-1/2 -translate-y-1/2 -right-3 z-10 bg-white border border-gray-200 shadow-md hover:bg-gray-50 w-6 h-10 p-0 rounded-r-md"
       >
         {isVisible ? (
-          <ChevronLeft size={16} className="text-gray-600" />
+          <ChevronLeft size={12} className="text-gray-600" />
         ) : (
-          <ChevronRight size={16} className="text-gray-600" />
+          <ChevronRight size={12} className="text-gray-600" />
         )}
       </Button>
     </div>
