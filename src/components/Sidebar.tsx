@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { MessageCircle, Home, Video, LogOut } from 'lucide-react';
+import { MessageCircle, Home, Video, Gamepad2, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -18,6 +18,7 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
     { id: 'chats', icon: MessageCircle, label: 'Conversas' },
     { id: 'feed', icon: Home, label: 'Feed' },
     { id: 'lives', icon: Video, label: 'Lives' },
+    { id: 'games', icon: Gamepad2, label: 'Jogos' },
   ];
 
   const handleLogout = () => {

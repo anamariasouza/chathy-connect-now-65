@@ -77,7 +77,7 @@ const Index = () => {
                 />
               </div>
             )}
-            <div className={`flex-1 ${isChatListVisible ? 'ml-4' : ''}`}>
+            <div className={`flex-1 ${isChatListVisible ? 'ml-4' : 'ml-16'}`}>
               <ChatWindow 
                 chat={selectedChat} 
                 onToggleChatList={handleToggleChatList}
@@ -90,6 +90,9 @@ const Index = () => {
         return <FeedView />;
       case 'lives':
         return <LivesView />;
+      case 'games':
+        navigate('/games');
+        return null;
       case 'profile':
         navigate('/profile');
         return null;
@@ -113,7 +116,7 @@ const Index = () => {
                 />
               </div>
             )}
-            <div className={`flex-1 ${isChatListVisible ? 'ml-4' : ''}`}>
+            <div className={`flex-1 ${isChatListVisible ? 'ml-4' : 'ml-16'}`}>
               <ChatWindow 
                 chat={selectedChat} 
                 onToggleChatList={handleToggleChatList}
