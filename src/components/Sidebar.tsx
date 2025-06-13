@@ -30,6 +30,15 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
     navigate('/profile');
   };
 
+  const handleMenuClick = (itemId: string) => {
+    if (itemId === 'profile') {
+      navigate('/profile');
+    } else {
+      navigate('/');
+      onTabChange(itemId);
+    }
+  };
+
   return (
     <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-50 w-16 bg-white/90 backdrop-blur-md shadow-2xl rounded-2xl flex flex-col items-center py-4 space-y-4 border border-gray-200">
       <button
@@ -43,7 +52,7 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
         {menuItems.map((item) => (
           <button
             key={item.id}
-            onClick={() => onTabChange(item.id)}
+            onClick={() => handleMenuClick(item.id)}
             className={cn(
               "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110",
               activeTab === item.id

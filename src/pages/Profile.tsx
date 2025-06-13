@@ -1,12 +1,12 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Edit2, Save, X, ArrowLeft } from 'lucide-react';
+import { Edit2, Save, X, ArrowLeft, Camera } from 'lucide-react';
 import ProfileMediaGrid from '@/components/ProfileMediaGrid';
 import ProfileFeedView from '@/components/ProfileFeedView';
 import Sidebar from '@/components/Sidebar';
@@ -16,6 +16,8 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [showFeedView, setShowFeedView] = useState(false);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState({
     name: 'Walter Silva',
     email: 'walter2161@gmail.com',
@@ -110,10 +112,16 @@ const Profile = () => {
 
   useEffect(() => {
     const savedProfile = localStorage.getItem('userProfile');
+    const savedProfileImage = localStorage.getItem('userProfileImage');
+    
     if (savedProfile) {
       const parsedProfile = JSON.parse(savedProfile);
       setProfile(parsedProfile);
       setEditProfile(parsedProfile);
+    }
+    
+    if (savedProfileImage) {
+      setProfileImage(savedProfileImage);
     }
   }, []);
 
@@ -130,6 +138,29 @@ const Profile = () => {
   const handleCancel = () => {
     setEditProfile(profile);
     setIsEditing(false);
+  };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imageUrl = e.target?.result as string;
+        setProfileImage(imageUrl);
+        localStorage.setItem('userProfileImage', imageUrl);
+        toast({
+          title: "Foto atualizada!",
+          description: "Sua foto de perfil foi alterada com sucesso.",
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleProfileImageClick = () => {
+    if (isEditing) {
+      fileInputRef.current?.click();
+    }
   };
 
   const handleMediaClick = (index: number) => {
@@ -180,8 +211,33 @@ const Profile = () => {
           <Card className="mx-4 mb-4">
             <CardHeader>
               <div className="flex items-center gap-4">
-                <div className="w-20 h-20 bg-chathy-primary rounded-full flex items-center justify-center text-white font-bold text-2xl">
-                  {profile.name.charAt(0)}
+                <div className="relative">
+                  <div 
+                    className="w-20 h-20 bg-chathy-primary rounded-full flex items-center justify-center text-white font-bold text-2xl overflow-hidden cursor-pointer"
+                    onClick={handleProfileImageClick}
+                  >
+                    {profileImage ? (
+                      <img 
+                        src={profileImage} 
+                        alt="Profile" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      profile.name.charAt(0)
+                    )}
+                  </div>
+                  {isEditing && (
+                    <div className="absolute -bottom-1 -right-1 bg-chathy-primary rounded-full p-1.5">
+                      <Camera size={14} className="text-white" />
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-4 mb-3">
