@@ -77,7 +77,7 @@ const Index = () => {
                 />
               </div>
             )}
-            <div className={`flex-1 ${isChatListVisible ? 'ml-6' : 'ml-16'}`}>
+            <div className={`flex-1 ${isChatListVisible ? 'ml-4' : 'ml-16'}`}>
               <ChatWindow 
                 chat={selectedChat} 
                 onToggleChatList={handleToggleChatList}
@@ -116,7 +116,7 @@ const Index = () => {
                 />
               </div>
             )}
-            <div className={`flex-1 ${isChatListVisible ? 'ml-6' : 'ml-16'}`}>
+            <div className={`flex-1 ${isChatListVisible ? 'ml-4' : 'ml-16'}`}>
               <ChatWindow 
                 chat={selectedChat} 
                 onToggleChatList={handleToggleChatList}
@@ -129,9 +129,9 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-100 relative pt-16 md:pt-0">
+    <div className="min-h-screen flex bg-gray-100 relative">
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
-      <div className="flex-1 md:ml-20">
+      <div className="flex-1 ml-20">
         {renderMainContent()}
       </div>
     </div>
