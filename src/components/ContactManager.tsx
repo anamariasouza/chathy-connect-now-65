@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Plus, MessageSquare, Eye } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -55,14 +55,12 @@ const ContactManager = ({ onContactSelect, onViewProfile, onStartChat }: Contact
   const handleContactClick = (contact: Contact) => {
     setSelectedContact(contact);
     onContactSelect?.(contact);
-  };
-
-  const handleViewProfile = (contact: Contact) => {
-    onViewProfile?.(contact);
-  };
-
-  const handleStartChat = (contact: Contact) => {
     onStartChat?.(contact);
+  };
+
+  const handleAvatarClick = (contact: Contact, e: React.MouseEvent) => {
+    e.stopPropagation();
+    onViewProfile?.(contact);
   };
 
   const handleAddContact = () => {
@@ -96,47 +94,23 @@ const ContactManager = ({ onContactSelect, onViewProfile, onStartChat }: Contact
             }`}
             onClick={() => handleContactClick(contact)}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="relative">
-                  <Avatar className="h-12 w-12">
-                    <AvatarFallback className="bg-chathy-primary text-white">
-                      {contact.avatar}
-                    </AvatarFallback>
-                  </Avatar>
-                  {contact.isOnline && (
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
-                  )}
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-900 dark:text-white">{contact.name}</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">@{contact.username}</p>
-                </div>
+            <div className="flex items-center space-x-3">
+              <div 
+                className="relative cursor-pointer"
+                onClick={(e) => handleAvatarClick(contact, e)}
+              >
+                <Avatar className="h-12 w-12">
+                  <AvatarFallback className="bg-chathy-primary text-white">
+                    {contact.avatar}
+                  </AvatarFallback>
+                </Avatar>
+                {contact.isOnline && (
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
+                )}
               </div>
-
-              <div className="flex items-center space-x-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleViewProfile(contact);
-                  }}
-                  className="p-2"
-                >
-                  <Eye size={16} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleStartChat(contact);
-                  }}
-                  className="p-2 text-chathy-primary hover:text-chathy-primary/80"
-                >
-                  <MessageSquare size={16} />
-                </Button>
+              <div>
+                <h3 className="font-medium text-gray-900 dark:text-white">{contact.name}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">@{contact.username}</p>
               </div>
             </div>
           </div>

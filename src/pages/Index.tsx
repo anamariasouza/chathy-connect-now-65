@@ -7,6 +7,7 @@ import FeedView from '@/components/FeedView';
 import LivesView from '@/components/LivesView';
 import ContactManager from '@/components/ContactManager';
 import { useAuth } from '@/hooks/useAuth';
+import { contactProfiles } from '@/data/contactProfiles';
 
 interface Chat {
   id: string;
@@ -86,7 +87,11 @@ const Index = () => {
   };
 
   const handleViewContactProfile = (contact: Contact) => {
-    navigate('/profile', { state: { contact } });
+    // Encontrar o perfil completo do contato
+    const fullProfile = contactProfiles.find(profile => profile.id === contact.id);
+    if (fullProfile) {
+      navigate('/profile', { state: { contact: fullProfile } });
+    }
   };
 
   const handleStartChat = (contact: Contact) => {

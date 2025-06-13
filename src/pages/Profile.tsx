@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,16 +9,21 @@ import { Edit2, Save, X, ArrowLeft, Camera } from 'lucide-react';
 import ProfileMediaGrid from '@/components/ProfileMediaGrid';
 import ProfileFeedView from '@/components/ProfileFeedView';
 import Sidebar from '@/components/Sidebar';
+import { ContactProfile } from '@/data/contactProfiles';
 
 const Profile = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isEditing, setIsEditing] = useState(false);
   const [showFeedView, setShowFeedView] = useState(false);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isOwnProfile, setIsOwnProfile] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [profile, setProfile] = useState({
+  
+  // Perfil padrão do usuário
+  const defaultProfile = {
     name: 'Walter Silva',
     email: 'walter2161@gmail.com',
     phone: '+55 11 99999-9999',
@@ -28,9 +33,37 @@ const Profile = () => {
     followers: 1250,
     following: 345,
     posts: 12
-  });
-  const [editProfile, setEditProfile] = useState(profile);
+  };
+
+  const [profile, setProfile] = useState(defaultProfile);
+  const [editProfile, setEditProfile] = useState(defaultProfile);
   const { toast } = useToast();
+
+  // Verificar se é um perfil de contato externo
+  useEffect(() => {
+    const contactData = location.state?.contact as ContactProfile;
+    if (contactData) {
+      setProfile(contactData);
+      setEditProfile(contactData);
+      setIsOwnProfile(false);
+      setIsEditing(false);
+    } else {
+      setIsOwnProfile(true);
+      // Carregar dados salvos do próprio usuário
+      const savedProfile = localStorage.getItem('userProfile');
+      const savedProfileImage = localStorage.getItem('userProfileImage');
+      
+      if (savedProfile) {
+        const parsedProfile = JSON.parse(savedProfile);
+        setProfile(parsedProfile);
+        setEditProfile(parsedProfile);
+      }
+      
+      if (savedProfileImage) {
+        setProfileImage(savedProfileImage);
+      }
+    }
+  }, [location.state]);
 
   // Listen for theme changes
   useEffect(() => {
@@ -127,21 +160,6 @@ const Profile = () => {
     }
   ];
 
-  useEffect(() => {
-    const savedProfile = localStorage.getItem('userProfile');
-    const savedProfileImage = localStorage.getItem('userProfileImage');
-    
-    if (savedProfile) {
-      const parsedProfile = JSON.parse(savedProfile);
-      setProfile(parsedProfile);
-      setEditProfile(parsedProfile);
-    }
-    
-    if (savedProfileImage) {
-      setProfileImage(savedProfileImage);
-    }
-  }, []);
-
   const getThemeColors = () => {
     if (isDarkMode) {
       return {
@@ -165,13 +183,15 @@ const Profile = () => {
   const theme = getThemeColors();
 
   const handleSave = () => {
-    setProfile(editProfile);
-    localStorage.setItem('userProfile', JSON.stringify(editProfile));
-    setIsEditing(false);
-    toast({
-      title: "Perfil atualizado!",
-      description: "Suas informações foram salvas com sucesso.",
-    });
+    if (isOwnProfile) {
+      setProfile(editProfile);
+      localStorage.setItem('userProfile', JSON.stringify(editProfile));
+      setIsEditing(false);
+      toast({
+        title: "Perfil atualizado!",
+        description: "Suas informações foram salvas com sucesso.",
+      });
+    }
   };
 
   const handleCancel = () => {
@@ -180,24 +200,26 @@ const Profile = () => {
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const imageUrl = e.target?.result as string;
-        setProfileImage(imageUrl);
-        localStorage.setItem('userProfileImage', imageUrl);
-        toast({
-          title: "Foto atualizada!",
-          description: "Sua foto de perfil foi alterada com sucesso.",
-        });
-      };
-      reader.readAsDataURL(file);
+    if (isOwnProfile) {
+      const file = event.target.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const imageUrl = e.target?.result as string;
+          setProfileImage(imageUrl);
+          localStorage.setItem('userProfileImage', imageUrl);
+          toast({
+            title: "Foto atualizada!",
+            description: "Sua foto de perfil foi alterada com sucesso.",
+          });
+        };
+        reader.readAsDataURL(file);
+      }
     }
   };
 
   const handleProfileImageClick = () => {
-    if (isEditing) {
+    if (isEditing && isOwnProfile) {
       fileInputRef.current?.click();
     }
   };
@@ -255,7 +277,7 @@ const Profile = () => {
                     className="w-20 h-20 bg-chathy-primary rounded-full flex items-center justify-center text-white font-bold text-2xl overflow-hidden cursor-pointer"
                     onClick={handleProfileImageClick}
                   >
-                    {profileImage ? (
+                    {(profileImage && isOwnProfile) ? (
                       <img 
                         src={profileImage} 
                         alt="Profile" 
@@ -265,7 +287,7 @@ const Profile = () => {
                       profile.name.charAt(0)
                     )}
                   </div>
-                  {isEditing && (
+                  {isEditing && isOwnProfile && (
                     <div className="absolute -bottom-1 -right-1 bg-chathy-primary rounded-full p-1.5">
                       <Camera size={14} className="text-white" />
                     </div>
@@ -281,12 +303,12 @@ const Profile = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-4 mb-3">
                     <h2 className={`text-lg font-bold ${theme.textPrimary}`}>{profile.name}</h2>
-                    {!isEditing ? (
+                    {!isEditing && isOwnProfile ? (
                       <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
                         <Edit2 size={16} className="mr-2" />
                         Editar
                       </Button>
-                    ) : (
+                    ) : isEditing && isOwnProfile ? (
                       <div className="space-x-2">
                         <Button onClick={handleSave} size="sm" className="bg-chathy-primary hover:bg-chathy-primary/90">
                           <Save size={16} className="mr-2" />
@@ -297,7 +319,7 @@ const Profile = () => {
                           Cancelar
                         </Button>
                       </div>
-                    )}
+                    ) : null}
                   </div>
                   
                   {/* Estatísticas */}
@@ -322,8 +344,8 @@ const Profile = () => {
             </CardHeader>
           </Card>
 
-          {/* Formulário de Edição */}
-          {isEditing && (
+          {/* Formulário de Edição - apenas para o próprio perfil */}
+          {isEditing && isOwnProfile && (
             <Card className={`mx-4 mb-4 ${theme.cardBg} ${theme.borderColor} border transition-colors duration-300`}>
               <CardContent className="pt-4">
                 <div className="space-y-4">
