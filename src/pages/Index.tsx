@@ -6,7 +6,6 @@ import ChatList from '@/components/ChatList';
 import ChatWindow from '@/components/ChatWindow';
 import FeedView from '@/components/FeedView';
 import LivesView from '@/components/LivesView';
-import Profile from './Profile';
 import { useAuth } from '@/hooks/useAuth';
 
 interface Chat {
@@ -49,11 +48,9 @@ const Index = () => {
       case 'lives':
         return <LivesView />;
       case 'profile':
-        return (
-          <div className="ml-20">
-            <Profile />
-          </div>
-        );
+        // Redireciona para a rota /profile em vez de renderizar aqui
+        navigate('/profile');
+        return null;
       default:
         return (
           <div className="flex flex-1 ml-20">
