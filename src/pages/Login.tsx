@@ -1,11 +1,12 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -13,6 +14,13 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,11 +32,14 @@ const Login = () => {
     if (email === 'walter2161@gmail.com' && password === '976431') {
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('userEmail', email);
+      
       toast({
         title: "Login realizado com sucesso!",
         description: "Bem-vindo de volta!",
       });
-      navigate('/');
+      
+      // Força um reload do estado de autenticação
+      window.location.reload();
     } else {
       toast({
         title: "Erro no login",
