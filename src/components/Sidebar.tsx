@@ -40,7 +40,7 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
         <img 
           src="/lovable-uploads/0e775d7a-2c40-49d5-83a9-620db5ffef64.png" 
           alt="Chathy Logo" 
-          className="w-8 h-8"
+          className="w-10 h-10"
         />
         
         <button
