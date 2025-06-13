@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Plus, User, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, MessageSquare, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -15,9 +15,10 @@ interface Contact {
 interface ContactManagerProps {
   onContactSelect?: (contact: Contact) => void;
   onViewProfile?: (contact: Contact) => void;
+  onStartChat?: (contact: Contact) => void;
 }
 
-const ContactManager = ({ onContactSelect, onViewProfile }: ContactManagerProps) => {
+const ContactManager = ({ onContactSelect, onViewProfile, onStartChat }: ContactManagerProps) => {
   const [contacts] = useState<Contact[]>([
     {
       id: '1',
@@ -50,7 +51,6 @@ const ContactManager = ({ onContactSelect, onViewProfile }: ContactManagerProps)
   ]);
 
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
-  const [showActions, setShowActions] = useState<string | null>(null);
 
   const handleContactClick = (contact: Contact) => {
     setSelectedContact(contact);
@@ -61,12 +61,8 @@ const ContactManager = ({ onContactSelect, onViewProfile }: ContactManagerProps)
     onViewProfile?.(contact);
   };
 
-  const handleEditContact = (contact: Contact) => {
-    console.log('Editar contato:', contact.name);
-  };
-
-  const handleDeleteContact = (contact: Contact) => {
-    console.log('Deletar contato:', contact.name);
+  const handleStartChat = (contact: Contact) => {
+    onStartChat?.(contact);
   };
 
   const handleAddContact = () => {
@@ -135,22 +131,11 @@ const ContactManager = ({ onContactSelect, onViewProfile }: ContactManagerProps)
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleEditContact(contact);
+                    handleStartChat(contact);
                   }}
-                  className="p-2"
+                  className="p-2 text-chathy-primary hover:text-chathy-primary/80"
                 >
-                  <Edit size={16} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteContact(contact);
-                  }}
-                  className="p-2 text-red-500 hover:text-red-700"
-                >
-                  <Trash2 size={16} />
+                  <MessageSquare size={16} />
                 </Button>
               </div>
             </div>

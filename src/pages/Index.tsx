@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
@@ -90,6 +89,23 @@ const Index = () => {
     navigate('/profile', { state: { contact } });
   };
 
+  const handleStartChat = (contact: Contact) => {
+    // Criar um chat com este contato
+    const newChat: Chat = {
+      id: contact.id,
+      name: contact.name,
+      lastMessage: '',
+      time: 'agora',
+      unread: 0,
+      avatar: contact.avatar,
+      isGroup: false
+    };
+    setSelectedChat(newChat);
+    if (window.innerWidth < 768) {
+      setShowMobileChatWindow(true);
+    }
+  };
+
   const getThemeColors = () => {
     if (isDarkMode) {
       return {
@@ -122,6 +138,7 @@ const Index = () => {
                 <ContactManager 
                   onContactSelect={handleContactSelect}
                   onViewProfile={handleViewContactProfile}
+                  onStartChat={handleStartChat}
                 />
               </div>
               
@@ -141,6 +158,7 @@ const Index = () => {
                 <ContactManager 
                   onContactSelect={handleContactSelect}
                   onViewProfile={handleViewContactProfile}
+                  onStartChat={handleStartChat}
                 />
               </div>
 
