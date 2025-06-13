@@ -1,11 +1,13 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
 import ChatList from '@/components/ChatList';
 import ChatWindow from '@/components/ChatWindow';
 import FeedView from '@/components/FeedView';
-import CallsView from '@/components/CallsView';
 import LivesView from '@/components/LivesView';
+import Profile from './Profile';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Chat {
   id: string;
@@ -20,6 +22,18 @@ interface Chat {
 const Index = () => {
   const [activeTab, setActiveTab] = useState('feed');
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const renderMainContent = () => {
     switch (activeTab) {
@@ -32,14 +46,14 @@ const Index = () => {
         );
       case 'feed':
         return <FeedView />;
-      case 'calls':
-        return (
-          <div className="ml-20">
-            <CallsView />
-          </div>
-        );
       case 'lives':
         return <LivesView />;
+      case 'profile':
+        return (
+          <div className="ml-20">
+            <Profile />
+          </div>
+        );
       default:
         return (
           <div className="flex flex-1 ml-20">
