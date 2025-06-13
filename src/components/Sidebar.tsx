@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { MessageCircle, Home, Video, User, LogOut } from 'lucide-react';
+import { MessageCircle, Home, Video, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -18,7 +18,6 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
     { id: 'chats', icon: MessageCircle, label: 'Conversas' },
     { id: 'feed', icon: Home, label: 'Feed' },
     { id: 'lives', icon: Video, label: 'Lives' },
-    { id: 'profile', icon: User, label: 'Perfil' },
   ];
 
   const handleLogout = () => {
@@ -31,12 +30,8 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
   };
 
   const handleMenuClick = (itemId: string) => {
-    if (itemId === 'profile') {
-      navigate('/profile');
-    } else {
-      navigate('/');
-      onTabChange(itemId);
-    }
+    navigate('/');
+    onTabChange(itemId);
   };
 
   return (
