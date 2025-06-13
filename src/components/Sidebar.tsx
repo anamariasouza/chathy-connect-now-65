@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { MessageCircle, Home, Video, Gamepad2, LogOut } from 'lucide-react';
+import { MessageCircle, Home, Video, Gamepad2, LogOut, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -90,49 +90,48 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
       {/* Mobile Sidebar */}
       <div className="md:hidden">
         {/* Minimized Mobile Sidebar */}
-        <div className="fixed left-2 top-4 z-50 w-14 h-32 bg-white/90 backdrop-blur-md shadow-2xl rounded-2xl flex flex-col items-center py-3 border border-gray-200">
-          <button
-            onClick={toggleMobileMenu}
-            className="w-10 h-10 flex items-center justify-center"
-          >
-            <img 
-              src="/lovable-uploads/0e775d7a-2c40-49d5-83a9-620db5ffef64.png" 
-              alt="Chathy Logo" 
-              className="w-8 h-8"
-            />
-          </button>
-          
-          <button
-            onClick={handleProfileClick}
-            className="w-8 h-8 bg-chathy-primary rounded-full flex items-center justify-center text-white font-bold text-sm mt-2"
-          >
-            C
-          </button>
-        </div>
-
-        {/* Expanded Mobile Menu */}
-        {isMobileMenuOpen && (
-          <>
-            {/* Backdrop */}
-            <div 
-              className="fixed inset-0 bg-black/20 z-40"
-              onClick={toggleMobileMenu}
-            />
-            
-            {/* Expanded Menu */}
-            <div className="fixed left-2 top-4 z-50 w-48 bg-white/50 backdrop-blur-md shadow-2xl rounded-2xl border border-gray-200 p-4">
-              <div className="flex items-center space-x-3 mb-6">
-                <button
-                  onClick={toggleMobileMenu}
-                  className="w-10 h-10 flex items-center justify-center"
-                >
+        <div className={`fixed left-2 top-4 z-50 bg-white/90 backdrop-blur-md shadow-2xl rounded-2xl border border-gray-200 transition-all duration-300 ${
+          isMobileMenuOpen ? 'w-48 h-auto' : 'w-14 h-20'
+        }`}>
+          {!isMobileMenuOpen ? (
+            /* Minimized state */
+            <div className="flex flex-col items-center py-3 space-y-2">
+              <button
+                onClick={toggleMobileMenu}
+                className="w-10 h-10 flex items-center justify-center"
+              >
+                <img 
+                  src="/lovable-uploads/0e775d7a-2c40-49d5-83a9-620db5ffef64.png" 
+                  alt="Chathy Logo" 
+                  className="w-8 h-8"
+                />
+              </button>
+              
+              <button
+                onClick={toggleMobileMenu}
+                className="w-8 h-6 flex items-center justify-center text-gray-600 hover:text-chathy-primary transition-colors"
+              >
+                <ChevronDown size={16} />
+              </button>
+            </div>
+          ) : (
+            /* Expanded state */
+            <div className="bg-white/50 backdrop-blur-md p-4">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-3">
                   <img 
                     src="/lovable-uploads/0e775d7a-2c40-49d5-83a9-620db5ffef64.png" 
                     alt="Chathy Logo" 
                     className="w-8 h-8"
                   />
+                  <span className="text-lg font-semibold text-gray-800">Chathy</span>
+                </div>
+                <button
+                  onClick={toggleMobileMenu}
+                  className="w-6 h-6 flex items-center justify-center text-gray-600 hover:text-chathy-primary transition-colors"
+                >
+                  <ChevronUp size={16} />
                 </button>
-                <span className="text-lg font-semibold text-gray-800">Chathy</span>
               </div>
               
               <div className="space-y-2">
@@ -173,7 +172,15 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
                 </div>
               </div>
             </div>
-          </>
+          )}
+        </div>
+
+        {/* Mobile Menu Backdrop */}
+        {isMobileMenuOpen && (
+          <div 
+            className="fixed inset-0 bg-black/20 z-40"
+            onClick={toggleMobileMenu}
+          />
         )}
       </div>
     </>
