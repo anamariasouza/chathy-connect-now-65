@@ -16,11 +16,11 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, checkAuth } = useAuth();
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/');
+      navigate('/', { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -35,7 +35,7 @@ const Login = () => {
         // Ainda dentro das 24h, manter logado
         if (!isAuthenticated) {
           localStorage.setItem('isAuthenticated', 'true');
-          window.location.reload();
+          checkAuth();
         }
       } else {
         // Passou das 24h, limpar dados
@@ -44,7 +44,7 @@ const Login = () => {
         localStorage.removeItem('loginTime');
       }
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, checkAuth]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,8 +99,9 @@ const Login = () => {
           description: "Bem-vindo de volta!",
         });
         
-        // Força um reload do estado de autenticação
-        window.location.reload();
+        // Usar checkAuth ao invés de reload forçado
+        checkAuth();
+        navigate('/', { replace: true });
       } else {
         // Mostrar erro específico baseado no que está errado
         if (fullEmail !== 'walter2161@gmail.com' && password !== '976431') {
