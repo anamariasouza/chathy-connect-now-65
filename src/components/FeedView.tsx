@@ -30,7 +30,7 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
       user: 'Maria Silva',
       avatar: 'M',
       description: 'Cozinhando um delicioso bolo de chocolate! 🍰✨ #culinaria #bolo',
-      youtubeVideoId: 'dQw4w9WgXcQ',
+      youtubeVideoId: 'rRFVWL82pNk',
       likes: 234,
       comments: 45,
       shares: 12,
@@ -58,7 +58,7 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
       user: 'Ana Costa',
       avatar: 'A',
       description: 'Tutorial de maquiagem para o dia a dia 💄✨',
-      youtubeVideoId: 'jNQXAC9IVRw',
+      youtubeVideoId: '_83ImgNgzvc',
       likes: 890,
       comments: 156,
       shares: 67,
@@ -70,12 +70,36 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
       user: 'João Silva',
       avatar: 'J',
       description: 'Treino pesado na academia hoje! 💪🔥',
-      youtubeVideoId: 'ScMzIvxBSi4',
+      youtubeVideoId: 'bBsErSe1VHY',
       likes: 445,
       comments: 78,
       shares: 23,
       isLiked: true,
       timestamp: 'há 8 horas'
+    },
+    {
+      id: '5',
+      user: 'Carlos Lima',
+      avatar: 'C',
+      description: 'Dicas de programação para iniciantes! 💻✨',
+      youtubeVideoId: 'hQA-mQyWUQU',
+      likes: 678,
+      comments: 124,
+      shares: 45,
+      isLiked: false,
+      timestamp: 'há 12 horas'
+    },
+    {
+      id: '6',
+      user: 'Fernanda Costa',
+      avatar: 'F',
+      description: 'Arte e criatividade no dia a dia! 🎨🌟',
+      youtubeVideoId: 'omcoa2GUc2U',
+      likes: 892,
+      comments: 167,
+      shares: 78,
+      isLiked: true,
+      timestamp: 'há 1 dia'
     }
   ]);
 
@@ -166,7 +190,7 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
         user: 'Você',
         avatar: 'V',
         description: newVideoDescription || 'Vídeo enviado da minha máquina!',
-        youtubeVideoId: 'dQw4w9WgXcQ', // Placeholder para vídeo local
+        youtubeVideoId: 'rRFVWL82pNk', // Placeholder para vídeo local
         likes: 0,
         comments: 0,
         shares: 0,

@@ -29,7 +29,7 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
       duration: '15:30',
       avatar: 'M',
       isLive: true,
-      youtubeVideoId: 'dQw4w9WgXcQ'
+      youtubeVideoId: 'z7SiAaN4ogw'
     },
     {
       id: '2',
@@ -39,7 +39,7 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
       duration: '8:45',
       avatar: 'P',
       isLive: true,
-      youtubeVideoId: 'jNQXAC9IVRw'
+      youtubeVideoId: '2BLqhS59Elc'
     },
     {
       id: '3',
@@ -49,7 +49,7 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
       duration: '45:20',
       avatar: 'A',
       isLive: false,
-      youtubeVideoId: 'ScMzIvxBSi4'
+      youtubeVideoId: 'HZaBTl3c5H0'
     },
     {
       id: '4',
@@ -59,7 +59,7 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
       duration: '22:15',
       avatar: 'J',
       isLive: true,
-      youtubeVideoId: 'kJQP7kiw5Fk'
+      youtubeVideoId: 'myS8EusS18Q'
     }
   ]);
 
