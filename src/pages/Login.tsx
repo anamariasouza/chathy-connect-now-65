@@ -7,10 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
+  const [emailPrefix, setEmailPrefix] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -51,10 +53,12 @@ const Login = () => {
     // Simular delay de login
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    if (email === 'walter2161@gmail.com' && password === '976431') {
+    const fullEmail = emailPrefix + '@gmail.com';
+    
+    if (fullEmail === 'walter2161@gmail.com' && password === '976431') {
       const currentTime = new Date().getTime();
       localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('userEmail', email);
+      localStorage.setItem('userEmail', fullEmail);
       localStorage.setItem('loginTime', currentTime.toString());
       
       toast({
@@ -95,27 +99,41 @@ const Login = () => {
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-gray-300">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="walter2161@gmail.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-              />
+              <div className="relative">
+                <Input
+                  id="email"
+                  type="text"
+                  placeholder="seuemail"
+                  value={emailPrefix}
+                  onChange={(e) => setEmailPrefix(e.target.value)}
+                  required
+                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 pr-20"
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <span className="text-gray-400">@gmail.com</span>
+                </div>
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="password" className="text-gray-300">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Digite sua senha"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Digite sua senha"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-white"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
             <Button type="submit" className="w-full bg-chathy-primary hover:bg-chathy-primary/90" disabled={isLoading}>
               {isLoading ? 'Entrando...' : 'Entrar'}
