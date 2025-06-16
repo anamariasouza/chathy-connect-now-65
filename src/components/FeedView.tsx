@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Heart, MessageCircle, Share, MoreVertical, Upload, Link } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -112,9 +111,11 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [userInteracted, setUserInteracted] = useState(false);
   const [youtubeApiReady, setYoutubeApiReady] = useState(false);
+  const [playedVideos, setPlayedVideos] = useState<Set<string>>(new Set());
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const iframeRefs = useRef<Map<string, HTMLIFrameElement>>(new Map());
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   // Inicializar API do YouTube
   useEffect(() => {
@@ -135,15 +136,17 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
 
     // Detectar primeira interação do usuário
     const handleFirstInteraction = () => {
-      setUserInteracted(true);
-      console.log('Primeira interação do usuário detectada');
-      // Tentar reproduzir vídeos após interação
-      setTimeout(() => {
-        tryPlayCurrentVideo();
-      }, 500);
+      if (!userInteracted) {
+        setUserInteracted(true);
+        console.log('Primeira interação do usuário detectada');
+        // Tentar reproduzir todos os vídeos visíveis após interação
+        setTimeout(() => {
+          tryPlayAllVisibleVideos();
+        }, 500);
+      }
     };
 
-    const events = ['click', 'touch', 'touchstart', 'scroll'];
+    const events = ['click', 'touch', 'touchstart', 'scroll', 'keydown'];
     events.forEach(event => {
       document.addEventListener(event, handleFirstInteraction, { once: true, passive: true });
     });
@@ -155,19 +158,75 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
     };
   }, []);
 
+  // Configurar Intersection Observer para detectar vídeos visíveis
+  useEffect(() => {
+    if (!observerRef.current) {
+      observerRef.current = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            const postId = entry.target.getAttribute('data-post-id');
+            if (entry.isIntersecting && postId && userInteracted) {
+              const post = posts.find(p => p.id === postId);
+              if (post?.youtubeVideoId && !playedVideos.has(postId)) {
+                console.log('Vídeo entrou na viewport:', postId);
+                setTimeout(() => {
+                  tryPlayVideo(postId);
+                }, 300);
+              }
+            }
+          });
+        },
+        {
+          threshold: 0.5, // 50% do vídeo precisa estar visível
+          rootMargin: '0px'
+        }
+      );
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [posts, userInteracted, playedVideos]);
+
+  const tryPlayVideo = (postId: string) => {
+    const iframe = iframeRefs.current.get(postId);
+    if (iframe && userInteracted) {
+      try {
+        // Múltiplas tentativas de comando de play
+        const commands = [
+          '{"event":"command","func":"playVideo","args":""}',
+          '{"event":"command","func":"unMute","args":""}',
+          '{"event":"command","func":"setVolume","args":"50"}'
+        ];
+        
+        commands.forEach((command, index) => {
+          setTimeout(() => {
+            iframe.contentWindow?.postMessage(command, '*');
+          }, index * 200);
+        });
+        
+        console.log('Comandos de play enviados para:', postId);
+        setPlayedVideos(prev => new Set(prev).add(postId));
+      } catch (error) {
+        console.log('Erro ao enviar comando de play:', error);
+      }
+    }
+  };
+
+  const tryPlayAllVisibleVideos = () => {
+    posts.forEach(post => {
+      if (post.youtubeVideoId && !playedVideos.has(post.id)) {
+        tryPlayVideo(post.id);
+      }
+    });
+  };
+
   const tryPlayCurrentVideo = () => {
     const currentPost = posts[currentPostIndex];
     if (currentPost?.youtubeVideoId && userInteracted) {
-      const iframe = iframeRefs.current.get(currentPost.id);
-      if (iframe) {
-        try {
-          // Tentar enviar comando de play via postMessage
-          iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-          console.log('Comando de play enviado para:', currentPost.youtubeVideoId);
-        } catch (error) {
-          console.log('Erro ao enviar comando de play:', error);
-        }
-      }
+      tryPlayVideo(currentPost.id);
     }
   };
 
@@ -299,10 +358,10 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
     iframeRefs.current.set(postId, iframe);
     console.log('Iframe carregado para post:', postId);
     
-    // Tentar reproduzir se for o vídeo atual e o usuário já interagiu
-    if (posts[currentPostIndex]?.id === postId && userInteracted) {
+    // Tentar reproduzir imediatamente se o usuário já interagiu
+    if (userInteracted && !playedVideos.has(postId)) {
       setTimeout(() => {
-        tryPlayCurrentVideo();
+        tryPlayVideo(postId);
       }, 1000);
     }
   };
@@ -377,6 +436,12 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
           <div 
             key={post.id} 
             className="h-screen w-full snap-start relative flex items-center justify-center"
+            data-post-id={post.id}
+            ref={(el) => {
+              if (el && observerRef.current) {
+                observerRef.current.observe(el);
+              }
+            }}
           >
             {/* Conteúdo de Vídeo/Imagem */}
             <div className="absolute inset-0 flex items-center justify-center">
@@ -386,25 +451,32 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
                     ref={(iframe) => iframe && handleIframeLoad(post.id, iframe)}
                     width="100%"
                     height="100%"
-                    src={`https://www.youtube.com/embed/${post.youtubeVideoId}?autoplay=1&mute=1&loop=1&playlist=${post.youtubeVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&start=0&end=0&cc_load_policy=0&disablekb=1&fs=0&iv_load_policy=3&autohide=1&color=white&theme=dark&vq=hd720`}
+                    src={`https://www.youtube.com/embed/${post.youtubeVideoId}?autoplay=1&mute=0&loop=1&playlist=${post.youtubeVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&start=0&end=0&cc_load_policy=0&disablekb=1&fs=0&iv_load_policy=3&autohide=1&color=white&theme=dark&vq=hd720`}
                     title={`Vídeo de ${post.user}`}
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                     allowFullScreen
                     className="rounded-lg"
-                    style={{ pointerEvents: 'none' }}
                   />
                   
                   {/* Overlay transparente para capturar interações */}
                   <div 
                     className="absolute inset-0 bg-transparent cursor-pointer"
                     onClick={() => {
-                      setUserInteracted(true);
-                      setTimeout(() => tryPlayCurrentVideo(), 100);
+                      if (!userInteracted) {
+                        setUserInteracted(true);
+                        setTimeout(() => tryPlayAllVisibleVideos(), 100);
+                      } else {
+                        tryPlayVideo(post.id);
+                      }
                     }}
                     onTouchStart={() => {
-                      setUserInteracted(true);
-                      setTimeout(() => tryPlayCurrentVideo(), 100);
+                      if (!userInteracted) {
+                        setUserInteracted(true);
+                        setTimeout(() => tryPlayAllVisibleVideos(), 100);
+                      } else {
+                        tryPlayVideo(post.id);
+                      }
                     }}
                   />
                 </div>
