@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Users, Heart, MessageCircle, Share, MoreVertical, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,9 +17,10 @@ interface Live {
 
 interface LivesViewProps {
   onViewProfile?: (contact: any) => void;
+  audioEnabled?: boolean;
 }
 
-const LivesView = ({ onViewProfile }: LivesViewProps) => {
+const LivesView = ({ onViewProfile, audioEnabled = true }: LivesViewProps) => {
   const [lives, setLives] = useState<Live[]>([
     {
       id: '1',
@@ -70,12 +70,13 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [userInteracted, setUserInteracted] = useState(false);
   const [youtubeApiReady, setYoutubeApiReady] = useState(false);
+  const [currentVisibleLive, setCurrentVisibleLive] = useState<string>('');
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRefs = useRef<Map<string, HTMLIFrameElement>>(new Map());
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   // Inicializar API do YouTube e detectar interação
   useEffect(() => {
-    // Carregar API do YouTube
     if (!window.YT) {
       const tag = document.createElement('script');
       tag.src = 'https://www.youtube.com/iframe_api';
@@ -90,14 +91,11 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
       setYoutubeApiReady(true);
     }
 
-    // Detectar primeira interação do usuário
     const handleFirstInteraction = () => {
-      setUserInteracted(true);
-      console.log('Primeira interação do usuário detectada nas Lives');
-      // Tentar reproduzir vídeos após interação
-      setTimeout(() => {
-        tryPlayCurrentLive();
-      }, 500);
+      if (!userInteracted) {
+        setUserInteracted(true);
+        console.log('Primeira interação do usuário detectada nas Lives');
+      }
     };
 
     const events = ['click', 'touch', 'touchstart', 'scroll'];
@@ -111,6 +109,133 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
       });
     };
   }, []);
+
+  // Configurar Intersection Observer para controle de reprodução
+  useEffect(() => {
+    if (!observerRef.current) {
+      observerRef.current = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            const liveId = entry.target.getAttribute('data-live-id');
+            if (liveId) {
+              const live = lives.find(l => l.id === liveId);
+              if (live?.youtubeVideoId) {
+                if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+                  // Live entrou na tela - pausar a anterior e reproduzir esta
+                  if (currentVisibleLive && currentVisibleLive !== liveId) {
+                    pauseLive(currentVisibleLive);
+                  }
+                  setCurrentVisibleLive(liveId);
+                  if (userInteracted) {
+                    playLiveFromStart(liveId);
+                  }
+                } else if (!entry.isIntersecting && currentVisibleLive === liveId) {
+                  // Live saiu da tela - pausar
+                  pauseLive(liveId);
+                  setCurrentVisibleLive('');
+                }
+              }
+            }
+          });
+        },
+        {
+          threshold: [0, 0.5, 1],
+          rootMargin: '0px'
+        }
+      );
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [lives, userInteracted, currentVisibleLive]);
+
+  const playLiveFromStart = (liveId: string) => {
+    const iframe = iframeRefs.current.get(liveId);
+    if (iframe && userInteracted) {
+      try {
+        const commands = [
+          '{"event":"command","func":"seekTo","args":[0,true]}',
+          '{"event":"command","func":"playVideo","args":""}',
+        ];
+        
+        if (audioEnabled) {
+          commands.push('{"event":"command","func":"unMute","args":""}');
+          commands.push('{"event":"command","func":"setVolume","args":"50"}');
+        } else {
+          commands.push('{"event":"command","func":"mute","args":""}');
+        }
+        
+        commands.forEach((command, index) => {
+          setTimeout(() => {
+            iframe.contentWindow?.postMessage(command, '*');
+          }, index * 200);
+        });
+        
+        console.log('Live reproduzindo do início:', liveId);
+      } catch (error) {
+        console.log('Erro ao reproduzir live:', error);
+      }
+    }
+  };
+
+  const pauseLive = (liveId: string) => {
+    const iframe = iframeRefs.current.get(liveId);
+    if (iframe) {
+      try {
+        iframe.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+        console.log('Live pausada:', liveId);
+      } catch (error) {
+        console.log('Erro ao pausar live:', error);
+      }
+    }
+  };
+
+  // Efeito para controlar áudio quando a preferência muda
+  useEffect(() => {
+    if (currentVisibleLive) {
+      const iframe = iframeRefs.current.get(currentVisibleLive);
+      if (iframe) {
+        try {
+          if (audioEnabled) {
+            iframe.contentWindow?.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+            iframe.contentWindow?.postMessage('{"event":"command","func":"setVolume","args":"50"}', '*');
+          } else {
+            iframe.contentWindow?.postMessage('{"event":"command","func":"mute","args":""}', '*');
+          }
+        } catch (error) {
+          console.log('Erro ao controlar áudio da live:', error);
+        }
+      }
+    }
+  }, [audioEnabled, currentVisibleLive]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!containerRef.current) return;
+      
+      const container = containerRef.current;
+      const scrollTop = container.scrollTop;
+      const itemHeight = container.clientHeight;
+      const newIndex = Math.round(scrollTop / itemHeight);
+      
+      if (newIndex !== currentLiveIndex && newIndex >= 0 && newIndex < lives.length) {
+        setCurrentLiveIndex(newIndex);
+        container.scrollTo({
+          top: newIndex * itemHeight,
+          behavior: 'smooth'
+        });
+      }
+    };
+
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
+  }, [currentLiveIndex, lives.length]);
 
   const tryPlayCurrentLive = () => {
     const currentLive = lives[currentLiveIndex];
@@ -139,7 +264,6 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
       
       if (newIndex !== currentLiveIndex && newIndex >= 0 && newIndex < lives.length) {
         setCurrentLiveIndex(newIndex);
-        // Rolagem magnética
         container.scrollTo({
           top: newIndex * itemHeight,
           behavior: 'smooth'
@@ -282,6 +406,12 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
             key={live.id} 
             className="h-screen w-full snap-start relative flex items-center justify-center"
             style={{ aspectRatio: '9/16' }}
+            data-live-id={live.id}
+            ref={(el) => {
+              if (el && observerRef.current) {
+                observerRef.current.observe(el);
+              }
+            }}
           >
             {/* Conteúdo da Live */}
             <div className="absolute inset-0 flex items-center justify-center">
@@ -292,7 +422,7 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
                       ref={(iframe) => iframe && handleIframeLoad(live.id, iframe)}
                       width="100%"
                       height="100%"
-                      src={`https://www.youtube.com/embed/${live.youtubeVideoId}?autoplay=1&mute=1&loop=1&playlist=${live.youtubeVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&start=0&end=0&cc_load_policy=0&disablekb=1&fs=0&iv_load_policy=3&autohide=1&color=white&theme=dark&vq=hd720`}
+                      src={`https://www.youtube.com/embed/${live.youtubeVideoId}?autoplay=0&mute=${audioEnabled ? 0 : 1}&loop=1&playlist=${live.youtubeVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&start=0&end=0&cc_load_policy=0&disablekb=1&fs=0&iv_load_policy=3&autohide=1&color=white&theme=dark&vq=hd720`}
                       title={`Live de ${live.name}`}
                       frameBorder="0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
@@ -305,12 +435,20 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
                     <div 
                       className="absolute inset-0 bg-transparent cursor-pointer"
                       onClick={() => {
-                        setUserInteracted(true);
-                        setTimeout(() => tryPlayCurrentLive(), 100);
+                        if (!userInteracted) {
+                          setUserInteracted(true);
+                          if (currentVisibleLive === live.id) {
+                            playLiveFromStart(live.id);
+                          }
+                        }
                       }}
                       onTouchStart={() => {
-                        setUserInteracted(true);
-                        setTimeout(() => tryPlayCurrentLive(), 100);
+                        if (!userInteracted) {
+                          setUserInteracted(true);
+                          if (currentVisibleLive === live.id) {
+                            playLiveFromStart(live.id);
+                          }
+                        }
                       }}
                     />
                   </div>

@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { MessageCircle, Play, Video, Gamepad2, LogOut, Moon, Sun } from 'lucide-react';
+import { MessageCircle, Play, Video, Gamepad2, LogOut, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -8,12 +8,14 @@ import { useNavigate } from 'react-router-dom';
 interface SidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  audioEnabled?: boolean;
+  onAudioToggle?: () => void;
 }
 
-const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
+const Sidebar = ({ activeTab, onTabChange, audioEnabled = true, onAudioToggle }: SidebarProps) => {
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const [isDarkMode, setIsDarkMode] = useState(true); // Modo escuro como padrão
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   // Set dark mode as default on first load
   useEffect(() => {
@@ -33,7 +35,6 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
       attributeFilter: ['class']
     });
 
-    // Set initial theme
     setIsDarkMode(document.documentElement.classList.contains('dark'));
 
     return () => observer.disconnect();
@@ -58,11 +59,6 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
   const handleMenuClick = (itemId: string) => {
     navigate('/');
     onTabChange(itemId);
-  };
-
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle('dark');
   };
 
   const getThemeColors = () => {
@@ -134,10 +130,15 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
           ))}
           
           <button
-            onClick={toggleTheme}
-            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 ${theme.iconInactive}`}
+            onClick={onAudioToggle}
+            className={cn(
+              "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110",
+              audioEnabled 
+                ? "bg-green-600 text-white shadow-lg"
+                : theme.iconInactive
+            )}
           >
-            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+            {audioEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
           </button>
           
           <div className="w-8 mx-auto mt-4 pt-4">
@@ -180,10 +181,15 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
             ))}
             
             <button
-              onClick={toggleTheme}
-              className={`p-2 rounded-lg transition-all duration-200 ${theme.iconInactive}`}
+              onClick={onAudioToggle}
+              className={cn(
+                "p-2 rounded-lg transition-all duration-200",
+                audioEnabled 
+                  ? "bg-green-600 text-white"
+                  : theme.iconInactive
+              )}
             >
-              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+              {audioEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
             </button>
             
             <button

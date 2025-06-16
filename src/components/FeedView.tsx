@@ -21,9 +21,10 @@ interface FeedPost {
 
 interface FeedViewProps {
   onViewProfile?: (contact: any) => void;
+  audioEnabled?: boolean;
 }
 
-const FeedView = ({ onViewProfile }: FeedViewProps) => {
+const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
   const [posts, setPosts] = useState<FeedPost[]>([
     {
       id: '1',
@@ -111,7 +112,7 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [userInteracted, setUserInteracted] = useState(false);
   const [youtubeApiReady, setYoutubeApiReady] = useState(false);
-  const [playedVideos, setPlayedVideos] = useState<Set<string>>(new Set());
+  const [currentVisibleVideo, setCurrentVisibleVideo] = useState<string>('');
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const iframeRefs = useRef<Map<string, HTMLIFrameElement>>(new Map());
@@ -119,7 +120,6 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
 
   // Inicializar API do YouTube
   useEffect(() => {
-    // Carregar API do YouTube
     if (!window.YT) {
       const tag = document.createElement('script');
       tag.src = 'https://www.youtube.com/iframe_api';
@@ -134,15 +134,10 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
       setYoutubeApiReady(true);
     }
 
-    // Detectar primeira interação do usuário
     const handleFirstInteraction = () => {
       if (!userInteracted) {
         setUserInteracted(true);
         console.log('Primeira interação do usuário detectada');
-        // Tentar reproduzir todos os vídeos visíveis após interação
-        setTimeout(() => {
-          tryPlayAllVisibleVideos();
-        }, 500);
       }
     };
 
@@ -158,26 +153,36 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
     };
   }, []);
 
-  // Configurar Intersection Observer para detectar vídeos visíveis
+  // Configurar Intersection Observer para controle de reprodução
   useEffect(() => {
     if (!observerRef.current) {
       observerRef.current = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
             const postId = entry.target.getAttribute('data-post-id');
-            if (entry.isIntersecting && postId && userInteracted) {
+            if (postId) {
               const post = posts.find(p => p.id === postId);
-              if (post?.youtubeVideoId && !playedVideos.has(postId)) {
-                console.log('Vídeo entrou na viewport:', postId);
-                setTimeout(() => {
-                  tryPlayVideo(postId);
-                }, 300);
+              if (post?.youtubeVideoId) {
+                if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+                  // Vídeo entrou na tela - pausar o anterior e reproduzir este
+                  if (currentVisibleVideo && currentVisibleVideo !== postId) {
+                    pauseVideo(currentVisibleVideo);
+                  }
+                  setCurrentVisibleVideo(postId);
+                  if (userInteracted) {
+                    playVideoFromStart(postId);
+                  }
+                } else if (!entry.isIntersecting && currentVisibleVideo === postId) {
+                  // Vídeo saiu da tela - pausar
+                  pauseVideo(postId);
+                  setCurrentVisibleVideo('');
+                }
               }
             }
           });
         },
         {
-          threshold: 0.5, // 50% do vídeo precisa estar visível
+          threshold: [0, 0.5, 1], // Múltiplos thresholds para melhor controle
           rootMargin: '0px'
         }
       );
@@ -188,18 +193,25 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
         observerRef.current.disconnect();
       }
     };
-  }, [posts, userInteracted, playedVideos]);
+  }, [posts, userInteracted, currentVisibleVideo]);
 
-  const tryPlayVideo = (postId: string) => {
+  const playVideoFromStart = (postId: string) => {
     const iframe = iframeRefs.current.get(postId);
     if (iframe && userInteracted) {
       try {
-        // Múltiplas tentativas de comando de play
+        // Comandos para reproduzir do início
         const commands = [
-          '{"event":"command","func":"playVideo","args":""}',
-          '{"event":"command","func":"unMute","args":""}',
-          '{"event":"command","func":"setVolume","args":"50"}'
+          '{"event":"command","func":"seekTo","args":[0,true]}', // Voltar ao início
+          '{"event":"command","func":"playVideo","args":""}', // Reproduzir
         ];
+        
+        // Configurar áudio baseado na preferência
+        if (audioEnabled) {
+          commands.push('{"event":"command","func":"unMute","args":""}');
+          commands.push('{"event":"command","func":"setVolume","args":"50"}');
+        } else {
+          commands.push('{"event":"command","func":"mute","args":""}');
+        }
         
         commands.forEach((command, index) => {
           setTimeout(() => {
@@ -207,28 +219,43 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
           }, index * 200);
         });
         
-        console.log('Comandos de play enviados para:', postId);
-        setPlayedVideos(prev => new Set(prev).add(postId));
+        console.log('Vídeo reproduzindo do início:', postId);
       } catch (error) {
-        console.log('Erro ao enviar comando de play:', error);
+        console.log('Erro ao reproduzir vídeo:', error);
       }
     }
   };
 
-  const tryPlayAllVisibleVideos = () => {
-    posts.forEach(post => {
-      if (post.youtubeVideoId && !playedVideos.has(post.id)) {
-        tryPlayVideo(post.id);
+  const pauseVideo = (postId: string) => {
+    const iframe = iframeRefs.current.get(postId);
+    if (iframe) {
+      try {
+        iframe.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+        console.log('Vídeo pausado:', postId);
+      } catch (error) {
+        console.log('Erro ao pausar vídeo:', error);
       }
-    });
-  };
-
-  const tryPlayCurrentVideo = () => {
-    const currentPost = posts[currentPostIndex];
-    if (currentPost?.youtubeVideoId && userInteracted) {
-      tryPlayVideo(currentPost.id);
     }
   };
+
+  // Efeito para controlar áudio quando a preferência muda
+  useEffect(() => {
+    if (currentVisibleVideo) {
+      const iframe = iframeRefs.current.get(currentVisibleVideo);
+      if (iframe) {
+        try {
+          if (audioEnabled) {
+            iframe.contentWindow?.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+            iframe.contentWindow?.postMessage('{"event":"command","func":"setVolume","args":"50"}', '*');
+          } else {
+            iframe.contentWindow?.postMessage('{"event":"command","func":"mute","args":""}', '*');
+          }
+        } catch (error) {
+          console.log('Erro ao controlar áudio:', error);
+        }
+      }
+    }
+  }, [audioEnabled, currentVisibleVideo]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -241,16 +268,10 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
       
       if (newIndex !== currentPostIndex && newIndex >= 0 && newIndex < posts.length) {
         setCurrentPostIndex(newIndex);
-        // Rolagem magnética
         container.scrollTo({
           top: newIndex * itemHeight,
           behavior: 'smooth'
         });
-        
-        // Tentar reproduzir novo vídeo após mudança
-        setTimeout(() => {
-          tryPlayCurrentVideo();
-        }, 500);
       }
     };
 
@@ -259,16 +280,7 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
       container.addEventListener('scroll', handleScroll);
       return () => container.removeEventListener('scroll', handleScroll);
     }
-  }, [currentPostIndex, posts.length, userInteracted]);
-
-  // Tentar reproduzir vídeo quando o índice atual muda
-  useEffect(() => {
-    if (userInteracted) {
-      setTimeout(() => {
-        tryPlayCurrentVideo();
-      }, 1000);
-    }
-  }, [currentPostIndex, userInteracted]);
+  }, [currentPostIndex, posts.length]);
 
   const setCarouselApi = (postId: string, api: CarouselApi) => {
     if (!api) return;
@@ -316,13 +328,12 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Simular upload de arquivo local
       const newPost: FeedPost = {
         id: Date.now().toString(),
         user: 'Você',
         avatar: 'V',
         description: newVideoDescription || 'Vídeo enviado da minha máquina!',
-        youtubeVideoId: 'rRFVWL82pNk', // Placeholder para vídeo local
+        youtubeVideoId: 'rRFVWL82pNk',
         likes: 0,
         comments: 0,
         shares: 0,
@@ -357,13 +368,6 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
   const handleIframeLoad = (postId: string, iframe: HTMLIFrameElement) => {
     iframeRefs.current.set(postId, iframe);
     console.log('Iframe carregado para post:', postId);
-    
-    // Tentar reproduzir imediatamente se o usuário já interagiu
-    if (userInteracted && !playedVideos.has(postId)) {
-      setTimeout(() => {
-        tryPlayVideo(postId);
-      }, 1000);
-    }
   };
 
   return (
@@ -451,7 +455,7 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
                     ref={(iframe) => iframe && handleIframeLoad(post.id, iframe)}
                     width="100%"
                     height="100%"
-                    src={`https://www.youtube.com/embed/${post.youtubeVideoId}?autoplay=1&mute=0&loop=1&playlist=${post.youtubeVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&start=0&end=0&cc_load_policy=0&disablekb=1&fs=0&iv_load_policy=3&autohide=1&color=white&theme=dark&vq=hd720`}
+                    src={`https://www.youtube.com/embed/${post.youtubeVideoId}?autoplay=0&mute=${audioEnabled ? 0 : 1}&loop=1&playlist=${post.youtubeVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&start=0&end=0&cc_load_policy=0&disablekb=1&fs=0&iv_load_policy=3&autohide=1&color=white&theme=dark&vq=hd720`}
                     title={`Vídeo de ${post.user}`}
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
@@ -465,17 +469,17 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
                     onClick={() => {
                       if (!userInteracted) {
                         setUserInteracted(true);
-                        setTimeout(() => tryPlayAllVisibleVideos(), 100);
-                      } else {
-                        tryPlayVideo(post.id);
+                        if (currentVisibleVideo === post.id) {
+                          playVideoFromStart(post.id);
+                        }
                       }
                     }}
                     onTouchStart={() => {
                       if (!userInteracted) {
                         setUserInteracted(true);
-                        setTimeout(() => tryPlayAllVisibleVideos(), 100);
-                      } else {
-                        tryPlayVideo(post.id);
+                        if (currentVisibleVideo === post.id) {
+                          playVideoFromStart(post.id);
+                        }
                       }
                     }}
                   />
