@@ -81,7 +81,7 @@ const Login = () => {
         <CardHeader className="space-y-1">
           <div className="flex flex-col items-center mb-4">
             <img 
-              src="/lovable-uploads/0e775d7a-2c40-49d5-83a9-620db5ffef64.png" 
+              src="/lovable-uploads/acb4c601-9598-4c2a-9e33-0fb1a5cbe212.png" 
               alt="Chathy Logo" 
               className="w-32 h-auto mb-2"
             />
