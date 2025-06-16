@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Heart, MessageCircle, Share, MoreVertical, Upload, Link } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -300,10 +301,10 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
                   <iframe
                     width="100%"
                     height="100%"
-                    src={`https://www.youtube.com/embed/${post.youtubeVideoId}?autoplay=1&mute=1&loop=1&playlist=${post.youtubeVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1`}
+                    src={`https://www.youtube.com/embed/${post.youtubeVideoId}?autoplay=1&mute=1&loop=1&playlist=${post.youtubeVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}`}
                     title={`Vídeo de ${post.user}`}
                     frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowFullScreen
                     className="rounded-lg"
                   />
