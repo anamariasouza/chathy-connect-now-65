@@ -82,7 +82,7 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
       const firstScriptTag = document.getElementsByTagName('script')[0];
       firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
       
-      (window as any).onYouTubeIframeAPIReady = () => {
+      window.onYouTubeIframeAPIReady = () => {
         setYoutubeApiReady(true);
         console.log('YouTube API carregada para Lives');
       };
