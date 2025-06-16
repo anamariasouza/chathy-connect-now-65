@@ -50,33 +50,101 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simular delay de login
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      // Validar se o usuário não digitou @gmail.com no campo
+      if (emailPrefix.includes('@')) {
+        toast({
+          title: "Erro no email",
+          description: "Digite apenas o nome do email, sem @gmail.com",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
 
-    const fullEmail = emailPrefix + '@gmail.com';
-    
-    if (fullEmail === 'walter2161@gmail.com' && password === '976431') {
-      const currentTime = new Date().getTime();
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('userEmail', fullEmail);
-      localStorage.setItem('loginTime', currentTime.toString());
+      // Validar se os campos não estão vazios
+      if (!emailPrefix.trim()) {
+        toast({
+          title: "Campo obrigatório",
+          description: "Digite seu endereço de email",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if (!password.trim()) {
+        toast({
+          title: "Campo obrigatório",
+          description: "Digite sua senha",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Simular delay de login
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const fullEmail = emailPrefix.trim() + '@gmail.com';
       
+      if (fullEmail === 'walter2161@gmail.com' && password === '976431') {
+        const currentTime = new Date().getTime();
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('userEmail', fullEmail);
+        localStorage.setItem('loginTime', currentTime.toString());
+        
+        toast({
+          title: "Login realizado com sucesso!",
+          description: "Bem-vindo de volta!",
+        });
+        
+        // Força um reload do estado de autenticação
+        window.location.reload();
+      } else {
+        // Mostrar erro específico baseado no que está errado
+        if (fullEmail !== 'walter2161@gmail.com' && password !== '976431') {
+          toast({
+            title: "Credenciais inválidas",
+            description: "Email e senha estão incorretos",
+            variant: "destructive",
+          });
+        } else if (fullEmail !== 'walter2161@gmail.com') {
+          toast({
+            title: "Email incorreto",
+            description: "O endereço de email não existe",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Senha incorreta",
+            description: "A senha digitada está incorreta",
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error) {
       toast({
-        title: "Login realizado com sucesso!",
-        description: "Bem-vindo de volta!",
-      });
-      
-      // Força um reload do estado de autenticação
-      window.location.reload();
-    } else {
-      toast({
-        title: "Erro no login",
-        description: "Email ou senha incorretos.",
+        title: "Erro no sistema",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
         variant: "destructive",
       });
     }
 
     setIsLoading(false);
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value;
+    // Remover @gmail.com se o usuário tentar digitar
+    if (value.includes('@gmail.com')) {
+      value = value.replace('@gmail.com', '');
+    }
+    // Remover apenas @ também
+    if (value.includes('@')) {
+      value = value.replace('@', '');
+    }
+    setEmailPrefix(value);
   };
 
   return (
@@ -85,7 +153,7 @@ const Login = () => {
         <CardHeader className="space-y-1">
           <div className="flex flex-col items-center mb-4">
             <img 
-              src="/lovable-uploads/acb4c601-9598-4c2a-9e33-0fb1a5cbe212.png" 
+              src="/lovable-uploads/c3048bc0-d027-4174-b4d7-175e6286480e.png" 
               alt="Chathy Logo" 
               className="w-32 h-auto mb-2"
             />
@@ -105,7 +173,7 @@ const Login = () => {
                   type="text"
                   placeholder="seuemail"
                   value={emailPrefix}
-                  onChange={(e) => setEmailPrefix(e.target.value)}
+                  onChange={handleEmailChange}
                   required
                   className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 pr-20"
                 />
