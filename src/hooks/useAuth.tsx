@@ -14,7 +14,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkAuth = () => {
     const auth = localStorage.getItem('isAuthenticated');
-    setIsAuthenticated(auth === 'true');
+    const loginTime = localStorage.getItem('loginTime');
+    
+    if (auth === 'true' && loginTime) {
+      const currentTime = new Date().getTime();
+      const twentyFourHours = 24 * 60 * 60 * 1000; // 24h em millisegundos
+      
+      if (currentTime - parseInt(loginTime) < twentyFourHours) {
+        setIsAuthenticated(true);
+      } else {
+        // Expirou, fazer logout automático
+        logout();
+      }
+    } else {
+      setIsAuthenticated(false);
+    }
   };
 
   useEffect(() => {
@@ -33,6 +47,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('userEmail');
     localStorage.removeItem('userProfile');
+    localStorage.removeItem('loginTime');
     setIsAuthenticated(false);
   };
 

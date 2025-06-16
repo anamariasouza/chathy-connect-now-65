@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Heart, MessageCircle, Share, Play, Pause, Volume2, VolumeX, MoreVertical } from 'lucide-react';
+import { Heart, MessageCircle, Share, MoreVertical, Upload, Link } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Carousel, CarouselContent, CarouselItem, CarouselApi } from '@/components/ui/carousel';
 
 interface FeedPost {
@@ -8,7 +10,7 @@ interface FeedPost {
   user: string;
   avatar: string;
   description: string;
-  videoUrl?: string;
+  youtubeVideoId?: string;
   images?: string[];
   likes: number;
   comments: number;
@@ -22,13 +24,13 @@ interface FeedViewProps {
 }
 
 const FeedView = ({ onViewProfile }: FeedViewProps) => {
-  const [posts] = useState<FeedPost[]>([
+  const [posts, setPosts] = useState<FeedPost[]>([
     {
       id: '1',
       user: 'Maria Silva',
       avatar: 'M',
       description: 'Cozinhando um delicioso bolo de chocolate! 🍰✨ #culinaria #bolo',
-      videoUrl: 'video1.mp4',
+      youtubeVideoId: 'dQw4w9WgXcQ',
       likes: 234,
       comments: 45,
       shares: 12,
@@ -56,7 +58,7 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
       user: 'Ana Costa',
       avatar: 'A',
       description: 'Tutorial de maquiagem para o dia a dia 💄✨',
-      videoUrl: 'video2.mp4',
+      youtubeVideoId: 'jNQXAC9IVRw',
       likes: 890,
       comments: 156,
       shares: 67,
@@ -68,7 +70,7 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
       user: 'João Silva',
       avatar: 'J',
       description: 'Treino pesado na academia hoje! 💪🔥',
-      videoUrl: 'video3.mp4',
+      youtubeVideoId: 'ScMzIvxBSi4',
       likes: 445,
       comments: 78,
       shares: 23,
@@ -78,29 +80,13 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
   ]);
 
   const [currentPostIndex, setCurrentPostIndex] = useState(0);
-  const [playingVideos, setPlayingVideos] = useState<Set<string>>(new Set());
-  const [mutedVideos, setMutedVideos] = useState<Set<string>>(new Set());
   const [carouselApis, setCarouselApis] = useState<Map<string, CarouselApi>>(new Map());
   const [currentSlides, setCurrentSlides] = useState<Map<string, number>>(new Map());
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [newVideoLink, setNewVideoLink] = useState('');
+  const [newVideoDescription, setNewVideoDescription] = useState('');
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  // Listen for theme changes
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setIsDarkMode(document.documentElement.classList.contains('dark'));
-    });
-    
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
-
-    // Set initial theme
-    setIsDarkMode(document.documentElement.classList.contains('dark'));
-
-    return () => observer.disconnect();
-  }, []);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -141,28 +127,57 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
     api.on('select', updateCurrentSlide);
   };
 
-  const togglePlay = (postId: string) => {
-    setPlayingVideos(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(postId)) {
-        newSet.delete(postId);
-      } else {
-        newSet.add(postId);
-      }
-      return newSet;
-    });
+  const extractYouTubeVideoId = (url: string) => {
+    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
   };
 
-  const toggleMute = (postId: string) => {
-    setMutedVideos(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(postId)) {
-        newSet.delete(postId);
-      } else {
-        newSet.add(postId);
-      }
-      return newSet;
-    });
+  const handleAddVideo = () => {
+    if (newVideoLink || newVideoDescription) {
+      const videoId = newVideoLink ? extractYouTubeVideoId(newVideoLink) : undefined;
+      
+      const newPost: FeedPost = {
+        id: Date.now().toString(),
+        user: 'Você',
+        avatar: 'V',
+        description: newVideoDescription || 'Novo vídeo compartilhado!',
+        youtubeVideoId: videoId || undefined,
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        isLiked: false,
+        timestamp: 'agora'
+      };
+
+      setPosts(prev => [newPost, ...prev]);
+      setNewVideoLink('');
+      setNewVideoDescription('');
+      setIsUploadDialogOpen(false);
+    }
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Simular upload de arquivo local
+      const newPost: FeedPost = {
+        id: Date.now().toString(),
+        user: 'Você',
+        avatar: 'V',
+        description: newVideoDescription || 'Vídeo enviado da minha máquina!',
+        youtubeVideoId: 'dQw4w9WgXcQ', // Placeholder para vídeo local
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        isLiked: false,
+        timestamp: 'agora'
+      };
+
+      setPosts(prev => [newPost, ...prev]);
+      setNewVideoDescription('');
+      setIsUploadDialogOpen(false);
+    }
   };
 
   const formatNumber = (num: number) => {
@@ -183,12 +198,67 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
     onViewProfile?.(contact);
   };
 
-  const getBackgroundColor = () => {
-    return isDarkMode ? 'bg-black' : 'bg-gray-300';
-  };
-
   return (
-    <div className={`fixed inset-0 ${getBackgroundColor()}`}>
+    <div className="fixed inset-0 bg-black">
+      {/* Botão de Upload */}
+      <div className="absolute top-4 right-4 z-50">
+        <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-chathy-primary hover:bg-chathy-primary/90 rounded-full w-12 h-12 p-0">
+              <Upload size={20} />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="bg-gray-800 border-gray-700">
+            <DialogHeader>
+              <DialogTitle className="text-white">Adicionar Vídeo</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-white text-sm mb-2 block">Descrição</label>
+                <Input
+                  placeholder="Descreva seu vídeo..."
+                  value={newVideoDescription}
+                  onChange={(e) => setNewVideoDescription(e.target.value)}
+                  className="bg-gray-700 border-gray-600 text-white"
+                />
+              </div>
+              <div>
+                <label className="text-white text-sm mb-2 block">Link do YouTube Short</label>
+                <Input
+                  placeholder="https://youtube.com/shorts/..."
+                  value={newVideoLink}
+                  onChange={(e) => setNewVideoLink(e.target.value)}
+                  className="bg-gray-700 border-gray-600 text-white"
+                />
+              </div>
+              <div className="text-center text-gray-400">ou</div>
+              <div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  accept="video/*"
+                  className="hidden"
+                />
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  variant="outline"
+                  className="w-full border-gray-600 text-white hover:bg-gray-700"
+                >
+                  Enviar da Máquina
+                </Button>
+              </div>
+              <Button
+                onClick={handleAddVideo}
+                className="w-full bg-chathy-primary hover:bg-chathy-primary/90"
+              >
+                Adicionar Vídeo
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
       <div 
         ref={containerRef}
         className="h-full overflow-y-auto snap-y snap-mandatory scrollbar-hide"
@@ -201,38 +271,21 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
           >
             {/* Conteúdo de Vídeo/Imagem */}
             <div className="absolute inset-0 flex items-center justify-center">
-              {post.videoUrl ? (
+              {post.youtubeVideoId ? (
                 <div className="relative h-full" style={{ width: 'calc(100vh * 9 / 16)', maxWidth: '100vw' }}>
-                  <div className="w-full h-full bg-gradient-to-br from-chathy-primary to-chathy-secondary flex items-center justify-center">
-                    <div className="text-white text-center">
-                      <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-4 mx-auto">
-                        <Play size={32} />
-                      </div>
-                      <p className="text-sm opacity-75">Vídeo de {post.user}</p>
-                    </div>
-                  </div>
-                  
-                  {/* Controles de Vídeo */}
-                  <div className="absolute bottom-20 left-4 flex space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => togglePlay(post.id)}
-                      className="bg-black/50 text-white hover:bg-black/70 rounded-full w-10 h-10 p-0"
-                    >
-                      {playingVideos.has(post.id) ? <Pause size={16} /> : <Play size={16} />}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleMute(post.id)}
-                      className="bg-black/50 text-white hover:bg-black/70 rounded-full w-10 h-10 p-0"
-                    >
-                      {mutedVideos.has(post.id) ? <VolumeX size={16} /> : <Volume2 size={16} />}
-                    </Button>
-                  </div>
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    src={`https://www.youtube.com/embed/${post.youtubeVideoId}?autoplay=1&mute=1&loop=1&playlist=${post.youtubeVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1`}
+                    title={`Vídeo de ${post.user}`}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="rounded-lg"
+                  />
                 </div>
               ) : post.images && post.images.length > 0 ? (
+                
                 <div className="h-full relative" style={{ width: 'calc(100vh * 9 / 16)', maxWidth: '100vw' }}>
                   <Carousel 
                     className="w-full h-full"

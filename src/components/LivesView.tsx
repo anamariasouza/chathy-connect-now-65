@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Play, Users, Heart, MessageCircle, Share, MoreVertical } from 'lucide-react';
+import { Users, Heart, MessageCircle, Share, MoreVertical, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface Live {
   id: string;
@@ -10,6 +12,7 @@ interface Live {
   duration: string;
   avatar: string;
   isLive: boolean;
+  youtubeVideoId?: string;
 }
 
 interface LivesViewProps {
@@ -17,7 +20,7 @@ interface LivesViewProps {
 }
 
 const LivesView = ({ onViewProfile }: LivesViewProps) => {
-  const [lives] = useState<Live[]>([
+  const [lives, setLives] = useState<Live[]>([
     {
       id: '1',
       name: 'Maria Silva',
@@ -25,7 +28,8 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
       viewers: 45,
       duration: '15:30',
       avatar: 'M',
-      isLive: true
+      isLive: true,
+      youtubeVideoId: 'dQw4w9WgXcQ'
     },
     {
       id: '2',
@@ -34,7 +38,8 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
       viewers: 123,
       duration: '8:45',
       avatar: 'P',
-      isLive: true
+      isLive: true,
+      youtubeVideoId: 'jNQXAC9IVRw'
     },
     {
       id: '3',
@@ -43,7 +48,8 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
       viewers: 89,
       duration: '45:20',
       avatar: 'A',
-      isLive: false
+      isLive: false,
+      youtubeVideoId: 'ScMzIvxBSi4'
     },
     {
       id: '4',
@@ -52,30 +58,16 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
       viewers: 67,
       duration: '22:15',
       avatar: 'J',
-      isLive: true
+      isLive: true,
+      youtubeVideoId: 'kJQP7kiw5Fk'
     }
   ]);
 
   const [currentLiveIndex, setCurrentLiveIndex] = useState(0);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [newLiveLink, setNewLiveLink] = useState('');
+  const [newLiveTitle, setNewLiveTitle] = useState('');
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  // Listen for theme changes
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setIsDarkMode(document.documentElement.classList.contains('dark'));
-    });
-    
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
-
-    // Set initial theme
-    setIsDarkMode(document.documentElement.classList.contains('dark'));
-
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -103,6 +95,36 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
     }
   }, [currentLiveIndex, lives.length]);
 
+  const extractYouTubeVideoId = (url: string) => {
+    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
+  };
+
+  const handleAddLive = () => {
+    if (newLiveLink && newLiveTitle) {
+      const videoId = extractYouTubeVideoId(newLiveLink);
+      
+      if (videoId) {
+        const newLive: Live = {
+          id: Date.now().toString(),
+          name: 'Você',
+          title: newLiveTitle,
+          viewers: 1,
+          duration: '0:00',
+          avatar: 'V',
+          isLive: true,
+          youtubeVideoId: videoId
+        };
+
+        setLives(prev => [newLive, ...prev]);
+        setNewLiveLink('');
+        setNewLiveTitle('');
+        setIsUploadDialogOpen(false);
+      }
+    }
+  };
+
   const handleViewProfile = (live: Live) => {
     const contact = {
       id: live.id,
@@ -121,12 +143,50 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
     return num.toString();
   };
 
-  const getBackgroundColor = () => {
-    return isDarkMode ? 'bg-black' : 'bg-gray-300';
-  };
-
   return (
-    <div className={`fixed inset-0 ${getBackgroundColor()}`}>
+    <div className="fixed inset-0 bg-black">
+      {/* Botão de Upload */}
+      <div className="absolute top-4 right-4 z-50">
+        <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-red-500 hover:bg-red-600 rounded-full w-12 h-12 p-0">
+              <Upload size={20} />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="bg-gray-800 border-gray-700">
+            <DialogHeader>
+              <DialogTitle className="text-white">Iniciar Live</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-white text-sm mb-2 block">Título da Live</label>
+                <Input
+                  placeholder="Digite o título da sua live..."
+                  value={newLiveTitle}
+                  onChange={(e) => setNewLiveTitle(e.target.value)}
+                  className="bg-gray-700 border-gray-600 text-white"
+                />
+              </div>
+              <div>
+                <label className="text-white text-sm mb-2 block">Link do YouTube</label>
+                <Input
+                  placeholder="https://youtube.com/watch?v=..."
+                  value={newLiveLink}
+                  onChange={(e) => setNewLiveLink(e.target.value)}
+                  className="bg-gray-700 border-gray-600 text-white"
+                />
+              </div>
+              <Button
+                onClick={handleAddLive}
+                className="w-full bg-red-500 hover:bg-red-600"
+              >
+                Iniciar Live
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
       <div 
         ref={containerRef}
         className="h-full overflow-y-auto snap-y snap-mandatory scrollbar-hide"
@@ -141,29 +201,52 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
             {/* Conteúdo da Live */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="relative w-full h-full max-w-md mx-auto bg-gray-900 flex items-center justify-center">
-                <div className="w-full h-full bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center relative">
-                  {/* Badge AO VIVO */}
-                  {live.isLive && (
-                    <div className="absolute top-6 left-6 z-10">
-                      <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold animate-pulse-green flex items-center">
-                        <div className="w-2 h-2 bg-white rounded-full mr-2 animate-ping"></div>
-                        AO VIVO
-                      </span>
+                {live.youtubeVideoId ? (
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    src={`https://www.youtube.com/embed/${live.youtubeVideoId}?autoplay=1&mute=1&loop=1&playlist=${live.youtubeVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1`}
+                    title={`Live de ${live.name}`}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center relative">
+                    {/* Badge AO VIVO */}
+                    {live.isLive && (
+                      <div className="absolute top-6 left-6 z-10">
+                        <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold animate-pulse-green flex items-center">
+                          <div className="w-2 h-2 bg-white rounded-full mr-2 animate-ping"></div>
+                          AO VIVO
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Avatar da Live */}
+                    <div className="text-white text-center">
+                      <div className="w-32 h-32 bg-white/20 rounded-full flex items-center justify-center mb-4 mx-auto">
+                        <span className="text-4xl font-bold">{live.avatar}</span>
+                      </div>
+                      <div className="flex items-center justify-center space-x-2 mb-2">
+                        <Users size={20} />
+                        <span className="text-lg font-semibold">{formatNumber(live.viewers)} assistindo</span>
+                      </div>
+                      <p className="text-sm opacity-75">{live.duration}</p>
                     </div>
-                  )}
-                  
-                  {/* Avatar da Live */}
-                  <div className="text-white text-center">
-                    <div className="w-32 h-32 bg-white/20 rounded-full flex items-center justify-center mb-4 mx-auto">
-                      <span className="text-4xl font-bold">{live.avatar}</span>
-                    </div>
-                    <div className="flex items-center justify-center space-x-2 mb-2">
-                      <Users size={20} />
-                      <span className="text-lg font-semibold">{formatNumber(live.viewers)} assistindo</span>
-                    </div>
-                    <p className="text-sm opacity-75">{live.duration}</p>
                   </div>
-                </div>
+                )}
+
+                {/* Badge AO VIVO sobreposto para vídeos do YouTube */}
+                {live.youtubeVideoId && live.isLive && (
+                  <div className="absolute top-6 left-6 z-10">
+                    <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold animate-pulse-green flex items-center">
+                      <div className="w-2 h-2 bg-white rounded-full mr-2 animate-ping"></div>
+                      AO VIVO
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
