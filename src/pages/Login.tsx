@@ -154,7 +154,7 @@ const Login = () => {
         <CardHeader className="space-y-1">
           <div className="flex flex-col items-center mb-4">
             <img 
-              src="/lovable-uploads/c3048bc0-d027-4174-b4d7-175e6286480e.png" 
+              src="/lovable-uploads/97e49b2b-0caf-467d-a8af-39923c0a7a77.png" 
               alt="Chathy Logo" 
               className="w-32 h-auto mb-2"
             />
@@ -168,7 +168,10 @@ const Login = () => {
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-gray-300">Email</Label>
-              <div className="relative">
+              <p className="text-xs text-gray-400 mb-2">
+                Digite apenas a primeira parte do seu email (antes do @gmail.com)
+              </p>
+              <div className="flex rounded-md border border-gray-600 bg-gray-700 overflow-hidden">
                 <Input
                   id="email"
                   type="text"
@@ -176,10 +179,10 @@ const Login = () => {
                   value={emailPrefix}
                   onChange={handleEmailChange}
                   required
-                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400 pr-20"
+                  className="flex-1 border-0 bg-transparent text-white placeholder-gray-400 focus:ring-0 focus:border-0 rounded-none"
                 />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                  <span className="text-gray-400">@gmail.com</span>
+                <div className="flex items-center px-3 bg-gray-600 text-gray-300 text-sm font-medium">
+                  @gmail.com
                 </div>
               </div>
             </div>
