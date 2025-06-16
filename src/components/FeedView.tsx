@@ -110,8 +110,66 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
   const [newVideoLink, setNewVideoLink] = useState('');
   const [newVideoDescription, setNewVideoDescription] = useState('');
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [userInteracted, setUserInteracted] = useState(false);
+  const [youtubeApiReady, setYoutubeApiReady] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const iframeRefs = useRef<Map<string, HTMLIFrameElement>>(new Map());
+
+  // Inicializar API do YouTube
+  useEffect(() => {
+    // Carregar API do YouTube
+    if (!window.YT) {
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      const firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+      
+      (window as any).onYouTubeIframeAPIReady = () => {
+        setYoutubeApiReady(true);
+        console.log('YouTube API carregada');
+      };
+    } else {
+      setYoutubeApiReady(true);
+    }
+
+    // Detectar primeira interação do usuário
+    const handleFirstInteraction = () => {
+      setUserInteracted(true);
+      console.log('Primeira interação do usuário detectada');
+      // Tentar reproduzir vídeos após interação
+      setTimeout(() => {
+        tryPlayCurrentVideo();
+      }, 500);
+    };
+
+    const events = ['click', 'touch', 'touchstart', 'scroll'];
+    events.forEach(event => {
+      document.addEventListener(event, handleFirstInteraction, { once: true, passive: true });
+    });
+
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, handleFirstInteraction);
+      });
+    };
+  }, []);
+
+  const tryPlayCurrentVideo = () => {
+    const currentPost = posts[currentPostIndex];
+    if (currentPost?.youtubeVideoId && userInteracted) {
+      const iframe = iframeRefs.current.get(currentPost.id);
+      if (iframe) {
+        try {
+          // Tentar enviar comando de play via postMessage
+          iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+          console.log('Comando de play enviado para:', currentPost.youtubeVideoId);
+        } catch (error) {
+          console.log('Erro ao enviar comando de play:', error);
+        }
+      }
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -129,6 +187,11 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
           top: newIndex * itemHeight,
           behavior: 'smooth'
         });
+        
+        // Tentar reproduzir novo vídeo após mudança
+        setTimeout(() => {
+          tryPlayCurrentVideo();
+        }, 500);
       }
     };
 
@@ -137,7 +200,16 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
       container.addEventListener('scroll', handleScroll);
       return () => container.removeEventListener('scroll', handleScroll);
     }
-  }, [currentPostIndex, posts.length]);
+  }, [currentPostIndex, posts.length, userInteracted]);
+
+  // Tentar reproduzir vídeo quando o índice atual muda
+  useEffect(() => {
+    if (userInteracted) {
+      setTimeout(() => {
+        tryPlayCurrentVideo();
+      }, 1000);
+    }
+  }, [currentPostIndex, userInteracted]);
 
   const setCarouselApi = (postId: string, api: CarouselApi) => {
     if (!api) return;
@@ -223,6 +295,18 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
     onViewProfile?.(contact);
   };
 
+  const handleIframeLoad = (postId: string, iframe: HTMLIFrameElement) => {
+    iframeRefs.current.set(postId, iframe);
+    console.log('Iframe carregado para post:', postId);
+    
+    // Tentar reproduzir se for o vídeo atual e o usuário já interagiu
+    if (posts[currentPostIndex]?.id === postId && userInteracted) {
+      setTimeout(() => {
+        tryPlayCurrentVideo();
+      }, 1000);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black">
       {/* Botão de Upload */}
@@ -299,14 +383,29 @@ const FeedView = ({ onViewProfile }: FeedViewProps) => {
               {post.youtubeVideoId ? (
                 <div className="relative h-full" style={{ width: 'calc(100vh * 9 / 16)', maxWidth: '100vw' }}>
                   <iframe
+                    ref={(iframe) => iframe && handleIframeLoad(post.id, iframe)}
                     width="100%"
                     height="100%"
-                    src={`https://www.youtube.com/embed/${post.youtubeVideoId}?autoplay=1&mute=1&loop=1&playlist=${post.youtubeVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}`}
+                    src={`https://www.youtube.com/embed/${post.youtubeVideoId}?autoplay=1&mute=1&loop=1&playlist=${post.youtubeVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&start=0&end=0&cc_load_policy=0&disablekb=1&fs=0&iv_load_policy=3&autohide=1&color=white&theme=dark&vq=hd720`}
                     title={`Vídeo de ${post.user}`}
                     frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                     allowFullScreen
                     className="rounded-lg"
+                    style={{ pointerEvents: 'none' }}
+                  />
+                  
+                  {/* Overlay transparente para capturar interações */}
+                  <div 
+                    className="absolute inset-0 bg-transparent cursor-pointer"
+                    onClick={() => {
+                      setUserInteracted(true);
+                      setTimeout(() => tryPlayCurrentVideo(), 100);
+                    }}
+                    onTouchStart={() => {
+                      setUserInteracted(true);
+                      setTimeout(() => tryPlayCurrentVideo(), 100);
+                    }}
                   />
                 </div>
               ) : post.images && post.images.length > 0 ? (

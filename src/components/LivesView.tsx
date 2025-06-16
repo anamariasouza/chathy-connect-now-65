@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Users, Heart, MessageCircle, Share, MoreVertical, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -67,7 +68,65 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
   const [newLiveLink, setNewLiveLink] = useState('');
   const [newLiveTitle, setNewLiveTitle] = useState('');
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [userInteracted, setUserInteracted] = useState(false);
+  const [youtubeApiReady, setYoutubeApiReady] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const iframeRefs = useRef<Map<string, HTMLIFrameElement>>(new Map());
+
+  // Inicializar API do YouTube e detectar interação
+  useEffect(() => {
+    // Carregar API do YouTube
+    if (!window.YT) {
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      const firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+      
+      (window as any).onYouTubeIframeAPIReady = () => {
+        setYoutubeApiReady(true);
+        console.log('YouTube API carregada para Lives');
+      };
+    } else {
+      setYoutubeApiReady(true);
+    }
+
+    // Detectar primeira interação do usuário
+    const handleFirstInteraction = () => {
+      setUserInteracted(true);
+      console.log('Primeira interação do usuário detectada nas Lives');
+      // Tentar reproduzir vídeos após interação
+      setTimeout(() => {
+        tryPlayCurrentLive();
+      }, 500);
+    };
+
+    const events = ['click', 'touch', 'touchstart', 'scroll'];
+    events.forEach(event => {
+      document.addEventListener(event, handleFirstInteraction, { once: true, passive: true });
+    });
+
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, handleFirstInteraction);
+      });
+    };
+  }, []);
+
+  const tryPlayCurrentLive = () => {
+    const currentLive = lives[currentLiveIndex];
+    if (currentLive?.youtubeVideoId && userInteracted) {
+      const iframe = iframeRefs.current.get(currentLive.id);
+      if (iframe) {
+        try {
+          // Tentar enviar comando de play via postMessage
+          iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+          console.log('Comando de play enviado para live:', currentLive.youtubeVideoId);
+        } catch (error) {
+          console.log('Erro ao enviar comando de play para live:', error);
+        }
+      }
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -85,6 +144,11 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
           top: newIndex * itemHeight,
           behavior: 'smooth'
         });
+        
+        // Tentar reproduzir nova live após mudança
+        setTimeout(() => {
+          tryPlayCurrentLive();
+        }, 500);
       }
     };
 
@@ -93,7 +157,16 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
       container.addEventListener('scroll', handleScroll);
       return () => container.removeEventListener('scroll', handleScroll);
     }
-  }, [currentLiveIndex, lives.length]);
+  }, [currentLiveIndex, lives.length, userInteracted]);
+
+  // Tentar reproduzir live quando o índice atual muda
+  useEffect(() => {
+    if (userInteracted) {
+      setTimeout(() => {
+        tryPlayCurrentLive();
+      }, 1000);
+    }
+  }, [currentLiveIndex, userInteracted]);
 
   const extractYouTubeVideoId = (url: string) => {
     const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
@@ -141,6 +214,18 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
       return (num / 1000).toFixed(1) + 'k';
     }
     return num.toString();
+  };
+
+  const handleIframeLoad = (liveId: string, iframe: HTMLIFrameElement) => {
+    iframeRefs.current.set(liveId, iframe);
+    console.log('Iframe de live carregado para:', liveId);
+    
+    // Tentar reproduzir se for a live atual e o usuário já interagiu
+    if (lives[currentLiveIndex]?.id === liveId && userInteracted) {
+      setTimeout(() => {
+        tryPlayCurrentLive();
+      }, 1000);
+    }
   };
 
   return (
@@ -202,16 +287,33 @@ const LivesView = ({ onViewProfile }: LivesViewProps) => {
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="relative w-full h-full max-w-md mx-auto bg-gray-900 flex items-center justify-center">
                 {live.youtubeVideoId ? (
-                  <iframe
-                    width="100%"
-                    height="100%"
-                    src={`https://www.youtube.com/embed/${live.youtubeVideoId}?autoplay=1&mute=1&loop=1&playlist=${live.youtubeVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}`}
-                    title={`Live de ${live.name}`}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                    className="w-full h-full"
-                  />
+                  <div className="relative w-full h-full">
+                    <iframe
+                      ref={(iframe) => iframe && handleIframeLoad(live.id, iframe)}
+                      width="100%"
+                      height="100%"
+                      src={`https://www.youtube.com/embed/${live.youtubeVideoId}?autoplay=1&mute=1&loop=1&playlist=${live.youtubeVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&start=0&end=0&cc_load_policy=0&disablekb=1&fs=0&iv_load_policy=3&autohide=1&color=white&theme=dark&vq=hd720`}
+                      title={`Live de ${live.name}`}
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+                      allowFullScreen
+                      className="w-full h-full"
+                      style={{ pointerEvents: 'none' }}
+                    />
+                    
+                    {/* Overlay transparente para capturar interações */}
+                    <div 
+                      className="absolute inset-0 bg-transparent cursor-pointer"
+                      onClick={() => {
+                        setUserInteracted(true);
+                        setTimeout(() => tryPlayCurrentLive(), 100);
+                      }}
+                      onTouchStart={() => {
+                        setUserInteracted(true);
+                        setTimeout(() => tryPlayCurrentLive(), 100);
+                      }}
+                    />
+                  </div>
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center relative">
                     {/* Badge AO VIVO */}
