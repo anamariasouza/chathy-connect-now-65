@@ -41,7 +41,7 @@ interface ChatWindowProps {
 }
 
 const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton }: ChatWindowProps) => {
-  // Se for um chat com bot, usar o ChatBotWindow
+  // If it's a bot chat, use ChatBotWindow
   if (chat?.isBot) {
     return (
       <ChatBotWindow
@@ -72,13 +72,13 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
   const navigate = useNavigate();
   const { getMessages, addMessage, initializeConversation } = useConversationHistory();
 
-  // Função para obter avatar do usuário
+  // Function to get contact avatar
   const getContactAvatar = (contactName: string) => {
     const contact = contactProfiles.find(profile => profile.name === contactName);
     return contact?.avatar || '';
   };
 
-  // Função para obter avatar do grupo
+  // Function to get group avatar - Updated with correct paths
   const getGroupAvatar = (groupName: string) => {
     const groupAvatars = {
       'Grupo Família': '/lovable-uploads/b3c79faf-b014-4557-b3f4-17410f8bbc27.png',
@@ -542,7 +542,10 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
               <Avatar className="h-10 w-10">
                 <AvatarImage 
                   src={chat.isGroup ? getGroupAvatar(chat.name) : getContactAvatar(chat.name)} 
-                  alt={chat.name} 
+                  alt={chat.name}
+                  onError={(e) => {
+                    console.log('Avatar load error for:', chat.name, 'URL:', chat.isGroup ? getGroupAvatar(chat.name) : getContactAvatar(chat.name));
+                  }}
                 />
                 <AvatarFallback className={`${chat.isGroup ? 'bg-purple-500' : 'bg-chathy-primary'} text-white`}>
                   {chat.isGroup ? <Users size={20} /> : chat.name.charAt(0)}

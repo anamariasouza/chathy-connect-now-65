@@ -1,5 +1,4 @@
-
-const CACHE_NAME = 'chathy-v2';
+const CACHE_NAME = 'chathy-v3';
 const DOMAIN = 'https://chathy.app';
 
 const urlsToCache = [
@@ -11,7 +10,16 @@ const urlsToCache = [
   '/lovable-uploads/6278072d-3af7-4137-a3ab-0b4239621600.png',
   '/lovable-uploads/c3048bc0-d027-4174-b4d7-175e6286480e.png',
   '/lovable-uploads/a3af063e-0a1f-48b2-ab8b-8a97f20b3ea0.png',
-  '/lovable-uploads/ad3eed74-11c0-4afc-86c2-ab8ad73056e2.png'
+  '/lovable-uploads/ad3eed74-11c0-4afc-86c2-ab8ad73056e2.png',
+  '/lovable-uploads/acb4c601-9598-4c2a-9e33-0fb1a5cbe212.png',
+  '/lovable-uploads/2694899a-ed7c-4d27-abc6-9722b9e5bf1c.png',
+  '/lovable-uploads/b9c3df60-de8a-4271-907d-dfd93761ac3f.png',
+  '/lovable-uploads/5deded1d-8e0c-45ac-9406-da311468b1d3.png',
+  '/lovable-uploads/42c0170b-a517-45c3-b92f-9b7e8f6aac26.png',
+  '/lovable-uploads/b3c79faf-b014-4557-b3f4-17410f8bbc27.png',
+  '/lovable-uploads/9b6d18e8-018e-44fd-91cc-9a90b0724788.png',
+  '/lovable-uploads/4d705ce6-3586-480b-be91-7dea31336b49.png',
+  '/lovable-uploads/97e49b2b-0caf-467d-a8af-39923c0a7a77.png'
 ];
 
 // Instalar o service worker
