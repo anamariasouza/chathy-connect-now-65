@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { mistralService } from '@/services/mistralService';
+import { useConversationHistory } from '@/hooks/useConversationHistory';
 
 interface Message {
   id: string;
@@ -28,18 +29,32 @@ interface ChatBotWindowProps {
 }
 
 const ChatBotWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton }: ChatBotWindowProps) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      content: 'Olá! Sou o Chat-Boy, seu mascote! Como posso te ajudar hoje?',
-      sender: 'bot',
-      timestamp: new Date()
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [charCount, setCharCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { getMessages, addMessage, initializeConversation } = useConversationHistory();
+
+  // Carregar mensagens do localStorage e inicializar se necessário
+  useEffect(() => {
+    if (chat) {
+      const savedMessages = getMessages(chat.id);
+      if (savedMessages.length > 0) {
+        setMessages(savedMessages);
+      } else {
+        // Inicializar com mensagem de boas-vindas
+        const welcomeMessage: Message = {
+          id: '1',
+          content: 'Olá! Sou o Chat-Boy, seu mascote! Como posso te ajudar hoje?',
+          sender: 'bot',
+          timestamp: new Date()
+        };
+        initializeConversation(chat.id, [welcomeMessage]);
+        setMessages([welcomeMessage]);
+      }
+    }
+  }, [chat, getMessages, initializeConversation]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -67,7 +82,9 @@ const ChatBotWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButt
       timestamp: new Date()
     };
 
+    // Adicionar mensagem do usuário
     setMessages(prev => [...prev, userMessage]);
+    addMessage(chat.id, userMessage);
     setNewMessage('');
     setCharCount(0);
     setIsLoading(true);
@@ -88,6 +105,7 @@ const ChatBotWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButt
       };
 
       setMessages(prev => [...prev, botMessage]);
+      addMessage(chat.id, botMessage);
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
       const errorMessage: Message = {
@@ -97,6 +115,7 @@ const ChatBotWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButt
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
+      addMessage(chat.id, errorMessage);
     } finally {
       setIsLoading(false);
     }

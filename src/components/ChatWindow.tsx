@@ -6,12 +6,14 @@ import { useNavigate } from 'react-router-dom';
 import { contactProfiles } from '@/data/contactProfiles';
 import EmojiPicker from 'emoji-picker-react';
 import ChatBotWindow from './ChatBotWindow';
+import GroupDetailsPopup from './GroupDetailsPopup';
+import { useConversationHistory } from '@/hooks/useConversationHistory';
 
 interface Message {
   id: string;
-  text: string;
+  content: string;
   sender: string;
-  time: string;
+  timestamp: Date;
   isOwn: boolean;
   type?: 'text' | 'image' | 'video' | 'audio' | 'file';
   fileUrl?: string;
@@ -55,6 +57,7 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
   const [showParticipants, setShowParticipants] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
+  const [showGroupDetails, setShowGroupDetails] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
@@ -63,67 +66,175 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
+  const { getMessages, addMessage, initializeConversation } = useConversationHistory();
 
-  // useEffect for mock messages
+  // useEffect for messages with localStorage
   useEffect(() => {
     if (chat) {
-      let mockMessages: Message[] = [];
-      
-      if (chat.isGroup) {
-        // Mensagens para grupos
-        mockMessages = [
-          {
-            id: '1',
-            text: 'Oi pessoal! Como estão?',
-            sender: 'Maria Silva',
-            time: '14:30',
-            isOwn: false
-          },
-          {
-            id: '2',
-            text: 'Tudo bem por aqui!',
-            sender: 'Você',
-            time: '14:32',
-            isOwn: true
-          },
-          {
-            id: '3',
-            text: 'Vamos marcar um encontro?',
-            sender: 'Pedro Santos',
-            time: '14:33',
-            isOwn: false
-          }
-        ];
+      const savedMessages = getMessages(chat.id);
+      if (savedMessages.length > 0) {
+        setMessages(savedMessages);
       } else {
-        // Mensagens para contatos individuais
-        mockMessages = [
-          {
-            id: '1',
-            text: 'Oi! Como você está?',
-            sender: chat.name,
-            time: '14:30',
-            isOwn: false
-          },
-          {
-            id: '2',
-            text: 'Estou bem, obrigado! E você?',
-            sender: 'Você',
-            time: '14:32',
-            isOwn: true
-          },
-          {
-            id: '3',
-            text: 'Também estou bem! Que bom te ver por aqui',
-            sender: chat.name,
-            time: '14:33',
-            isOwn: false
-          }
-        ];
+        // Inicializar com mensagens de exemplo mais realistas
+        let initialMessages: Message[] = [];
+        
+        if (chat.isGroup) {
+          initialMessages = [
+            {
+              id: '1',
+              content: 'Pessoal, vamos organizar nosso próximo encontro!',
+              sender: 'Maria Silva',
+              timestamp: new Date(Date.now() - 3600000),
+              isOwn: false
+            },
+            {
+              id: '2',
+              content: 'Ótima ideia! Que tal no final de semana?',
+              sender: 'Você',
+              timestamp: new Date(Date.now() - 3300000),
+              isOwn: true
+            },
+            {
+              id: '3',
+              content: 'Sábado à tarde funciona para mim',
+              sender: 'Pedro Santos',
+              timestamp: new Date(Date.now() - 3000000),
+              isOwn: false
+            },
+            {
+              id: '4',
+              content: 'Perfeito! Vou criar o evento no grupo',
+              sender: 'João Silva',
+              timestamp: new Date(Date.now() - 2700000),
+              isOwn: false
+            }
+          ];
+        } else {
+          const contactExamples = {
+            'Maria Silva': [
+              {
+                id: '1',
+                content: 'Oi! Vi suas fotos da viagem, que lugar incrível!',
+                sender: 'Maria Silva',
+                timestamp: new Date(Date.now() - 1800000),
+                isOwn: false
+              },
+              {
+                id: '2',
+                content: 'Muito obrigado! Foi uma experiência incrível mesmo',
+                sender: 'Você',
+                timestamp: new Date(Date.now() - 1500000),
+                isOwn: true
+              },
+              {
+                id: '3',
+                content: 'Temos que planejar uma viagem juntos em breve!',
+                sender: 'Maria Silva',
+                timestamp: new Date(Date.now() - 1200000),
+                isOwn: false
+              }
+            ],
+            'Pedro Santos': [
+              {
+                id: '1',
+                content: 'E aí, como foi o projeto que você estava desenvolvendo?',
+                sender: 'Pedro Santos',
+                timestamp: new Date(Date.now() - 2400000),
+                isOwn: false
+              },
+              {
+                id: '2',
+                content: 'Foi um sucesso! Cliente ficou muito satisfeito',
+                sender: 'Você',
+                timestamp: new Date(Date.now() - 2100000),
+                isOwn: true
+              },
+              {
+                id: '3',
+                content: 'Que ótimo! Parabéns pelo trabalho 👏',
+                sender: 'Pedro Santos',
+                timestamp: new Date(Date.now() - 1800000),
+                isOwn: false
+              }
+            ],
+            'Ana Costa': [
+              {
+                id: '1',
+                content: 'Olha só essa foto que tirei hoje! 📸',
+                sender: 'Ana Costa',
+                timestamp: new Date(Date.now() - 3600000),
+                isOwn: false
+              },
+              {
+                id: '2',
+                content: 'Que linda! Você tem um olhar único para fotografia',
+                sender: 'Você',
+                timestamp: new Date(Date.now() - 3300000),
+                isOwn: true
+              },
+              {
+                id: '3',
+                content: 'Obrigada! Estou preparando uma exposição',
+                sender: 'Ana Costa',
+                timestamp: new Date(Date.now() - 3000000),
+                isOwn: false
+              }
+            ],
+            'João Silva': [
+              {
+                id: '1',
+                content: 'Escuta essa música que acabei de produzir! 🎵',
+                sender: 'João Silva',
+                timestamp: new Date(Date.now() - 4200000),
+                isOwn: false
+              },
+              {
+                id: '2',
+                content: 'Cara, ficou incrível! Que batida marcante',
+                sender: 'Você',
+                timestamp: new Date(Date.now() - 3900000),
+                isOwn: true
+              },
+              {
+                id: '3',
+                content: 'Valeu! Vai fazer parte do meu próximo álbum',
+                sender: 'João Silva',
+                timestamp: new Date(Date.now() - 3600000),
+                isOwn: false
+              }
+            ]
+          };
+
+          initialMessages = contactExamples[chat.name as keyof typeof contactExamples] || [
+            {
+              id: '1',
+              content: 'Olá! Como você está?',
+              sender: chat.name,
+              timestamp: new Date(Date.now() - 1800000),
+              isOwn: false
+            },
+            {
+              id: '2',
+              content: 'Oi! Estou bem, obrigado! E você?',
+              sender: 'Você',
+              timestamp: new Date(Date.now() - 1500000),
+              isOwn: true
+            },
+            {
+              id: '3',
+              content: 'Também estou bem! Que bom falar com você',
+              sender: chat.name,
+              timestamp: new Date(Date.now() - 1200000),
+              isOwn: false
+            }
+          ];
+        }
+        
+        initializeConversation(chat.id, initialMessages);
+        setMessages(initialMessages);
       }
-      
-      setMessages(mockMessages);
     }
-  }, [chat]);
+  }, [chat, getMessages, initializeConversation]);
 
   // scrollToBottom and useEffect
   const scrollToBottom = () => {
@@ -151,18 +262,16 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
         
         const newMessage: Message = {
           id: Date.now().toString(),
-          text: 'Áudio',
+          content: 'Áudio',
           sender: 'Você',
-          time: new Date().toLocaleTimeString('pt-BR', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          }),
+          timestamp: new Date(),
           isOwn: true,
           type: 'audio',
           fileUrl: audioUrl
         };
         
         setMessages(prev => [...prev, newMessage]);
+        addMessage(chat!.id, newMessage);
         stream.getTracks().forEach(track => track.stop());
       };
       
@@ -211,12 +320,9 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
       
       const newMessage: Message = {
         id: Date.now().toString(),
-        text: messageText,
+        content: messageText,
         sender: 'Você',
-        time: new Date().toLocaleTimeString('pt-BR', { 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        }),
+        timestamp: new Date(),
         isOwn: true,
         type: type,
         fileUrl: fileUrl,
@@ -224,6 +330,7 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
       };
       
       setMessages(prev => [...prev, newMessage]);
+      addMessage(chat.id, newMessage);
       setShowAttachmentMenu(false);
     }
   };
@@ -238,15 +345,13 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
     if (message.trim() && chat) {
       const newMessage: Message = {
         id: Date.now().toString(),
-        text: message,
+        content: message,
         sender: 'Você',
-        time: new Date().toLocaleTimeString('pt-BR', { 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        }),
+        timestamp: new Date(),
         isOwn: true
       };
       setMessages([...messages, newMessage]);
+      addMessage(chat.id, newMessage);
       setMessage('');
     }
   };
@@ -281,6 +386,13 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
     }
   };
 
+  const handleGroupAvatarClick = () => {
+    if (chat?.isGroup) {
+      setShowGroupDetails(true);
+    }
+  };
+
+  // renderMessage function
   const renderMessage = (msg: Message) => {
     if (msg.type === 'audio') {
       return (
@@ -297,7 +409,7 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
       return (
         <div>
           <img src={msg.fileUrl} alt="Imagem" className="max-w-48 rounded-lg mb-2" />
-          <p className="text-sm">{msg.text}</p>
+          <p className="text-sm">{msg.content}</p>
         </div>
       );
     }
@@ -308,7 +420,7 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
           <video src={msg.fileUrl} controls className="max-w-48 rounded-lg mb-2">
             Seu navegador não suporta vídeo.
           </video>
-          <p className="text-sm">{msg.text}</p>
+          <p className="text-sm">{msg.content}</p>
         </div>
       );
     }
@@ -324,7 +436,7 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
       );
     }
     
-    return <p className="text-sm">{msg.text}</p>;
+    return <p className="text-sm">{msg.content}</p>;
   };
 
   if (!chat) {
@@ -351,7 +463,10 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
       <div className="p-4 border-b border-gray-200 bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className={`w-10 h-10 rounded-full ${chat.isGroup ? 'bg-purple-500' : 'bg-chathy-primary'} flex items-center justify-center text-white font-semibold`}>
+            <div 
+              className={`w-10 h-10 rounded-full ${chat.isGroup ? 'bg-purple-500' : 'bg-chathy-primary'} flex items-center justify-center text-white font-semibold ${chat.isGroup ? 'cursor-pointer hover:opacity-80' : ''}`}
+              onClick={chat.isGroup ? handleGroupAvatarClick : undefined}
+            >
               {chat.avatar}
             </div>
             <div>
@@ -452,7 +567,10 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
               <p className={`text-xs mt-1 ${
                 msg.isOwn ? 'text-green-100' : 'text-gray-500'
               }`}>
-                {msg.time}
+                {msg.timestamp.toLocaleTimeString('pt-BR', { 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })}
               </p>
             </div>
           </div>
@@ -592,6 +710,24 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
           className="hidden"
         />
       </div>
+
+      {/* Group Details Popup */}
+      {chat.isGroup && chat.participants && (
+        <GroupDetailsPopup
+          isOpen={showGroupDetails}
+          onClose={() => setShowGroupDetails(false)}
+          groupName={chat.name}
+          groupAvatar={chat.avatar}
+          participants={chat.participants}
+          onStartPrivateChat={handleParticipantClick}
+          onViewProfile={(participant) => {
+            const participantProfile = contactProfiles.find(profile => profile.name === participant);
+            if (participantProfile) {
+              navigate('/profile', { state: { contact: participantProfile } });
+            }
+          }}
+        />
+      )}
     </div>
   );
 };
