@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { usePWA } from '@/hooks/usePWA';
+import { Eye, EyeOff, ArrowLeft, Download, Smartphone } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -41,6 +42,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isAuthenticated, checkAuth } = useAuth();
+  const { isInstallable, installPWA } = usePWA();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -481,8 +483,40 @@ const Login = () => {
     }
   };
 
+  const handleInstallPWA = async () => {
+    const success = await installPWA();
+    if (success) {
+      toast({
+        title: "App instalado!",
+        description: "O Chathy foi instalado em seu dispositivo",
+      });
+    } else {
+      toast({
+        title: "Erro na instalação",
+        description: "Não foi possível instalar o app. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f0f2f5] p-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#f0f2f5] p-4 relative">
+      {/* Botão flutuante PWA */}
+      {isInstallable && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <Button
+            onClick={handleInstallPWA}
+            className="bg-[#00a884] hover:bg-[#008069] text-white shadow-lg rounded-full w-16 h-16 p-0 flex items-center justify-center group transition-all duration-300 hover:w-auto hover:px-4"
+          >
+            <Download size={24} className="group-hover:hidden" />
+            <div className="hidden group-hover:flex items-center space-x-2">
+              <Smartphone size={20} />
+              <span className="text-sm font-medium whitespace-nowrap">Instalar App</span>
+            </div>
+          </Button>
+        </div>
+      )}
+
       <div className="w-full max-w-md">
         {/* WhatsApp Web style header */}
         <div className="text-center mb-8">
