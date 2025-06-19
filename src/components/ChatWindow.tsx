@@ -247,6 +247,22 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
   }, [messages]);
 
   // Audio recording functions
+  const cleanupRecording = () => {
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+    
+    if (audioStream) {
+      audioStream.getTracks().forEach(track => track.stop());
+      setAudioStream(null);
+    }
+    
+    setMediaRecorder(null);
+    setIsRecording(false);
+    setRecordingTime(0);
+  };
+
   const startRecording = async () => {
     if (isRecording) return;
     
@@ -264,6 +280,10 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
       
       recorder.onstop = () => {
         console.log('Gravação finalizada, criando áudio...');
+        
+        // Limpar tudo ANTES de processar o áudio para evitar loops
+        cleanupRecording();
+        
         const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
         const audioUrl = URL.createObjectURL(audioBlob);
         
@@ -279,12 +299,6 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
         
         setMessages(prev => [...prev, newMessage]);
         addMessage(chat!.id, newMessage);
-        
-        // Limpar stream
-        if (audioStream) {
-          audioStream.getTracks().forEach(track => track.stop());
-          setAudioStream(null);
-        }
       };
       
       setAudioStream(stream);
@@ -299,6 +313,7 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
       
     } catch (error) {
       console.error('Erro ao iniciar gravação:', error);
+      cleanupRecording();
     }
   };
 
@@ -306,14 +321,7 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
     console.log('Parando gravação...');
     if (mediaRecorder && isRecording) {
       mediaRecorder.stop();
-      setIsRecording(false);
-      setRecordingTime(0);
-      setMediaRecorder(null);
-      
-      if (recordingTimerRef.current) {
-        clearInterval(recordingTimerRef.current);
-        recordingTimerRef.current = null;
-      }
+      // A limpeza será feita no evento onstop do MediaRecorder
     }
   };
 
@@ -321,20 +329,7 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
     console.log('Cancelando gravação...');
     if (mediaRecorder && isRecording) {
       mediaRecorder.stop();
-      setIsRecording(false);
-      setRecordingTime(0);
-      setMediaRecorder(null);
-      
-      if (recordingTimerRef.current) {
-        clearInterval(recordingTimerRef.current);
-        recordingTimerRef.current = null;
-      }
-      
-      // Limpar stream sem salvar áudio
-      if (audioStream) {
-        audioStream.getTracks().forEach(track => track.stop());
-        setAudioStream(null);
-      }
+      cleanupRecording();
     }
   };
 

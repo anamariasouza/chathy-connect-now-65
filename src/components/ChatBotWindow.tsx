@@ -35,7 +35,6 @@ const ChatBotWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButt
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [charCount, setCharCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { getMessages, addMessage, initializeConversation } = useConversationHistory();
 
@@ -72,7 +71,6 @@ const ChatBotWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButt
     const value = e.target.value;
     if (value.length <= 200) {
       setNewMessage(value);
-      setCharCount(value.length);
     }
   };
 
@@ -91,7 +89,6 @@ const ChatBotWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButt
     setMessages(prev => [...prev, userMessage]);
     addMessage(chat.id, userMessage);
     setNewMessage('');
-    setCharCount(0);
     setIsLoading(true);
 
     try {
