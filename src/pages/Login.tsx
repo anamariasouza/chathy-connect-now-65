@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -510,8 +511,8 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-[#f0f2f5] p-4 relative">
       <div className="w-full max-w-md">
         {/* WhatsApp Web style header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
+        <div className="text-center mb-2.5">
+          <div className="flex items-center justify-center">
             <img 
               src="/lovable-uploads/6278072d-3af7-4137-a3ab-0b4239621600.png" 
               alt="Chathy Logo" 
