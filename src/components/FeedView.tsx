@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Heart, MessageCircle, Share, MoreVertical, Upload, Link } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -104,10 +105,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
     }
   ]);
 
-  // Create infinite loop by duplicating posts
-  const infinitePosts = [...posts, ...posts, ...posts]; // Triple the posts for seamless looping
-  
-  const [currentPostIndex, setCurrentPostIndex] = useState(posts.length); // Start at the middle set
+  const [currentPostIndex, setCurrentPostIndex] = useState(0);
   const [carouselApis, setCarouselApis] = useState<Map<string, CarouselApi>>(new Map());
   const [currentSlides, setCurrentSlides] = useState<Map<string, number>>(new Map());
   const [newVideoLink, setNewVideoLink] = useState('');
@@ -115,8 +113,6 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [userInteracted, setUserInteracted] = useState(false);
   const [currentVisibleVideo, setCurrentVisibleVideo] = useState<string>('');
-  const [lastScrollPosition, setLastScrollPosition] = useState(0);
-  const [isLooping, setIsLooping] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const iframeRefs = useRef<Map<string, HTMLIFrameElement>>(new Map());
@@ -155,29 +151,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
     });
   };
 
-  // Nova função para pausar vídeo ao rolar 80px
-  const handleScrollPause = () => {
-    if (!containerRef.current) return;
-
-    const currentScrollPosition = containerRef.current.scrollTop;
-    const scrollDifference = Math.abs(currentScrollPosition - lastScrollPosition);
-
-    if (scrollDifference >= 80) {
-      console.log('Scroll de 80px detectado, pausando todos os vídeos');
-      pauseAllVideos();
-      setCurrentVisibleVideo('');
-      setLastScrollPosition(currentScrollPosition);
-    }
-  };
-
-  // Função corrigida para pausar vídeo ao clicar (sem reiniciar)
-  const handleVideoClick = (postId: string) => {
-    console.log('Clique no vídeo detectado:', postId);
-    pauseVideo(postId);
-    setCurrentVisibleVideo('');
-  };
-
-  // Configurar Intersection Observer para posts infinitos
+  // Configurar Intersection Observer
   useEffect(() => {
     if (observerRef.current) {
       observerRef.current.disconnect();
@@ -188,11 +162,10 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
         entries.forEach((entry) => {
           const postId = entry.target.getAttribute('data-post-id');
           if (postId) {
-            const post = infinitePosts.find(p => p.id === postId);
+            const post = posts.find(p => p.id === postId);
             
             if (entry.isIntersecting && entry.intersectionRatio > 0.7) {
-              // Post entrou na tela com mais de 70% visível
-              console.log('Post entrando na tela:', postId, 'Ratio:', entry.intersectionRatio);
+              console.log('Post entrando na tela:', postId);
               
               // Pausar todos os vídeos primeiro
               pauseAllVideos();
@@ -206,13 +179,11 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
                   }
                 }, 300);
               } else {
-                // Se não tem vídeo, limpar o vídeo visível atual
                 setCurrentVisibleVideo('');
               }
               
             } else if (!entry.isIntersecting || entry.intersectionRatio < 0.3) {
-              // Post saiu da tela ou está menos de 30% visível
-              console.log('Post saindo da tela:', postId, 'Ratio:', entry.intersectionRatio);
+              console.log('Post saindo da tela:', postId);
               
               // Se era um vídeo que estava tocando, pausar
               if (post?.youtubeVideoId && currentVisibleVideo === postId) {
@@ -229,7 +200,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
       }
     );
 
-    // Observar todos os posts infinitos
+    // Observar todos os posts
     const postElements = document.querySelectorAll('[data-post-id]');
     postElements.forEach(el => {
       if (observerRef.current) {
@@ -242,7 +213,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
         observerRef.current.disconnect();
       }
     };
-  }, [infinitePosts, userInteracted, currentVisibleVideo]);
+  }, [posts, userInteracted, currentVisibleVideo]);
 
   const playVideoFromStart = (postId: string) => {
     const iframe = iframeRefs.current.get(postId);
@@ -286,6 +257,33 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
     }
   };
 
+  // Controle simples de scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!containerRef.current) return;
+      
+      const container = containerRef.current;
+      const scrollTop = container.scrollTop;
+      const itemHeight = container.clientHeight;
+      const newIndex = Math.round(scrollTop / itemHeight);
+      
+      if (newIndex !== currentPostIndex && newIndex >= 0 && newIndex < posts.length) {
+        console.log('Mudança de post via scroll:', currentPostIndex, '->', newIndex);
+        setCurrentPostIndex(newIndex);
+        
+        // Pausar todos os vídeos ao mudar de post
+        pauseAllVideos();
+        setCurrentVisibleVideo('');
+      }
+    };
+
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll, { passive: true });
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
+  }, [currentPostIndex, posts.length]);
+
   // Controlar áudio quando a preferência muda
   useEffect(() => {
     if (currentVisibleVideo && userInteracted) {
@@ -305,91 +303,6 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
       }
     }
   }, [audioEnabled, currentVisibleVideo, userInteracted]);
-
-  // Controle de scroll com looping infinito suave
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!containerRef.current || isLooping) return;
-      
-      // Verificar se rolou 80px para pausar
-      handleScrollPause();
-      
-      const container = containerRef.current;
-      const scrollTop = container.scrollTop;
-      const itemHeight = container.clientHeight;
-      const maxScrollTop = container.scrollHeight - container.clientHeight;
-      
-      const newIndex = Math.round(scrollTop / itemHeight);
-      
-      // Implementar looping infinito suave
-      if (scrollTop >= maxScrollTop - 50) {
-        // Chegou perto do final, fazer loop suave para o meio
-        console.log('Chegou ao final do feed, fazendo loop infinito');
-        setIsLooping(true);
-        pauseAllVideos();
-        setCurrentVisibleVideo('');
-        
-        const middleIndex = posts.length; // Índice do segundo conjunto
-        setCurrentPostIndex(middleIndex);
-        
-        setTimeout(() => {
-          container.scrollTo({
-            top: middleIndex * itemHeight,
-            behavior: 'auto' // Mudança instantânea para seamless loop
-          });
-          setIsLooping(false);
-        }, 100);
-        
-        return;
-      }
-      
-      if (scrollTop <= 50 && currentPostIndex > 0) {
-        // Chegou perto do início, fazer loop suave para o meio
-        console.log('Chegou ao início do feed, fazendo loop infinito');
-        setIsLooping(true);
-        pauseAllVideos();
-        setCurrentVisibleVideo('');
-        
-        const middleIndex = posts.length * 2 - 1; // Último item do segundo conjunto
-        setCurrentPostIndex(middleIndex);
-        
-        setTimeout(() => {
-          container.scrollTo({
-            top: middleIndex * itemHeight,
-            behavior: 'auto' // Mudança instantânea para seamless loop
-          });
-          setIsLooping(false);
-        }, 100);
-        
-        return;
-      }
-      
-      if (newIndex !== currentPostIndex && newIndex >= 0 && newIndex < infinitePosts.length && !isLooping) {
-        console.log('Mudança de post via scroll:', currentPostIndex, '->', newIndex);
-        setCurrentPostIndex(newIndex);
-        
-        // Pausar todos os vídeos ao mudar de post
-        pauseAllVideos();
-        setCurrentVisibleVideo('');
-      }
-    };
-
-    const container = containerRef.current;
-    if (container) {
-      // Inicializar no meio do loop infinito
-      const middleIndex = posts.length;
-      const itemHeight = container.clientHeight;
-      container.scrollTo({
-        top: middleIndex * itemHeight,
-        behavior: 'auto'
-      });
-      setCurrentPostIndex(middleIndex);
-      setLastScrollPosition(container.scrollTop);
-      
-      container.addEventListener('scroll', handleScroll);
-      return () => container.removeEventListener('scroll', handleScroll);
-    }
-  }, [currentPostIndex, infinitePosts.length, lastScrollPosition, isLooping, posts.length]);
 
   const setCarouselApi = (postId: string, api: CarouselApi) => {
     if (!api) return;
@@ -484,11 +397,15 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
     onViewProfile?.(contact);
   };
 
+  const handleVideoClick = (postId: string) => {
+    console.log('Clique no vídeo detectado:', postId);
+    pauseVideo(postId);
+    setCurrentVisibleVideo('');
+  };
+
   const handleIframeLoad = (postId: string, iframe: HTMLIFrameElement) => {
-    // Use unique key for infinite posts to avoid conflicts
-    const uniqueKey = `${postId}_${Math.random()}`;
-    iframeRefs.current.set(uniqueKey, iframe);
-    console.log('Iframe carregado para post:', uniqueKey);
+    iframeRefs.current.set(postId, iframe);
+    console.log('Iframe carregado para post:', postId);
   };
 
   return (
@@ -557,9 +474,9 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
         className="h-full overflow-y-auto snap-y snap-mandatory scrollbar-hide"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        {infinitePosts.map((post, index) => (
+        {posts.map((post, index) => (
           <div 
-            key={`${post.id}_${index}`} 
+            key={post.id} 
             className="h-screen w-full snap-start relative flex items-center justify-center"
             data-post-id={post.id}
           >
@@ -568,7 +485,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
               {post.youtubeVideoId ? (
                 <div className="relative h-full" style={{ width: 'calc(100vh * 9 / 16)', maxWidth: '100vw' }}>
                   <iframe
-                    ref={(iframe) => iframe && handleIframeLoad(`${post.id}_${index}`, iframe)}
+                    ref={(iframe) => iframe && handleIframeLoad(post.id, iframe)}
                     width="100%"
                     height="100%"
                     src={`https://www.youtube.com/embed/${post.youtubeVideoId}?autoplay=0&mute=1&loop=1&playlist=${post.youtubeVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&start=0&end=0&cc_load_policy=0&disablekb=1&fs=0&iv_load_policy=3&autohide=1&color=white&theme=dark&vq=hd720`}
@@ -583,32 +500,31 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
                     className="absolute inset-0 bg-transparent cursor-pointer"
                     onClick={() => {
                       if (userInteracted) {
-                        handleVideoClick(`${post.id}_${index}`);
+                        handleVideoClick(post.id);
                       } else {
                         setUserInteracted(true);
-                        if (currentVisibleVideo === `${post.id}_${index}`) {
-                          playVideoFromStart(`${post.id}_${index}`);
+                        if (currentVisibleVideo === post.id) {
+                          playVideoFromStart(post.id);
                         }
                       }
                     }}
                     onTouchStart={() => {
                       if (userInteracted) {
-                        handleVideoClick(`${post.id}_${index}`);
+                        handleVideoClick(post.id);
                       } else {
                         setUserInteracted(true);
-                        if (currentVisibleVideo === `${post.id}_${index}`) {
-                          playVideoFromStart(`${post.id}_${index}`);
+                        if (currentVisibleVideo === post.id) {
+                          playVideoFromStart(post.id);
                         }
                       }
                     }}
                   />
                 </div>
               ) : post.images && post.images.length > 0 ? (
-                
                 <div className="h-full relative" style={{ width: 'calc(100vh * 9 / 16)', maxWidth: '100vw' }}>
                   <Carousel 
                     className="w-full h-full"
-                    setApi={(api) => setCarouselApi(`${post.id}_${index}`, api)}
+                    setApi={(api) => setCarouselApi(post.id, api)}
                   >
                     <CarouselContent className="h-full -ml-0">
                       {post.images.map((image, imageIndex) => (
@@ -645,7 +561,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
                         <div
                           key={dotIndex}
                           className={`w-2 h-2 rounded-full transition-colors ${
-                            (currentSlides.get(`${post.id}_${index}`) || 0) === dotIndex
+                            (currentSlides.get(post.id) || 0) === dotIndex
                               ? 'bg-white'
                               : 'bg-white/50'
                           }`}
