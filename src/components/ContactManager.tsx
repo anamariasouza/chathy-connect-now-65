@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Plus, Users, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -160,7 +159,7 @@ const ContactManager = ({ onContactSelect, onViewProfile, onStartChat }: Contact
                   <h3 className="font-medium text-gray-900 dark:text-white">{contact.name}</h3>
                   {contact.isBot && (
                     <span className="text-xs bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300 px-2 py-1 rounded-full">
-                      IA Assistant
+                      IA
                     </span>
                   )}
                   {contact.isGroup && (
@@ -168,15 +167,10 @@ const ContactManager = ({ onContactSelect, onViewProfile, onStartChat }: Contact
                       Grupo
                     </span>
                   )}
-                  {contact.isFixed && (
-                    <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 px-2 py-1 rounded-full">
-                      Fixo
-                    </span>
-                  )}
                 </div>
                 {contact.isBot ? (
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Assistente inteligente sempre disponível
+                    Inteligente e sempre disponível
                   </p>
                 ) : contact.isGroup && contact.participants ? (
                   <p className="text-sm text-gray-500 dark:text-gray-400">
