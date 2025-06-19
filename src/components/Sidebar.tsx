@@ -45,9 +45,13 @@ const Sidebar = ({ activeTab, onTabChange, audioEnabled = true, onAudioToggle }:
         <div className="flex flex-col items-center space-y-3 mb-4">
           <button
             onClick={handleProfileClick}
-            className="w-10 h-10 bg-[#00a884] rounded-full flex items-center justify-center text-white font-bold text-lg hover:bg-[#008069] transition-all duration-200"
+            className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-all duration-200"
           >
-            W
+            <img 
+              src="/lovable-uploads/dd9738c9-e44d-4130-86fc-a762359e3a4e.png" 
+              alt="Chathy Logo" 
+              className="w-8 h-8 object-contain"
+            />
           </button>
         </div>
         
@@ -102,6 +106,11 @@ const Sidebar = ({ activeTab, onTabChange, audioEnabled = true, onAudioToggle }:
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-[#202c33] h-16">
         <div className="flex items-center justify-between px-4 h-full">
           <div className="flex items-center space-x-3">
+            <img 
+              src="/lovable-uploads/dd9738c9-e44d-4130-86fc-a762359e3a4e.png" 
+              alt="Chathy Logo" 
+              className="w-8 h-8 object-contain"
+            />
             <h1 className="text-lg font-normal text-white">Chathy</h1>
           </div>
           
@@ -135,9 +144,13 @@ const Sidebar = ({ activeTab, onTabChange, audioEnabled = true, onAudioToggle }:
             
             <button
               onClick={handleProfileClick}
-              className="w-8 h-8 bg-[#00a884] rounded-full flex items-center justify-center text-white font-bold text-sm ml-2"
+              className="w-8 h-8 bg-white rounded-full flex items-center justify-center ml-2 hover:bg-gray-100 transition-all duration-200"
             >
-              W
+              <img 
+                src="/lovable-uploads/dd9738c9-e44d-4130-86fc-a762359e3a4e.png" 
+                alt="Chathy Logo" 
+                className="w-6 h-6 object-contain"
+              />
             </button>
           </div>
         </div>
