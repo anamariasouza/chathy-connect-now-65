@@ -302,7 +302,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
     }
   }, [audioEnabled, currentVisibleVideo, userInteracted]);
 
-  // Controle de scroll com pausa a cada 80px
+  // Controle de scroll com pausa a cada 80px e looping infinito
   useEffect(() => {
     const handleScroll = () => {
       if (!containerRef.current) return;
@@ -313,7 +313,47 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
       const container = containerRef.current;
       const scrollTop = container.scrollTop;
       const itemHeight = container.clientHeight;
+      const maxScrollTop = container.scrollHeight - container.clientHeight;
+      
       const newIndex = Math.round(scrollTop / itemHeight);
+      
+      // Implementar looping infinito
+      if (scrollTop >= maxScrollTop - 10) {
+        // Chegou ao final, voltar para o início
+        console.log('Chegou ao final do feed, voltando ao início');
+        pauseAllVideos();
+        setCurrentVisibleVideo('');
+        setCurrentPostIndex(0);
+        setLastScrollPosition(0);
+        
+        setTimeout(() => {
+          container.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
+        }, 100);
+        
+        return;
+      }
+      
+      if (scrollTop <= 0 && currentPostIndex > 0) {
+        // Chegou ao início e estava em outro post, ir para o último
+        console.log('Chegou ao início do feed, indo para o último post');
+        pauseAllVideos();
+        setCurrentVisibleVideo('');
+        const lastIndex = posts.length - 1;
+        setCurrentPostIndex(lastIndex);
+        setLastScrollPosition(lastIndex * itemHeight);
+        
+        setTimeout(() => {
+          container.scrollTo({
+            top: lastIndex * itemHeight,
+            behavior: 'smooth'
+          });
+        }, 100);
+        
+        return;
+      }
       
       if (newIndex !== currentPostIndex && newIndex >= 0 && newIndex < posts.length) {
         console.log('Mudança de post via scroll:', currentPostIndex, '->', newIndex);
