@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Phone, Video, MoreVertical, Paperclip, Smile, X, Users, User, Mic, Camera, FileText, Image, MicIcon, Square } from 'lucide-react';
+import { Send, Phone, Video, MoreVertical, Paperclip, Smile, X, Users, User, Mic, Camera, FileText, Image, MicIcon, Square, Play, Pause } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
@@ -59,9 +59,11 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [showGroupDetails, setShowGroupDetails] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
+  const [audioChunks, setAudioChunks] = useState<BlobPart[]>([]);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -260,7 +262,9 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
     
     setMediaRecorder(null);
     setIsRecording(false);
+    setIsPaused(false);
     setRecordingTime(0);
+    setAudioChunks([]);
   };
 
   const startRecording = async () => {
@@ -270,41 +274,20 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
       console.log('Iniciando gravação...');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
-      const audioChunks: BlobPart[] = [];
+      const chunks: BlobPart[] = [];
       
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          audioChunks.push(event.data);
+          chunks.push(event.data);
         }
-      };
-      
-      recorder.onstop = () => {
-        console.log('Gravação finalizada, criando áudio...');
-        
-        // Limpar tudo ANTES de processar o áudio para evitar loops
-        cleanupRecording();
-        
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        
-        const newMessage: Message = {
-          id: Date.now().toString(),
-          content: 'Áudio',
-          sender: 'Você',
-          timestamp: new Date(),
-          isOwn: true,
-          type: 'audio',
-          fileUrl: audioUrl
-        };
-        
-        setMessages(prev => [...prev, newMessage]);
-        addMessage(chat!.id, newMessage);
       };
       
       setAudioStream(stream);
       setMediaRecorder(recorder);
+      setAudioChunks(chunks);
       recorder.start();
       setIsRecording(true);
+      setIsPaused(false);
       setRecordingTime(0);
       
       recordingTimerRef.current = setInterval(() => {
@@ -317,20 +300,60 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
     }
   };
 
-  const stopRecording = () => {
-    console.log('Parando gravação...');
-    if (mediaRecorder && isRecording) {
+  const pauseRecording = () => {
+    if (mediaRecorder && isRecording && !isPaused) {
+      console.log('Pausando gravação...');
+      mediaRecorder.pause();
+      setIsPaused(true);
+      
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+    }
+  };
+
+  const resumeRecording = () => {
+    if (mediaRecorder && isRecording && isPaused) {
+      console.log('Retomando gravação...');
+      mediaRecorder.resume();
+      setIsPaused(false);
+      
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+    }
+  };
+
+  const sendAudio = () => {
+    if (mediaRecorder && audioChunks.length > 0) {
+      console.log('Enviando áudio...');
+      
       mediaRecorder.stop();
-      // A limpeza será feita no evento onstop do MediaRecorder
+      
+      const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      const newMessage: Message = {
+        id: Date.now().toString(),
+        content: 'Áudio',
+        sender: 'Você',
+        timestamp: new Date(),
+        isOwn: true,
+        type: 'audio',
+        fileUrl: audioUrl
+      };
+      
+      setMessages(prev => [...prev, newMessage]);
+      addMessage(chat!.id, newMessage);
+      
+      cleanupRecording();
     }
   };
 
   const cancelRecording = () => {
     console.log('Cancelando gravação...');
-    if (mediaRecorder && isRecording) {
-      mediaRecorder.stop();
-      cleanupRecording();
-    }
+    cleanupRecording();
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video' | 'file') => {
@@ -613,16 +636,37 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
 
       {/* Input */}
       <div className="p-4 border-t border-gray-200 bg-white relative">
-        {/* Recording indicator */}
-        {isRecording && (
-          <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg mb-3 border border-red-200">
+        {/* Recording interface */}
+        {(isRecording || isPaused) && (
+          <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg mb-3 border border-blue-200">
             <div className="flex items-center space-x-3">
-              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-              <span className="text-red-600 text-sm font-medium">
-                Gravando áudio: {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
+              <div className={`w-3 h-3 rounded-full ${isPaused ? 'bg-yellow-500' : 'bg-red-500 animate-pulse'}`}></div>
+              <span className={`text-sm font-medium ${isPaused ? 'text-yellow-600' : 'text-red-600'}`}>
+                {isPaused ? 'Pausado' : 'Gravando'}: {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
               </span>
             </div>
             <div className="flex items-center space-x-2">
+              {!isPaused ? (
+                <Button
+                  onClick={pauseRecording}
+                  variant="outline"
+                  size="sm"
+                  className="text-yellow-600 border-yellow-200 hover:bg-yellow-50"
+                >
+                  <Pause size={16} />
+                  Pausar
+                </Button>
+              ) : (
+                <Button
+                  onClick={resumeRecording}
+                  variant="outline"
+                  size="sm"
+                  className="text-green-600 border-green-200 hover:bg-green-50"
+                >
+                  <Play size={16} />
+                  Retomar
+                </Button>
+              )}
               <Button
                 onClick={cancelRecording}
                 variant="outline"
@@ -633,12 +677,13 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
                 Cancelar
               </Button>
               <Button
-                onClick={stopRecording}
+                onClick={sendAudio}
                 size="sm"
-                className="bg-red-500 hover:bg-red-600 text-white"
+                className="bg-green-500 hover:bg-green-600 text-white"
+                disabled={!isRecording && !isPaused}
               >
-                <Square size={16} />
-                Parar e Enviar
+                <Send size={16} />
+                Enviar
               </Button>
             </div>
           </div>
@@ -703,7 +748,7 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
           </div>
         )}
 
-        {!isRecording && (
+        {!(isRecording || isPaused) && (
           <div className="flex items-center space-x-2">
             <Button 
               variant="ghost" 
@@ -740,7 +785,6 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
               <Button 
                 onClick={startRecording}
                 className="bg-[#00a884] hover:bg-[#008069] text-white"
-                disabled={isRecording}
               >
                 <Mic size={20} />
               </Button>
