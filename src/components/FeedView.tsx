@@ -33,7 +33,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true, onAudioToggle, uploadDia
     {
       id: '1',
       user: 'Maria Silva',
-      avatar: 'M',
+      avatar: '/lovable-uploads/2694899a-ed7c-4d27-abc6-9722b9e5bf1c.png',
       description: 'Cozinhando um delicioso bolo de chocolate! 🍰✨ #culinaria #bolo',
       youtubeVideoId: 'rRFVWL82pNk',
       likes: 234,
@@ -45,7 +45,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true, onAudioToggle, uploadDia
     {
       id: '2',
       user: 'Pedro Santos',
-      avatar: 'P',
+      avatar: '/lovable-uploads/b9c3df60-de8a-4271-907d-dfd93761ac3f.png',
       description: 'Viagem incrível pelas montanhas! 🏔️',
       images: [
         'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&h=711&fit=crop',
@@ -61,7 +61,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true, onAudioToggle, uploadDia
     {
       id: '3',
       user: 'Ana Costa',
-      avatar: 'A',
+      avatar: '/lovable-uploads/5deded1d-8e0c-45ac-9406-da311468b1d3.png',
       description: 'Tutorial de maquiagem para o dia a dia 💄✨',
       youtubeVideoId: '_83ImgNgzvc',
       likes: 890,
@@ -73,7 +73,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true, onAudioToggle, uploadDia
     {
       id: '4',
       user: 'João Silva',
-      avatar: 'J',
+      avatar: '/lovable-uploads/42c0170b-a517-45c3-b92f-9b7e8f6aac26.png',
       description: 'Treino pesado na academia hoje! 💪🔥',
       youtubeVideoId: 'bBsErSe1VHY',
       likes: 445,
@@ -84,20 +84,71 @@ const FeedView = ({ onViewProfile, audioEnabled = true, onAudioToggle, uploadDia
     },
     {
       id: '5',
+      user: 'Maria Silva',
+      avatar: '/lovable-uploads/2694899a-ed7c-4d27-abc6-9722b9e5bf1c.png',
+      description: 'Momento especial no trabalho hoje! ✨👩‍💼',
+      images: ['/lovable-uploads/2694899a-ed7c-4d27-abc6-9722b9e5bf1c.png'],
+      likes: 342,
+      comments: 56,
+      shares: 18,
+      isLiked: false,
+      timestamp: 'há 10 horas'
+    },
+    {
+      id: '6',
+      user: 'Pedro Santos',
+      avatar: '/lovable-uploads/b9c3df60-de8a-4271-907d-dfd93761ac3f.png',
+      description: 'Novo projeto de programação! 💻🚀',
+      images: ['/lovable-uploads/b9c3df60-de8a-4271-907d-dfd93761ac3f.png'],
+      likes: 789,
+      comments: 123,
+      shares: 45,
+      isLiked: true,
+      timestamp: 'há 12 horas'
+    },
+    {
+      id: '7',
+      user: 'Ana Costa',
+      avatar: '/lovable-uploads/5deded1d-8e0c-45ac-9406-da311468b1d3.png',
+      description: 'Sessão de fotos incríveis hoje! 📸🌟',
+      images: [
+        '/lovable-uploads/5deded1d-8e0c-45ac-9406-da311468b1d3.png',
+        'https://images.unsplash.com/photo-1494790108755-2616c27bb675?w=400&h=711&fit=crop'
+      ],
+      likes: 1234,
+      comments: 234,
+      shares: 89,
+      isLiked: false,
+      timestamp: 'há 14 horas'
+    },
+    {
+      id: '8',
+      user: 'João Silva',
+      avatar: '/lovable-uploads/42c0170b-a517-45c3-b92f-9b7e8f6aac26.png',
+      description: 'Nova música em produção! 🎵🎧',
+      images: ['/lovable-uploads/42c0170b-a517-45c3-b92f-9b7e8f6aac26.png'],
+      likes: 567,
+      comments: 92,
+      shares: 34,
+      isLiked: true,
+      timestamp: 'há 16 horas'
+    },
+    {
+      id: '9',
       user: 'Carlos Lima',
-      avatar: 'C',
+      avatar: '/lovable-uploads/b3c79faf-b014-4557-b3f4-17410f8bbc27.png',
       description: 'Dicas de programação para iniciantes! 💻✨',
       youtubeVideoId: 'hQA-mQyWUQU',
       likes: 678,
       comments: 124,
       shares: 45,
       isLiked: false,
-      timestamp: 'há 12 horas'
+      timestamp: 'há 18 horas'
     },
     {
-      id: '6',
+      id: '10',
       user: 'Fernanda Costa',
-      avatar: 'F',
+      avatar: '/lovable-uploads/9b6d18e8-018e-44fd-91cc-9a90b0724788.png',
       description: 'Arte e criatividade no dia a dia! 🎨🌟',
       youtubeVideoId: 'omcoa2GUc2U',
       likes: 892,
@@ -588,9 +639,22 @@ const FeedView = ({ onViewProfile, audioEnabled = true, onAudioToggle, uploadDia
               <div className="flex flex-col items-center relative">
                 <button
                   onClick={() => handleViewProfile(post)}
-                  className="w-12 h-12 rounded-full bg-chathy-primary flex items-center justify-center text-white font-semibold mb-2 hover:scale-110 transition-transform"
+                  className="w-12 h-12 rounded-full overflow-hidden bg-chathy-primary flex items-center justify-center text-white font-semibold mb-2 hover:scale-110 transition-transform"
                 >
-                  {post.avatar}
+                  <img 
+                    src={post.avatar} 
+                    alt={post.user}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.parentElement?.querySelector('.fallback-avatar') as HTMLElement;
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
+                  />
+                  <span className="fallback-avatar w-full h-full flex items-center justify-center" style={{ display: 'none' }}>
+                    {post.user.charAt(0)}
+                  </span>
                 </button>
                 
                 {/* Botão de áudio posicionado sobre o avatar */}
