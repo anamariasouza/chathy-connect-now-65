@@ -27,6 +27,7 @@ interface Chat {
   avatar: string;
   isGroup: boolean;
   participants?: string[];
+  isBot?: boolean;
 }
 
 interface ChatWindowProps {
@@ -38,7 +39,7 @@ interface ChatWindowProps {
 
 const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton }: ChatWindowProps) => {
   // Se for um chat com bot, usar o ChatBotWindow
-  if (chat.isBot) {
+  if (chat?.isBot) {
     return (
       <ChatBotWindow
         chat={chat}
