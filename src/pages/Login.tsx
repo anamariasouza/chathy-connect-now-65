@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { Eye, EyeOff } from 'lucide-react';
@@ -12,6 +12,7 @@ import { Eye, EyeOff } from 'lucide-react';
 const Login = () => {
   const [emailPrefix, setEmailPrefix] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -23,6 +24,19 @@ const Login = () => {
       navigate('/', { replace: true });
     }
   }, [isAuthenticated, navigate]);
+
+  // Carregar credenciais salvas no localStorage
+  useEffect(() => {
+    const savedEmailPrefix = localStorage.getItem('rememberedEmailPrefix');
+    const savedPassword = localStorage.getItem('rememberedPassword');
+    const savedRememberMe = localStorage.getItem('rememberMe') === 'true';
+    
+    if (savedRememberMe && savedEmailPrefix && savedPassword) {
+      setEmailPrefix(savedEmailPrefix);
+      setPassword(savedPassword);
+      setRememberMe(true);
+    }
+  }, []);
 
   // Verificar se ainda está dentro das 24h de login
   useEffect(() => {
@@ -93,6 +107,17 @@ const Login = () => {
         localStorage.setItem('isAuthenticated', 'true');
         localStorage.setItem('userEmail', fullEmail);
         localStorage.setItem('loginTime', currentTime.toString());
+        
+        // Salvar ou remover credenciais baseado na opção "Lembrar de mim"
+        if (rememberMe) {
+          localStorage.setItem('rememberedEmailPrefix', emailPrefix.trim());
+          localStorage.setItem('rememberedPassword', password);
+          localStorage.setItem('rememberMe', 'true');
+        } else {
+          localStorage.removeItem('rememberedEmailPrefix');
+          localStorage.removeItem('rememberedPassword');
+          localStorage.removeItem('rememberMe');
+        }
         
         toast({
           title: "Login realizado com sucesso!",
@@ -207,6 +232,22 @@ const Login = () => {
                 </button>
               </div>
             </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="remember"
+                checked={rememberMe}
+                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                className="border-gray-600 data-[state=checked]:bg-chathy-primary data-[state=checked]:border-chathy-primary"
+              />
+              <Label 
+                htmlFor="remember" 
+                className="text-sm text-gray-300 cursor-pointer"
+              >
+                Lembrar de mim
+              </Label>
+            </div>
+            
             <Button type="submit" className="w-full bg-chathy-primary hover:bg-chathy-primary/90" disabled={isLoading}>
               {isLoading ? 'Entrando...' : 'Entrar'}
             </Button>
