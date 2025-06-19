@@ -14,25 +14,25 @@
   "dir": "ltr",
   "icons": [
     {
-      "src": "/lovable-uploads/0e775d7a-2c40-49d5-83a9-620db5ffef64.png",
+      "src": "/lovable-uploads/ad3eed74-11c0-4afc-86c2-ab8ad73056e2.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "/lovable-uploads/6278072d-3af7-4137-a3ab-0b4239621600.png",
+      "src": "/lovable-uploads/ad3eed74-11c0-4afc-86c2-ab8ad73056e2.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "/lovable-uploads/c3048bc0-d027-4174-b4d7-175e6286480e.png",
+      "src": "/lovable-uploads/ad3eed74-11c0-4afc-86c2-ab8ad73056e2.png",
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "apple-touch-icon"
     },
     {
-      "src": "/lovable-uploads/a3af063e-0a1f-48b2-ab8b-8a97f20b3ea0.png",
+      "src": "/lovable-uploads/ad3eed74-11c0-4afc-86c2-ab8ad73056e2.png",
       "sizes": "1024x1024",
       "type": "image/png",
       "purpose": "maskable any"
@@ -60,7 +60,7 @@
       "url": "https://chathy.app/?action=new-chat",
       "icons": [
         {
-          "src": "/lovable-uploads/6278072d-3af7-4137-a3ab-0b4239621600.png",
+          "src": "/lovable-uploads/ad3eed74-11c0-4afc-86c2-ab8ad73056e2.png",
           "sizes": "96x96"
         }
       ]
@@ -72,7 +72,7 @@
       "url": "https://chathy.app/?tab=feed",
       "icons": [
         {
-          "src": "/lovable-uploads/6278072d-3af7-4137-a3ab-0b4239621600.png",
+          "src": "/lovable-uploads/ad3eed74-11c0-4afc-86c2-ab8ad73056e2.png",
           "sizes": "96x96"
         }
       ]
