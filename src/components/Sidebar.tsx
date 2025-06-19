@@ -161,6 +161,15 @@ const Sidebar = ({ activeTab, onTabChange, audioEnabled = true, onAudioToggle }:
             >
               W
             </button>
+            
+            {/* Botão de Logout - Mais visível no mobile */}
+            <button
+              onClick={handleLogout}
+              className="p-2.5 rounded-full transition-all duration-200 text-[#aebac1] hover:bg-[#2a3942] hover:text-red-400 ml-1"
+              title="Sair"
+            >
+              <LogOut size={20} />
+            </button>
           </div>
         </div>
       </div>
