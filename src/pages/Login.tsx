@@ -42,7 +42,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isAuthenticated, checkAuth } = useAuth();
-  const { isInstallable, installPWA } = usePWA();
+  const { isInstallable, installPWA, isIOS } = usePWA();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -484,23 +484,23 @@ const Login = () => {
   };
 
   const handleInstallPWA = async () => {
-    const success = await installPWA();
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const result = await installPWA();
     
-    if (success) {
+    if (result.success) {
       toast({
         title: "App instalado!",
         description: "O Chathy foi instalado em seu dispositivo",
       });
-    } else if (isIOS) {
+    } else if (result.isIOS) {
       toast({
-        title: "Como instalar no iOS",
-        description: "Toque no botão 'Compartilhar' e depois 'Adicionar à Tela de Início'",
+        title: "Como instalar no iPhone",
+        description: result.message || "Toque no botão 'Compartilhar' e depois 'Adicionar à Tela de Início'",
+        duration: 8000, // Toast mais longo para iOS
       });
     } else {
       toast({
         title: "Instalação não disponível",
-        description: "Seu navegador não suporta instalação de PWA ou o app já está instalado",
+        description: result.message || "Seu navegador não suporta instalação de PWA ou o app já está instalado",
         variant: "destructive",
       });
     }
@@ -614,8 +614,8 @@ const Login = () => {
                 </button>
               </div>
               
-              {/* Botão de Download PWA */}
-              <div className="pt-3 border-t border-[#e9edef]">
+              {/* Botão de Download PWA - Sempre visível */}
+              <div className="mt-6">
                 <Button
                   onClick={handleInstallPWA}
                   variant="outline"
@@ -623,10 +623,16 @@ const Login = () => {
                 >
                   <Download size={18} className="mr-2" />
                   <Smartphone size={18} className="mr-2" />
-                  Instalar App Chathy
+                  {isIOS 
+                    ? 'Instruções para Instalar' 
+                    : 'Instalar App Chathy'
+                  }
                 </Button>
-                <p className="text-xs text-[#8696a0] mt-2 font-medium">
-                  Instale o app para uma melhor experiência offline
+                <p className="text-xs text-[#8696a0] mt-2 text-center font-medium">
+                  {isIOS 
+                    ? 'Toque no botão acima para ver como instalar no iPhone' 
+                    : 'Instale o app para uma melhor experiência offline'
+                  }
                 </p>
               </div>
             </div>
