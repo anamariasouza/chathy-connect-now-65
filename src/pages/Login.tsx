@@ -95,6 +95,10 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      console.log('Tentativa de login iniciada');
+      console.log('Email prefix:', emailPrefix);
+      console.log('Password length:', password.length);
+
       if (emailPrefix.includes('@')) {
         toast({
           title: "Erro no email",
@@ -128,22 +132,18 @@ const Login = () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       const fullEmail = emailPrefix.trim() + '@gmail.com';
+      console.log('Full email:', fullEmail);
       
       // Verifica se o usuário está registrado
       const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '{}');
       const userExists = registeredUsers[fullEmail];
       
-      if (!userExists) {
-        toast({
-          title: "Usuário não encontrado",
-          description: "Este email não está cadastrado. Registre-se primeiro.",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
+      console.log('Registered users:', registeredUsers);
+      console.log('User exists:', userExists);
       
+      // Verifica primeiro se é o usuário padrão walter2161
       if (fullEmail === 'walter2161@gmail.com' && password === '976431') {
+        console.log('Login do usuário padrão walter2161 detectado');
         const currentTime = new Date().getTime();
         localStorage.setItem('isAuthenticated', 'true');
         localStorage.setItem('userEmail', fullEmail);
@@ -161,12 +161,27 @@ const Login = () => {
         
         toast({
           title: "Login realizado com sucesso!",
-          description: "Bem-vindo de volta!",
+          description: "Bem-vindo de volta, Walter!",
         });
         
         checkAuth();
         navigate('/', { replace: true });
-      } else if (userExists.password === password) {
+        setIsLoading(false);
+        return;
+      }
+      
+      if (!userExists) {
+        toast({
+          title: "Usuário não encontrado",
+          description: "Este email não está cadastrado. Registre-se primeiro.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      if (userExists.password === password) {
+        console.log('Login de usuário registrado bem-sucedido');
         const currentTime = new Date().getTime();
         localStorage.setItem('isAuthenticated', 'true');
         localStorage.setItem('userEmail', fullEmail);
@@ -190,6 +205,7 @@ const Login = () => {
         checkAuth();
         navigate('/', { replace: true });
       } else {
+        console.log('Senha incorreta para usuário registrado');
         toast({
           title: "Senha incorreta",
           description: "A senha digitada está incorreta",
@@ -197,6 +213,7 @@ const Login = () => {
         });
       }
     } catch (error) {
+      console.error('Erro durante o login:', error);
       toast({
         title: "Erro no sistema",
         description: "Ocorreu um erro inesperado. Tente novamente.",
@@ -671,7 +688,7 @@ const Login = () => {
                 <Button 
                   variant="outline"
                   onClick={() => setIsRegisterCodeSent(false)}
-                  className="flex-1 border-[#e9edef] text-[#111b21] hover:bg-[#f0f2f5]"
+                  className="flex-1 border-[#00a884] text-[#00a884] hover:bg-[#00a884] hover:text-white"
                 >
                   <ArrowLeft size={16} className="mr-2" />
                   Voltar
@@ -771,7 +788,7 @@ const Login = () => {
                 <Button 
                   variant="outline"
                   onClick={() => setIsForgotCodeSent(false)}
-                  className="flex-1 border-[#e9edef] text-[#111b21] hover:bg-[#f0f2f5]"
+                  className="flex-1 border-[#00a884] text-[#00a884] hover:bg-[#00a884] hover:text-white"
                 >
                   <ArrowLeft size={16} className="mr-2" />
                   Voltar
