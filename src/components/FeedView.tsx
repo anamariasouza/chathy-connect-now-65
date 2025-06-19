@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Heart, MessageCircle, Share, MoreVertical, Upload, Link } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -116,7 +117,6 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const iframeRefs = useRef<Map<string, HTMLIFrameElement>>(new Map());
   const observerRef = useRef<IntersectionObserver | null>(null);
-  const playedVideos = useRef<Set<string>>(new Set());
 
   // Detectar primeira interação do usuário
   useEffect(() => {
@@ -139,6 +139,18 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
     };
   }, [userInteracted]);
 
+  // Pausar todos os vídeos
+  const pauseAllVideos = () => {
+    iframeRefs.current.forEach((iframe, postId) => {
+      try {
+        iframe.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+        console.log('Pausando vídeo:', postId);
+      } catch (error) {
+        console.log('Erro ao pausar vídeo:', postId, error);
+      }
+    });
+  };
+
   // Configurar Intersection Observer
   useEffect(() => {
     if (observerRef.current) {
@@ -152,23 +164,28 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
           if (postId) {
             const post = posts.find(p => p.id === postId);
             if (post?.youtubeVideoId) {
-              if (entry.isIntersecting && entry.intersectionRatio > 0.7) {
-                // Vídeo entrou na tela com mais de 70% visível
-                if (currentVisibleVideo && currentVisibleVideo !== postId) {
-                  pauseVideo(currentVisibleVideo);
-                  console.log('Pausando vídeo anterior:', currentVisibleVideo);
-                }
-                setCurrentVisibleVideo(postId);
-                if (userInteracted) {
-                  playVideoFromStart(postId);
-                  console.log('Iniciando reprodução do vídeo:', postId);
-                }
-              } else if (!entry.isIntersecting || entry.intersectionRatio < 0.3) {
-                // Vídeo saiu da tela ou está menos de 30% visível
+              if (entry.isIntersecting && entry.intersectionRatio > 0.8) {
+                // Vídeo entrou na tela com mais de 80% visível
+                console.log('Vídeo entrando na tela:', postId, 'Ratio:', entry.intersectionRatio);
+                
+                // Pausar todos os outros vídeos primeiro
+                pauseAllVideos();
+                
+                // Aguardar um pouco e então reproduzir o novo vídeo
+                setTimeout(() => {
+                  setCurrentVisibleVideo(postId);
+                  if (userInteracted) {
+                    playVideoFromStart(postId);
+                  }
+                }, 200);
+                
+              } else if (!entry.isIntersecting || entry.intersectionRatio < 0.5) {
+                // Vídeo saiu da tela ou está menos de 50% visível
+                console.log('Vídeo saindo da tela:', postId, 'Ratio:', entry.intersectionRatio);
+                
                 if (currentVisibleVideo === postId) {
                   pauseVideo(postId);
                   setCurrentVisibleVideo('');
-                  console.log('Pausando vídeo que saiu de tela:', postId);
                 }
               }
             }
@@ -176,8 +193,8 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
         });
       },
       {
-        threshold: [0, 0.3, 0.7, 1],
-        rootMargin: '-10% 0px -10% 0px'
+        threshold: [0, 0.5, 0.8, 1],
+        rootMargin: '-5% 0px -5% 0px'
       }
     );
 
@@ -202,27 +219,26 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
     const iframe = iframeRefs.current.get(postId);
     if (iframe && userInteracted) {
       try {
-        console.log('Enviando comandos para reproduzir vídeo:', postId, 'Audio:', audioEnabled);
+        console.log('Reproduzindo vídeo do início:', postId, 'Audio habilitado:', audioEnabled);
         
         // Comandos sequenciais para garantir reprodução do início
-        setTimeout(() => {
-          iframe.contentWindow?.postMessage('{"event":"command","func":"seekTo","args":[0,true]}', '*');
-        }, 100);
+        const commands = [
+          () => iframe.contentWindow?.postMessage('{"event":"command","func":"seekTo","args":[0,true]}', '*'),
+          () => {
+            if (audioEnabled) {
+              iframe.contentWindow?.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+              iframe.contentWindow?.postMessage('{"event":"command","func":"setVolume","args":[50]}', '*');
+            } else {
+              iframe.contentWindow?.postMessage('{"event":"command","func":"mute","args":""}', '*');
+            }
+          },
+          () => iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*')
+        ];
         
-        setTimeout(() => {
-          if (audioEnabled) {
-            iframe.contentWindow?.postMessage('{"event":"command","func":"unMute","args":""}', '*');
-            iframe.contentWindow?.postMessage('{"event":"command","func":"setVolume","args":[50]}', '*');
-          } else {
-            iframe.contentWindow?.postMessage('{"event":"command","func":"mute","args":""}', '*');
-          }
-        }, 300);
+        commands.forEach((command, index) => {
+          setTimeout(command, index * 300);
+        });
         
-        setTimeout(() => {
-          iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-        }, 500);
-        
-        playedVideos.current.add(postId);
       } catch (error) {
         console.log('Erro ao reproduzir vídeo:', error);
       }
@@ -234,9 +250,9 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
     if (iframe) {
       try {
         iframe.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-        console.log('Vídeo pausado:', postId);
+        console.log('Vídeo pausado com sucesso:', postId);
       } catch (error) {
-        console.log('Erro ao pausar vídeo:', error);
+        console.log('Erro ao pausar vídeo:', postId, error);
       }
     }
   };
@@ -253,7 +269,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
           } else {
             iframe.contentWindow?.postMessage('{"event":"command","func":"mute","args":""}', '*');
           }
-          console.log('Áudio alterado para:', audioEnabled ? 'ligado' : 'desligado');
+          console.log('Controle de áudio alterado para:', audioEnabled ? 'ligado' : 'desligado');
         } catch (error) {
           console.log('Erro ao controlar áudio:', error);
         }
@@ -261,6 +277,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
     }
   }, [audioEnabled, currentVisibleVideo, userInteracted]);
 
+  // Controle de scroll manual
   useEffect(() => {
     const handleScroll = () => {
       if (!containerRef.current) return;
@@ -271,7 +288,12 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
       const newIndex = Math.round(scrollTop / itemHeight);
       
       if (newIndex !== currentPostIndex && newIndex >= 0 && newIndex < posts.length) {
+        console.log('Mudança de post via scroll:', currentPostIndex, '->', newIndex);
         setCurrentPostIndex(newIndex);
+        
+        // Pausar todos os vídeos antes de mudar
+        pauseAllVideos();
+        
         container.scrollTo({
           top: newIndex * itemHeight,
           behavior: 'smooth'
@@ -376,7 +398,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
 
   return (
     <div className="fixed inset-0 bg-black">
-      {/* Botão de Upload */}
+      {/* Upload Button */}
       <div className="absolute top-4 right-4 z-50">
         <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
           <DialogTrigger asChild>
