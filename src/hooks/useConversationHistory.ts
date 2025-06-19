@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react';
 interface Message {
   id: string;
   content: string;
-  sender: 'user' | 'bot';
+  sender: string;
   timestamp: Date;
+  isOwn: boolean;
   type?: 'text' | 'image' | 'video' | 'audio' | 'file';
   fileUrl?: string;
   fileName?: string;
-  isOwn?: boolean;
 }
 
 interface ConversationHistory {
