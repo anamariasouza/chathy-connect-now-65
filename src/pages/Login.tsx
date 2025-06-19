@@ -173,28 +173,20 @@ const Login = () => {
               className="w-12 h-12"
             />
           </div>
-          <h1 className="text-2xl font-light text-[#111b21] mb-2">Chathy Web</h1>
-          <p className="text-[#667781] text-sm">
-            Para usar o Chathy no seu computador:
-          </p>
-          <div className="text-[#667781] text-xs mt-2 space-y-1">
-            <p>1. Digite suas credenciais abaixo</p>
-            <p>2. Mantenha seu telefone conectado à internet</p>
-          </div>
         </div>
 
         <Card className="bg-white border-[#e9edef] shadow-lg">
           <CardHeader className="space-y-1 pb-6">
-            <CardTitle className="text-xl text-center text-[#111b21] font-normal">Entrar na conta</CardTitle>
-            <CardDescription className="text-center text-[#667781] text-sm">
+            <CardTitle className="text-xl text-center text-[#111b21] font-medium">Entrar na conta</CardTitle>
+            <CardDescription className="text-center text-[#667781] text-sm font-medium">
               Digite suas credenciais para continuar
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-[#111b21] text-sm font-normal">Email</Label>
-                <p className="text-xs text-[#667781] mb-2">
+                <Label htmlFor="email" className="text-[#111b21] text-sm font-medium">Email</Label>
+                <p className="text-xs text-[#667781] mb-2 font-medium">
                   Digite apenas a primeira parte do seu email
                 </p>
                 <div className="flex rounded-md border border-[#e9edef] bg-white overflow-hidden focus-within:border-[#00a884]">
@@ -205,16 +197,16 @@ const Login = () => {
                     value={emailPrefix}
                     onChange={handleEmailChange}
                     required
-                    className="flex-1 border-0 bg-transparent text-[#111b21] placeholder-[#8696a0] focus:ring-0 focus:border-0 rounded-none"
+                    className="flex-1 border-0 bg-transparent text-[#111b21] placeholder-[#8696a0] focus:ring-0 focus:border-0 rounded-none font-medium"
                   />
-                  <div className="flex items-center px-3 bg-[#f0f2f5] text-[#667781] text-sm">
+                  <div className="flex items-center px-3 bg-[#f0f2f5] text-[#667781] text-sm font-medium">
                     @gmail.com
                   </div>
                 </div>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-[#111b21] text-sm font-normal">Senha</Label>
+                <Label htmlFor="password" className="text-[#111b21] text-sm font-medium">Senha</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -223,7 +215,7 @@ const Login = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="bg-white border-[#e9edef] text-[#111b21] placeholder-[#8696a0] pr-10 focus:border-[#00a884]"
+                    className="bg-white border-[#e9edef] text-[#111b21] placeholder-[#8696a0] pr-10 focus:border-[#00a884] font-medium"
                   />
                   <button
                     type="button"
@@ -244,7 +236,7 @@ const Login = () => {
                 />
                 <Label 
                   htmlFor="remember" 
-                  className="text-sm text-[#667781] cursor-pointer font-normal"
+                  className="text-sm text-[#667781] cursor-pointer font-medium"
                 >
                   Lembrar de mim
                 </Label>
@@ -252,7 +244,7 @@ const Login = () => {
               
               <Button 
                 type="submit" 
-                className="w-full bg-[#00a884] hover:bg-[#008069] text-white font-normal py-2.5 mt-6" 
+                className="w-full bg-[#00a884] hover:bg-[#008069] text-white font-medium py-2.5 mt-6" 
                 disabled={isLoading}
               >
                 {isLoading ? 'Entrando...' : 'Entrar'}
@@ -263,7 +255,7 @@ const Login = () => {
 
         {/* Footer text similar to WhatsApp Web */}
         <div className="text-center mt-8 text-xs text-[#8696a0] space-y-2">
-          <p>Suas mensagens pessoais são protegidas pela criptografia de ponta a ponta</p>
+          <p className="font-medium">Suas mensagens pessoais são protegidas pela criptografia de ponta a ponta</p>
         </div>
       </div>
     </div>
