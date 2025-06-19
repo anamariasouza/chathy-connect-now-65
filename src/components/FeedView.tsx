@@ -104,7 +104,10 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
     }
   ]);
 
-  const [currentPostIndex, setCurrentPostIndex] = useState(0);
+  // Create infinite loop by duplicating posts
+  const infinitePosts = [...posts, ...posts, ...posts]; // Triple the posts for seamless looping
+  
+  const [currentPostIndex, setCurrentPostIndex] = useState(posts.length); // Start at the middle set
   const [carouselApis, setCarouselApis] = useState<Map<string, CarouselApi>>(new Map());
   const [currentSlides, setCurrentSlides] = useState<Map<string, number>>(new Map());
   const [newVideoLink, setNewVideoLink] = useState('');
@@ -113,6 +116,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
   const [userInteracted, setUserInteracted] = useState(false);
   const [currentVisibleVideo, setCurrentVisibleVideo] = useState<string>('');
   const [lastScrollPosition, setLastScrollPosition] = useState(0);
+  const [isLooping, setIsLooping] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const iframeRefs = useRef<Map<string, HTMLIFrameElement>>(new Map());
@@ -173,7 +177,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
     setCurrentVisibleVideo('');
   };
 
-  // Configurar Intersection Observer
+  // Configurar Intersection Observer para posts infinitos
   useEffect(() => {
     if (observerRef.current) {
       observerRef.current.disconnect();
@@ -184,7 +188,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
         entries.forEach((entry) => {
           const postId = entry.target.getAttribute('data-post-id');
           if (postId) {
-            const post = posts.find(p => p.id === postId);
+            const post = infinitePosts.find(p => p.id === postId);
             
             if (entry.isIntersecting && entry.intersectionRatio > 0.7) {
               // Post entrou na tela com mais de 70% visível
@@ -225,7 +229,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
       }
     );
 
-    // Observar todos os posts (com e sem vídeo)
+    // Observar todos os posts infinitos
     const postElements = document.querySelectorAll('[data-post-id]');
     postElements.forEach(el => {
       if (observerRef.current) {
@@ -238,7 +242,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
         observerRef.current.disconnect();
       }
     };
-  }, [posts, userInteracted, currentVisibleVideo]);
+  }, [infinitePosts, userInteracted, currentVisibleVideo]);
 
   const playVideoFromStart = (postId: string) => {
     const iframe = iframeRefs.current.get(postId);
@@ -302,10 +306,10 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
     }
   }, [audioEnabled, currentVisibleVideo, userInteracted]);
 
-  // Controle de scroll com pausa a cada 80px e looping infinito
+  // Controle de scroll com looping infinito suave
   useEffect(() => {
     const handleScroll = () => {
-      if (!containerRef.current) return;
+      if (!containerRef.current || isLooping) return;
       
       // Verificar se rolou 80px para pausar
       handleScrollPause();
@@ -317,66 +321,75 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
       
       const newIndex = Math.round(scrollTop / itemHeight);
       
-      // Implementar looping infinito
-      if (scrollTop >= maxScrollTop - 10) {
-        // Chegou ao final, voltar para o início
-        console.log('Chegou ao final do feed, voltando ao início');
+      // Implementar looping infinito suave
+      if (scrollTop >= maxScrollTop - 50) {
+        // Chegou perto do final, fazer loop suave para o meio
+        console.log('Chegou ao final do feed, fazendo loop infinito');
+        setIsLooping(true);
         pauseAllVideos();
         setCurrentVisibleVideo('');
-        setCurrentPostIndex(0);
-        setLastScrollPosition(0);
+        
+        const middleIndex = posts.length; // Índice do segundo conjunto
+        setCurrentPostIndex(middleIndex);
         
         setTimeout(() => {
           container.scrollTo({
-            top: 0,
-            behavior: 'smooth'
+            top: middleIndex * itemHeight,
+            behavior: 'auto' // Mudança instantânea para seamless loop
           });
+          setIsLooping(false);
         }, 100);
         
         return;
       }
       
-      if (scrollTop <= 0 && currentPostIndex > 0) {
-        // Chegou ao início e estava em outro post, ir para o último
-        console.log('Chegou ao início do feed, indo para o último post');
+      if (scrollTop <= 50 && currentPostIndex > 0) {
+        // Chegou perto do início, fazer loop suave para o meio
+        console.log('Chegou ao início do feed, fazendo loop infinito');
+        setIsLooping(true);
         pauseAllVideos();
         setCurrentVisibleVideo('');
-        const lastIndex = posts.length - 1;
-        setCurrentPostIndex(lastIndex);
-        setLastScrollPosition(lastIndex * itemHeight);
+        
+        const middleIndex = posts.length * 2 - 1; // Último item do segundo conjunto
+        setCurrentPostIndex(middleIndex);
         
         setTimeout(() => {
           container.scrollTo({
-            top: lastIndex * itemHeight,
-            behavior: 'smooth'
+            top: middleIndex * itemHeight,
+            behavior: 'auto' // Mudança instantânea para seamless loop
           });
+          setIsLooping(false);
         }, 100);
         
         return;
       }
       
-      if (newIndex !== currentPostIndex && newIndex >= 0 && newIndex < posts.length) {
+      if (newIndex !== currentPostIndex && newIndex >= 0 && newIndex < infinitePosts.length && !isLooping) {
         console.log('Mudança de post via scroll:', currentPostIndex, '->', newIndex);
         setCurrentPostIndex(newIndex);
         
         // Pausar todos os vídeos ao mudar de post
         pauseAllVideos();
         setCurrentVisibleVideo('');
-        
-        container.scrollTo({
-          top: newIndex * itemHeight,
-          behavior: 'smooth'
-        });
       }
     };
 
     const container = containerRef.current;
     if (container) {
+      // Inicializar no meio do loop infinito
+      const middleIndex = posts.length;
+      const itemHeight = container.clientHeight;
+      container.scrollTo({
+        top: middleIndex * itemHeight,
+        behavior: 'auto'
+      });
+      setCurrentPostIndex(middleIndex);
       setLastScrollPosition(container.scrollTop);
+      
       container.addEventListener('scroll', handleScroll);
       return () => container.removeEventListener('scroll', handleScroll);
     }
-  }, [currentPostIndex, posts.length, lastScrollPosition]);
+  }, [currentPostIndex, infinitePosts.length, lastScrollPosition, isLooping, posts.length]);
 
   const setCarouselApi = (postId: string, api: CarouselApi) => {
     if (!api) return;
@@ -472,8 +485,10 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
   };
 
   const handleIframeLoad = (postId: string, iframe: HTMLIFrameElement) => {
-    iframeRefs.current.set(postId, iframe);
-    console.log('Iframe carregado para post:', postId);
+    // Use unique key for infinite posts to avoid conflicts
+    const uniqueKey = `${postId}_${Math.random()}`;
+    iframeRefs.current.set(uniqueKey, iframe);
+    console.log('Iframe carregado para post:', uniqueKey);
   };
 
   return (
@@ -542,9 +557,9 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
         className="h-full overflow-y-auto snap-y snap-mandatory scrollbar-hide"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        {posts.map((post, index) => (
+        {infinitePosts.map((post, index) => (
           <div 
-            key={post.id} 
+            key={`${post.id}_${index}`} 
             className="h-screen w-full snap-start relative flex items-center justify-center"
             data-post-id={post.id}
           >
@@ -553,7 +568,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
               {post.youtubeVideoId ? (
                 <div className="relative h-full" style={{ width: 'calc(100vh * 9 / 16)', maxWidth: '100vw' }}>
                   <iframe
-                    ref={(iframe) => iframe && handleIframeLoad(post.id, iframe)}
+                    ref={(iframe) => iframe && handleIframeLoad(`${post.id}_${index}`, iframe)}
                     width="100%"
                     height="100%"
                     src={`https://www.youtube.com/embed/${post.youtubeVideoId}?autoplay=0&mute=1&loop=1&playlist=${post.youtubeVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&start=0&end=0&cc_load_policy=0&disablekb=1&fs=0&iv_load_policy=3&autohide=1&color=white&theme=dark&vq=hd720`}
@@ -564,26 +579,25 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
                     className="rounded-lg"
                   />
                   
-                  {/* Overlay para capturar cliques e pausar vídeo */}
                   <div 
                     className="absolute inset-0 bg-transparent cursor-pointer"
                     onClick={() => {
                       if (userInteracted) {
-                        handleVideoClick(post.id);
+                        handleVideoClick(`${post.id}_${index}`);
                       } else {
                         setUserInteracted(true);
-                        if (currentVisibleVideo === post.id) {
-                          playVideoFromStart(post.id);
+                        if (currentVisibleVideo === `${post.id}_${index}`) {
+                          playVideoFromStart(`${post.id}_${index}`);
                         }
                       }
                     }}
                     onTouchStart={() => {
                       if (userInteracted) {
-                        handleVideoClick(post.id);
+                        handleVideoClick(`${post.id}_${index}`);
                       } else {
                         setUserInteracted(true);
-                        if (currentVisibleVideo === post.id) {
-                          playVideoFromStart(post.id);
+                        if (currentVisibleVideo === `${post.id}_${index}`) {
+                          playVideoFromStart(`${post.id}_${index}`);
                         }
                       }
                     }}
@@ -594,7 +608,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
                 <div className="h-full relative" style={{ width: 'calc(100vh * 9 / 16)', maxWidth: '100vw' }}>
                   <Carousel 
                     className="w-full h-full"
-                    setApi={(api) => setCarouselApi(post.id, api)}
+                    setApi={(api) => setCarouselApi(`${post.id}_${index}`, api)}
                   >
                     <CarouselContent className="h-full -ml-0">
                       {post.images.map((image, imageIndex) => (
@@ -625,14 +639,13 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
                     </CarouselContent>
                   </Carousel>
                   
-                  {/* Indicadores de ponto */}
                   {post.images.length > 1 && (
                     <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
                       {post.images.map((_, dotIndex) => (
                         <div
                           key={dotIndex}
                           className={`w-2 h-2 rounded-full transition-colors ${
-                            (currentSlides.get(post.id) || 0) === dotIndex
+                            (currentSlides.get(`${post.id}_${index}`) || 0) === dotIndex
                               ? 'bg-white'
                               : 'bg-white/50'
                           }`}
