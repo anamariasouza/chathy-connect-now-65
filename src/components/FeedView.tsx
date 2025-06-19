@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Carousel, CarouselContent, CarouselItem, CarouselApi } from '@/components/ui/carousel';
+import { cn } from '@/lib/utils';
 
 interface FeedPost {
   id: string;
@@ -22,11 +23,12 @@ interface FeedPost {
 interface FeedViewProps {
   onViewProfile?: (contact: any) => void;
   audioEnabled?: boolean;
+  onAudioToggle?: () => void;
   uploadDialogOpen?: boolean;
   onUploadDialogChange?: (open: boolean) => void;
 }
 
-const FeedView = ({ onViewProfile, audioEnabled = true, uploadDialogOpen = false, onUploadDialogChange }: FeedViewProps) => {
+const FeedView = ({ onViewProfile, audioEnabled = true, onAudioToggle, uploadDialogOpen = false, onUploadDialogChange }: FeedViewProps) => {
   const [posts, setPosts] = useState<FeedPost[]>([
     {
       id: '1',
@@ -592,7 +594,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true, uploadDialogOpen = false
                 </button>
                 
                 {/* Botão de áudio posicionado sobre o avatar */}
-                {post.youtubeVideoId && (
+                {post.youtubeVideoId && onAudioToggle && (
                   <button
                     onClick={onAudioToggle}
                     className={cn(
