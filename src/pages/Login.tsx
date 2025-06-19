@@ -501,22 +501,6 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f0f2f5] p-4 relative">
-      {/* Botão flutuante PWA */}
-      {isInstallable && (
-        <div className="fixed bottom-6 right-6 z-50">
-          <Button
-            onClick={handleInstallPWA}
-            className="bg-[#00a884] hover:bg-[#008069] text-white shadow-lg rounded-full w-16 h-16 p-0 flex items-center justify-center group transition-all duration-300 hover:w-auto hover:px-4"
-          >
-            <Download size={24} className="group-hover:hidden" />
-            <div className="hidden group-hover:flex items-center space-x-2">
-              <Smartphone size={20} />
-              <span className="text-sm font-medium whitespace-nowrap">Instalar App</span>
-            </div>
-          </Button>
-        </div>
-      )}
-
       <div className="w-full max-w-md">
         {/* WhatsApp Web style header */}
         <div className="text-center mb-8">
@@ -621,6 +605,22 @@ const Login = () => {
                 >
                   Cadastre-se
                 </button>
+              </div>
+              
+              {/* Botão de Download PWA */}
+              <div className="pt-3 border-t border-[#e9edef]">
+                <Button
+                  onClick={handleInstallPWA}
+                  variant="outline"
+                  className="w-full border-[#00a884] text-[#00a884] hover:bg-[#00a884] hover:text-white font-medium transition-colors"
+                >
+                  <Download size={18} className="mr-2" />
+                  <Smartphone size={18} className="mr-2" />
+                  Baixar App Chathy
+                </Button>
+                <p className="text-xs text-[#8696a0] mt-2 font-medium">
+                  Instale o app para uma melhor experiência
+                </p>
               </div>
             </div>
           </CardContent>
