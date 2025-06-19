@@ -126,9 +126,7 @@ const LivesView = ({ onViewProfile, audioEnabled = true }: LivesViewProps) => {
                     pauseLive(currentVisibleLive);
                   }
                   setCurrentVisibleLive(liveId);
-                  if (userInteracted) {
-                    playLiveFromStart(liveId);
-                  }
+                  playLiveFromStart(liveId);
                 } else if (!entry.isIntersecting && currentVisibleLive === liveId) {
                   // Live saiu da tela - pausar
                   pauseLive(liveId);
@@ -150,31 +148,32 @@ const LivesView = ({ onViewProfile, audioEnabled = true }: LivesViewProps) => {
         observerRef.current.disconnect();
       }
     };
-  }, [lives, userInteracted, currentVisibleLive]);
+  }, [lives, currentVisibleLive]);
 
   const playLiveFromStart = (liveId: string) => {
     const iframe = iframeRefs.current.get(liveId);
-    if (iframe && userInteracted) {
+    if (iframe) {
       try {
-        const commands = [
-          '{"event":"command","func":"seekTo","args":[0,true]}',
-          '{"event":"command","func":"playVideo","args":""}',
-        ];
+        console.log('Tentando reproduzir live:', liveId, 'Audio habilitado:', audioEnabled);
         
-        if (audioEnabled) {
-          commands.push('{"event":"command","func":"unMute","args":""}');
-          commands.push('{"event":"command","func":"setVolume","args":"50"}');
-        } else {
-          commands.push('{"event":"command","func":"mute","args":""}');
-        }
+        setTimeout(() => {
+          iframe.contentWindow?.postMessage('{"event":"command","func":"seekTo","args":[0,true]}', '*');
+        }, 100);
         
-        commands.forEach((command, index) => {
-          setTimeout(() => {
-            iframe.contentWindow?.postMessage(command, '*');
-          }, index * 200);
-        });
+        setTimeout(() => {
+          if (audioEnabled) {
+            iframe.contentWindow?.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+            iframe.contentWindow?.postMessage('{"event":"command","func":"setVolume","args":[50]}', '*');
+          } else {
+            iframe.contentWindow?.postMessage('{"event":"command","func":"mute","args":""}', '*');
+          }
+        }, 300);
         
-        console.log('Live reproduzindo do início:', liveId);
+        setTimeout(() => {
+          iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+          console.log('Comando de reprodução enviado para live:', liveId);
+        }, 500);
+        
       } catch (error) {
         console.log('Erro ao reproduzir live:', error);
       }
@@ -344,11 +343,34 @@ const LivesView = ({ onViewProfile, audioEnabled = true }: LivesViewProps) => {
     iframeRefs.current.set(liveId, iframe);
     console.log('Iframe de live carregado para:', liveId);
     
-    // Tentar reproduzir se for a live atual e o usuário já interagiu
-    if (lives[currentLiveIndex]?.id === liveId && userInteracted) {
-      setTimeout(() => {
-        tryPlayCurrentLive();
-      }, 1000);
+    // Se esta é a live visível na tela, tentar reproduzir
+    setTimeout(() => {
+      const liveElement = document.querySelector(`[data-live-id="${liveId}"]`);
+      if (liveElement) {
+        const rect = liveElement.getBoundingClientRect();
+        const isVisible = rect.top >= 0 && rect.top < window.innerHeight * 0.7;
+        if (isVisible) {
+          setCurrentVisibleLive(liveId);
+          playLiveFromStart(liveId);
+        }
+      }
+    }, 1000);
+  };
+
+  const handleLiveClick = (liveId: string) => {
+    console.log('Clique na live detectado:', liveId);
+    const iframe = iframeRefs.current.get(liveId);
+    if (iframe) {
+      if (currentVisibleLive === liveId) {
+        pauseLive(liveId);
+        setCurrentVisibleLive('');
+      } else {
+        setCurrentVisibleLive(liveId);
+        playLiveFromStart(liveId);
+      }
+    }
+    if (!userInteracted) {
+      setUserInteracted(true);
     }
   };
 
@@ -422,34 +444,19 @@ const LivesView = ({ onViewProfile, audioEnabled = true }: LivesViewProps) => {
                       ref={(iframe) => iframe && handleIframeLoad(live.id, iframe)}
                       width="100%"
                       height="100%"
-                      src={`https://www.youtube.com/embed/${live.youtubeVideoId}?autoplay=0&mute=${audioEnabled ? 0 : 1}&loop=1&playlist=${live.youtubeVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&start=0&end=0&cc_load_policy=0&disablekb=1&fs=0&iv_load_policy=3&autohide=1&color=white&theme=dark&vq=hd720`}
+                      src={`https://www.youtube.com/embed/${live.youtubeVideoId}?enablejsapi=1&autoplay=1&mute=1&loop=1&playlist=${live.youtubeVideoId}&controls=1&showinfo=0&rel=0&modestbranding=1&playsinline=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}`}
                       title={`Live de ${live.name}`}
                       frameBorder="0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                       allowFullScreen
                       className="w-full h-full"
-                      style={{ pointerEvents: 'none' }}
                     />
                     
                     {/* Overlay transparente para capturar interações */}
                     <div 
-                      className="absolute inset-0 bg-transparent cursor-pointer"
-                      onClick={() => {
-                        if (!userInteracted) {
-                          setUserInteracted(true);
-                          if (currentVisibleLive === live.id) {
-                            playLiveFromStart(live.id);
-                          }
-                        }
-                      }}
-                      onTouchStart={() => {
-                        if (!userInteracted) {
-                          setUserInteracted(true);
-                          if (currentVisibleLive === live.id) {
-                            playLiveFromStart(live.id);
-                          }
-                        }
-                      }}
+                      className="absolute inset-0 bg-transparent cursor-pointer z-10"
+                      onClick={() => handleLiveClick(live.id)}
+                      onTouchStart={() => handleLiveClick(live.id)}
                     />
                   </div>
                 ) : (

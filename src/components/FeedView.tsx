@@ -174,10 +174,8 @@ const FeedView = ({ onViewProfile, audioEnabled = true, uploadDialogOpen = false
               if (post?.youtubeVideoId) {
                 setTimeout(() => {
                   setCurrentVisibleVideo(postId);
-                  if (userInteracted) {
-                    playVideoFromStart(postId);
-                  }
-                }, 300);
+                  playVideoFromStart(postId);
+                }, 500);
               } else {
                 setCurrentVisibleVideo('');
               }
@@ -213,31 +211,32 @@ const FeedView = ({ onViewProfile, audioEnabled = true, uploadDialogOpen = false
         observerRef.current.disconnect();
       }
     };
-  }, [posts, userInteracted, currentVisibleVideo]);
+  }, [posts, currentVisibleVideo]);
 
   const playVideoFromStart = (postId: string) => {
     const iframe = iframeRefs.current.get(postId);
-    if (iframe && userInteracted) {
+    if (iframe) {
       try {
-        console.log('Reproduzindo vídeo do início:', postId, 'Audio habilitado:', audioEnabled);
+        console.log('Tentando reproduzir vídeo:', postId, 'Audio habilitado:', audioEnabled);
         
-        // Comandos sequenciais para garantir reprodução do início
-        const commands = [
-          () => iframe.contentWindow?.postMessage('{"event":"command","func":"seekTo","args":[0,true]}', '*'),
-          () => {
-            if (audioEnabled) {
-              iframe.contentWindow?.postMessage('{"event":"command","func":"unMute","args":""}', '*');
-              iframe.contentWindow?.postMessage('{"event":"command","func":"setVolume","args":[50]}', '*');
-            } else {
-              iframe.contentWindow?.postMessage('{"event":"command","func":"mute","args":""}', '*');
-            }
-          },
-          () => iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*')
-        ];
+        // Comandos sequenciais para garantir reprodução
+        setTimeout(() => {
+          iframe.contentWindow?.postMessage('{"event":"command","func":"seekTo","args":[0,true]}', '*');
+        }, 100);
         
-        commands.forEach((command, index) => {
-          setTimeout(command, index * 200);
-        });
+        setTimeout(() => {
+          if (audioEnabled) {
+            iframe.contentWindow?.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+            iframe.contentWindow?.postMessage('{"event":"command","func":"setVolume","args":[50]}', '*');
+          } else {
+            iframe.contentWindow?.postMessage('{"event":"command","func":"mute","args":""}', '*');
+          }
+        }, 300);
+        
+        setTimeout(() => {
+          iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+          console.log('Comando de reprodução enviado para:', postId);
+        }, 500);
         
       } catch (error) {
         console.log('Erro ao reproduzir vídeo:', error);
@@ -399,13 +398,37 @@ const FeedView = ({ onViewProfile, audioEnabled = true, uploadDialogOpen = false
 
   const handleVideoClick = (postId: string) => {
     console.log('Clique no vídeo detectado:', postId);
-    pauseVideo(postId);
-    setCurrentVisibleVideo('');
+    const iframe = iframeRefs.current.get(postId);
+    if (iframe) {
+      if (currentVisibleVideo === postId) {
+        pauseVideo(postId);
+        setCurrentVisibleVideo('');
+      } else {
+        setCurrentVisibleVideo(postId);
+        playVideoFromStart(postId);
+      }
+    }
+    if (!userInteracted) {
+      setUserInteracted(true);
+    }
   };
 
   const handleIframeLoad = (postId: string, iframe: HTMLIFrameElement) => {
     iframeRefs.current.set(postId, iframe);
     console.log('Iframe carregado para post:', postId);
+    
+    // Se este é o post visível na tela, tentar reproduzir
+    setTimeout(() => {
+      const postElement = document.querySelector(`[data-post-id="${postId}"]`);
+      if (postElement) {
+        const rect = postElement.getBoundingClientRect();
+        const isVisible = rect.top >= 0 && rect.top < window.innerHeight * 0.7;
+        if (isVisible) {
+          setCurrentVisibleVideo(postId);
+          playVideoFromStart(postId);
+        }
+      }
+    }, 1000);
   };
 
   return (
@@ -491,7 +514,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true, uploadDialogOpen = false
                     ref={(iframe) => iframe && handleIframeLoad(post.id, iframe)}
                     width="100%"
                     height="100%"
-                    src={`https://www.youtube.com/embed/${post.youtubeVideoId}?autoplay=0&mute=1&loop=1&playlist=${post.youtubeVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&start=0&end=0&cc_load_policy=0&disablekb=1&fs=0&iv_load_policy=3&autohide=1&color=white&theme=dark&vq=hd720`}
+                    src={`https://www.youtube.com/embed/${post.youtubeVideoId}?enablejsapi=1&autoplay=1&mute=1&loop=1&playlist=${post.youtubeVideoId}&controls=1&showinfo=0&rel=0&modestbranding=1&playsinline=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}`}
                     title={`Vídeo de ${post.user}`}
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
@@ -500,27 +523,9 @@ const FeedView = ({ onViewProfile, audioEnabled = true, uploadDialogOpen = false
                   />
                   
                   <div 
-                    className="absolute inset-0 bg-transparent cursor-pointer"
-                    onClick={() => {
-                      if (userInteracted) {
-                        handleVideoClick(post.id);
-                      } else {
-                        setUserInteracted(true);
-                        if (currentVisibleVideo === post.id) {
-                          playVideoFromStart(post.id);
-                        }
-                      }
-                    }}
-                    onTouchStart={() => {
-                      if (userInteracted) {
-                        handleVideoClick(post.id);
-                      } else {
-                        setUserInteracted(true);
-                        if (currentVisibleVideo === post.id) {
-                          playVideoFromStart(post.id);
-                        }
-                      }
-                    }}
+                    className="absolute inset-0 bg-transparent cursor-pointer z-10"
+                    onClick={() => handleVideoClick(post.id)}
+                    onTouchStart={() => handleVideoClick(post.id)}
                   />
                 </div>
               ) : post.images && post.images.length > 0 ? (
