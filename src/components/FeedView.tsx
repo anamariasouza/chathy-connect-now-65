@@ -112,6 +112,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [userInteracted, setUserInteracted] = useState(false);
   const [currentVisibleVideo, setCurrentVisibleVideo] = useState<string>('');
+  const [lastScrollPosition, setLastScrollPosition] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const iframeRefs = useRef<Map<string, HTMLIFrameElement>>(new Map());
@@ -148,6 +149,30 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
         console.log('Erro ao pausar vídeo:', postId, error);
       }
     });
+  };
+
+  // Nova função para pausar vídeo ao rolar 80px
+  const handleScrollPause = () => {
+    if (!containerRef.current) return;
+
+    const currentScrollPosition = containerRef.current.scrollTop;
+    const scrollDifference = Math.abs(currentScrollPosition - lastScrollPosition);
+
+    if (scrollDifference >= 80) {
+      console.log('Scroll de 80px detectado, pausando todos os vídeos');
+      pauseAllVideos();
+      setCurrentVisibleVideo('');
+      setLastScrollPosition(currentScrollPosition);
+    }
+  };
+
+  // Nova função para pausar vídeo ao clicar
+  const handleVideoClick = (postId: string) => {
+    console.log('Clique no vídeo detectado:', postId);
+    pauseVideo(postId);
+    if (currentVisibleVideo === postId) {
+      setCurrentVisibleVideo('');
+    }
   };
 
   // Configurar Intersection Observer
@@ -279,10 +304,13 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
     }
   }, [audioEnabled, currentVisibleVideo, userInteracted]);
 
-  // Controle de scroll manual
+  // Controle de scroll com pausa a cada 80px
   useEffect(() => {
     const handleScroll = () => {
       if (!containerRef.current) return;
+      
+      // Verificar se rolou 80px para pausar
+      handleScrollPause();
       
       const container = containerRef.current;
       const scrollTop = container.scrollTop;
@@ -306,10 +334,11 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
 
     const container = containerRef.current;
     if (container) {
+      setLastScrollPosition(container.scrollTop);
       container.addEventListener('scroll', handleScroll);
       return () => container.removeEventListener('scroll', handleScroll);
     }
-  }, [currentPostIndex, posts.length]);
+  }, [currentPostIndex, posts.length, lastScrollPosition]);
 
   const setCarouselApi = (postId: string, api: CarouselApi) => {
     if (!api) return;
@@ -497,11 +526,13 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
                     className="rounded-lg"
                   />
                   
-                  {/* Overlay transparente para capturar interações */}
+                  {/* Overlay para capturar cliques e pausar vídeo */}
                   <div 
                     className="absolute inset-0 bg-transparent cursor-pointer"
                     onClick={() => {
-                      if (!userInteracted) {
+                      if (userInteracted) {
+                        handleVideoClick(post.id);
+                      } else {
                         setUserInteracted(true);
                         if (currentVisibleVideo === post.id) {
                           playVideoFromStart(post.id);
@@ -509,7 +540,9 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
                       }
                     }}
                     onTouchStart={() => {
-                      if (!userInteracted) {
+                      if (userInteracted) {
+                        handleVideoClick(post.id);
+                      } else {
                         setUserInteracted(true);
                         if (currentVisibleVideo === post.id) {
                           playVideoFromStart(post.id);
