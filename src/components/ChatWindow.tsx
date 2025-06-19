@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Phone, Video, MoreVertical, Paperclip, Smile, X } from 'lucide-react';
+import { Send, Phone, Video, MoreVertical, Paperclip, Smile, X, Users, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useNavigate } from 'react-router-dom';
+import { contactProfiles } from '@/data/contactProfiles';
 
 interface Message {
   id: string;
@@ -32,7 +34,9 @@ interface ChatWindowProps {
 const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton }: ChatWindowProps) => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
+  const [showParticipants, setShowParticipants] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   // useEffect for mock messages
   useEffect(() => {
@@ -128,6 +132,30 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
     }
   };
 
+  const handleParticipantClick = (participantName: string) => {
+    // Encontrar o perfil do participante
+    const participantProfile = contactProfiles.find(profile => profile.name === participantName);
+    
+    if (participantProfile) {
+      // Navegar para o perfil
+      navigate('/profile', { state: { contact: participantProfile } });
+    } else {
+      // Se não encontrar o perfil, criar um chat particular
+      const newChat: Chat = {
+        id: `chat_${participantName.replace(' ', '_').toLowerCase()}`,
+        name: participantName,
+        lastMessage: '',
+        time: 'agora',
+        unread: 0,
+        avatar: participantName.charAt(0),
+        isGroup: false
+      };
+      
+      console.log('Iniciando chat com:', participantName);
+      // Aqui você pode implementar a lógica para iniciar o chat
+    }
+  };
+
   if (!chat) {
     return (
       <div className="flex-1 flex items-center justify-center bg-gray-50">
@@ -165,7 +193,17 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
                 )}
               </div>
               {chat.isGroup && chat.participants ? (
-                <p className="text-sm text-gray-500">{chat.participants.length} participantes</p>
+                <div className="flex items-center space-x-1">
+                  <p className="text-sm text-gray-500">{chat.participants.length} participantes</p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowParticipants(!showParticipants)}
+                    className="p-1 h-auto"
+                  >
+                    <Users size={14} className="text-gray-500" />
+                  </Button>
+                </div>
               ) : (
                 <p className="text-sm text-green-600">Online</p>
               )}
@@ -193,6 +231,28 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
             )}
           </div>
         </div>
+
+        {/* Participants List */}
+        {chat.isGroup && showParticipants && chat.participants && (
+          <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Participantes:</h4>
+            <div className="space-y-2">
+              {chat.participants.map((participant, index) => (
+                <div
+                  key={index}
+                  className="flex items-center space-x-2 p-2 hover:bg-white rounded-lg cursor-pointer transition-colors"
+                  onClick={() => handleParticipantClick(participant)}
+                >
+                  <div className="w-8 h-8 bg-chathy-primary rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                    {participant.charAt(0)}
+                  </div>
+                  <span className="text-sm text-gray-800">{participant}</span>
+                  <User size={12} className="text-gray-400 ml-auto" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Messages */}
@@ -210,7 +270,12 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
               }`}
             >
               {!msg.isOwn && chat.isGroup && (
-                <p className="text-xs font-semibold mb-1 text-blue-600">{msg.sender}</p>
+                <p 
+                  className="text-xs font-semibold mb-1 text-blue-600 cursor-pointer hover:underline"
+                  onClick={() => handleParticipantClick(msg.sender)}
+                >
+                  {msg.sender}
+                </p>
               )}
               <p className="text-sm">{msg.text}</p>
               <p className={`text-xs mt-1 ${
