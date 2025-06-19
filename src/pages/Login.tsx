@@ -485,15 +485,22 @@ const Login = () => {
 
   const handleInstallPWA = async () => {
     const success = await installPWA();
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    
     if (success) {
       toast({
         title: "App instalado!",
         description: "O Chathy foi instalado em seu dispositivo",
       });
+    } else if (isIOS) {
+      toast({
+        title: "Como instalar no iOS",
+        description: "Toque no botão 'Compartilhar' e depois 'Adicionar à Tela de Início'",
+      });
     } else {
       toast({
-        title: "Erro na instalação",
-        description: "Não foi possível instalar o app. Tente novamente.",
+        title: "Instalação não disponível",
+        description: "Seu navegador não suporta instalação de PWA ou o app já está instalado",
         variant: "destructive",
       });
     }
@@ -616,10 +623,10 @@ const Login = () => {
                 >
                   <Download size={18} className="mr-2" />
                   <Smartphone size={18} className="mr-2" />
-                  Baixar App Chathy
+                  Instalar App Chathy
                 </Button>
                 <p className="text-xs text-[#8696a0] mt-2 font-medium">
-                  Instale o app para uma melhor experiência
+                  Instale o app para uma melhor experiência offline
                 </p>
               </div>
             </div>

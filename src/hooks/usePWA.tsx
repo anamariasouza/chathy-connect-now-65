@@ -58,15 +58,13 @@ export const usePWA = () => {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     
     if (isIOS) {
-      // Para iOS, redireciona para chathy.app
-      window.open('https://chathy.app', '_blank');
-      return true;
+      // Para iOS, retorna false para mostrar instruções manuais
+      return false;
     }
 
     if (!deferredPrompt) {
-      // Se não há prompt disponível, redireciona para chathy.app
-      window.open('https://chathy.app', '_blank');
-      return true;
+      // Se não há prompt disponível, retorna false
+      return false;
     }
 
     try {
@@ -85,8 +83,6 @@ export const usePWA = () => {
       return outcome === 'accepted';
     } catch (error) {
       console.error('PWA: Erro durante instalação:', error);
-      // Em caso de erro, redireciona para chathy.app
-      window.open('https://chathy.app', '_blank');
       return false;
     }
   };
