@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { MessageCircle, Play, Video, Gamepad2, LogOut, Volume2, VolumeX, Menu, MoreVertical } from 'lucide-react';
+import { MessageCircle, Play, Video, Gamepad2, LogOut, Volume2, VolumeX, Menu, MoreVertical, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -10,9 +10,10 @@ interface SidebarProps {
   onTabChange: (tab: string) => void;
   audioEnabled?: boolean;
   onAudioToggle?: () => void;
+  onUploadClick?: () => void;
 }
 
-const Sidebar = ({ activeTab, onTabChange, audioEnabled = true, onAudioToggle }: SidebarProps) => {
+const Sidebar = ({ activeTab, onTabChange, audioEnabled = true, onAudioToggle, onUploadClick }: SidebarProps) => {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -139,6 +140,17 @@ const Sidebar = ({ activeTab, onTabChange, audioEnabled = true, onAudioToggle }:
                 <item.icon size={20} />
               </button>
             ))}
+            
+            {/* Botão de Upload - só aparece no feed no mobile */}
+            {activeTab === 'feed' && (
+              <button
+                onClick={onUploadClick}
+                className="p-2.5 rounded-full transition-all duration-200 bg-[#00a884] text-white hover:bg-[#008069]"
+                title="Adicionar Vídeo"
+              >
+                <Upload size={20} />
+              </button>
+            )}
             
             {shouldShowAudioButton && (
               <button

@@ -1,9 +1,8 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Heart, MessageCircle, Share, MoreVertical, Upload, Link } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Carousel, CarouselContent, CarouselItem, CarouselApi } from '@/components/ui/carousel';
 
 interface FeedPost {
@@ -23,9 +22,11 @@ interface FeedPost {
 interface FeedViewProps {
   onViewProfile?: (contact: any) => void;
   audioEnabled?: boolean;
+  uploadDialogOpen?: boolean;
+  onUploadDialogChange?: (open: boolean) => void;
 }
 
-const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
+const FeedView = ({ onViewProfile, audioEnabled = true, uploadDialogOpen = false, onUploadDialogChange }: FeedViewProps) => {
   const [posts, setPosts] = useState<FeedPost[]>([
     {
       id: '1',
@@ -110,7 +111,6 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
   const [currentSlides, setCurrentSlides] = useState<Map<string, number>>(new Map());
   const [newVideoLink, setNewVideoLink] = useState('');
   const [newVideoDescription, setNewVideoDescription] = useState('');
-  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [userInteracted, setUserInteracted] = useState(false);
   const [currentVisibleVideo, setCurrentVisibleVideo] = useState<string>('');
   const containerRef = useRef<HTMLDivElement>(null);
@@ -353,7 +353,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
       setPosts(prev => [newPost, ...prev]);
       setNewVideoLink('');
       setNewVideoDescription('');
-      setIsUploadDialogOpen(false);
+      onUploadDialogChange?.(false);
     }
   };
 
@@ -375,7 +375,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
 
       setPosts(prev => [newPost, ...prev]);
       setNewVideoDescription('');
-      setIsUploadDialogOpen(false);
+      onUploadDialogChange?.(false);
     }
   };
 
@@ -410,64 +410,67 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
 
   return (
     <div className="fixed inset-0 bg-black">
-      {/* Upload Button */}
-      <div className="absolute top-4 right-4 z-50">
-        <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-chathy-primary hover:bg-chathy-primary/90 rounded-full w-12 h-12 p-0">
-              <Upload size={20} />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="bg-gray-800 border-gray-700">
-            <DialogHeader>
-              <DialogTitle className="text-white">Adicionar Vídeo</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <label className="text-white text-sm mb-2 block">Descrição</label>
-                <Input
-                  placeholder="Descreva seu vídeo..."
-                  value={newVideoDescription}
-                  onChange={(e) => setNewVideoDescription(e.target.value)}
-                  className="bg-gray-700 border-gray-600 text-white"
-                />
-              </div>
-              <div>
-                <label className="text-white text-sm mb-2 block">Link do YouTube Short</label>
-                <Input
-                  placeholder="https://youtube.com/shorts/..."
-                  value={newVideoLink}
-                  onChange={(e) => setNewVideoLink(e.target.value)}
-                  className="bg-gray-700 border-gray-600 text-white"
-                />
-              </div>
-              <div className="text-center text-gray-400">ou</div>
-              <div>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileUpload}
-                  accept="video/*"
-                  className="hidden"
-                />
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  variant="outline"
-                  className="w-full border-gray-600 text-white hover:bg-gray-700"
-                >
-                  Enviar da Máquina
-                </Button>
-              </div>
+      {/* Upload Button - só no desktop */}
+      <div className="absolute top-4 right-4 z-50 hidden md:block">
+        <Button 
+          onClick={() => onUploadDialogChange?.(true)}
+          className="bg-chathy-primary hover:bg-chathy-primary/90 rounded-full w-12 h-12 p-0"
+        >
+          <Upload size={20} />
+        </Button>
+      </div>
+
+      {/* Upload Dialog */}
+      <Dialog open={uploadDialogOpen} onOpenChange={onUploadDialogChange}>
+        <DialogContent className="bg-gray-800 border-gray-700">
+          <DialogHeader>
+            <DialogTitle className="text-white">Adicionar Vídeo</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-white text-sm mb-2 block">Descrição</label>
+              <Input
+                placeholder="Descreva seu vídeo..."
+                value={newVideoDescription}
+                onChange={(e) => setNewVideoDescription(e.target.value)}
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+            <div>
+              <label className="text-white text-sm mb-2 block">Link do YouTube Short</label>
+              <Input
+                placeholder="https://youtube.com/shorts/..."
+                value={newVideoLink}
+                onChange={(e) => setNewVideoLink(e.target.value)}
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+            <div className="text-center text-gray-400">ou</div>
+            <div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                accept="video/*"
+                className="hidden"
+              />
               <Button
-                onClick={handleAddVideo}
-                className="w-full bg-chathy-primary hover:bg-chathy-primary/90"
+                onClick={() => fileInputRef.current?.click()}
+                variant="outline"
+                className="w-full border-gray-600 text-white hover:bg-gray-700"
               >
-                Adicionar Vídeo
+                Enviar da Máquina
               </Button>
             </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+            <Button
+              onClick={handleAddVideo}
+              className="w-full bg-chathy-primary hover:bg-chathy-primary/90"
+            >
+              Adicionar Vídeo
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div 
         ref={containerRef}

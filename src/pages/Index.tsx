@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
@@ -33,6 +34,7 @@ const Index = () => {
   const [showMobileChatWindow, setShowMobileChatWindow] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [audioEnabled, setAudioEnabled] = useState(true);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -93,6 +95,10 @@ const Index = () => {
 
   const handleAudioToggle = () => {
     setAudioEnabled(!audioEnabled);
+  };
+
+  const handleUploadClick = () => {
+    setUploadDialogOpen(true);
   };
 
   const renderMainContent = () => {
@@ -166,7 +172,12 @@ const Index = () => {
       case 'feed':
         return (
           <div className="pt-16 md:pt-0 bg-[#f0f2f5] min-h-screen">
-            <FeedView onViewProfile={handleViewContactProfile} audioEnabled={audioEnabled} />
+            <FeedView 
+              onViewProfile={handleViewContactProfile} 
+              audioEnabled={audioEnabled}
+              uploadDialogOpen={uploadDialogOpen}
+              onUploadDialogChange={setUploadDialogOpen}
+            />
           </div>
         );
       case 'lives':
@@ -184,7 +195,12 @@ const Index = () => {
       default:
         return (
           <div className="pt-16 md:pt-0 bg-[#f0f2f5] min-h-screen">
-            <FeedView onViewProfile={handleViewContactProfile} audioEnabled={audioEnabled} />
+            <FeedView 
+              onViewProfile={handleViewContactProfile} 
+              audioEnabled={audioEnabled}
+              uploadDialogOpen={uploadDialogOpen}
+              onUploadDialogChange={setUploadDialogOpen}
+            />
           </div>
         );
     }
@@ -197,6 +213,7 @@ const Index = () => {
         onTabChange={setActiveTab} 
         audioEnabled={audioEnabled}
         onAudioToggle={handleAudioToggle}
+        onUploadClick={handleUploadClick}
       />
       <div className="flex-1 md:ml-16">
         {renderMainContent()}
