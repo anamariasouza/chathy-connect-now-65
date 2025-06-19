@@ -3,8 +3,8 @@
   "name": "Chathy - Seu App de Mensagens",
   "short_name": "Chathy",
   "description": "O melhor app de mensagens com calls, status e lives",
-  "start_url": "https://chathy.app/",
-  "scope": "https://chathy.app/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "theme_color": "#00a884",
@@ -57,7 +57,7 @@
       "name": "Nova Conversa",
       "short_name": "Conversa",
       "description": "Iniciar uma nova conversa",
-      "url": "https://chathy.app/?action=new-chat",
+      "url": "/?action=new-chat",
       "icons": [
         {
           "src": "/lovable-uploads/ad3eed74-11c0-4afc-86c2-ab8ad73056e2.png",
@@ -69,7 +69,7 @@
       "name": "Status",
       "short_name": "Status",
       "description": "Ver status dos contatos",
-      "url": "https://chathy.app/?tab=feed",
+      "url": "/?tab=feed",
       "icons": [
         {
           "src": "/lovable-uploads/ad3eed74-11c0-4afc-86c2-ab8ad73056e2.png",

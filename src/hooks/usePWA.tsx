@@ -18,9 +18,7 @@ export const usePWA = () => {
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
       console.log('PWA: beforeinstallprompt event fired');
-      // Previne o prompt automático
       e.preventDefault();
-      // Salva o evento para usar depois
       setDeferredPrompt(e);
       setIsInstallable(true);
     };
@@ -31,25 +29,50 @@ export const usePWA = () => {
       setDeferredPrompt(null);
     };
 
-    // Detecção melhorada para iOS
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    // Detecção melhorada para diferentes dispositivos
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isInWebAppiOS = (window.navigator as any).standalone === true;
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    const isInWebAppChrome = window.matchMedia('(display-mode: standalone)').matches;
     
     setIsIOS(isIOSDevice);
     
-    if (isStandalone || isInWebAppiOS) {
-      console.log('PWA: App já está instalado');
+    console.log('PWA: Detecção de dispositivo:', {
+      isIOSDevice,
+      isInWebAppiOS,
+      isStandalone,
+      userAgent: navigator.userAgent
+    });
+
+    // Se já está em modo standalone, não mostrar botão de instalação
+    if (isStandalone || isInWebAppiOS || isInWebAppChrome) {
+      console.log('PWA: App já está em modo standalone');
       setIsInstallable(false);
     } else {
-      // Para iOS Safari, sempre mostra como instalável se não estiver em standalone
-      if (isIOSDevice) {
+      // Para dispositivos não-iOS, aguardar o evento beforeinstallprompt
+      if (!isIOSDevice) {
+        // Timeout para detectar se o evento beforeinstallprompt não disparar
+        const timeout = setTimeout(() => {
+          console.log('PWA: beforeinstallprompt não disparou, verificando compatibilidade');
+          // Verifica se o navegador suporta service workers
+          if ('serviceWorker' in navigator && 'BeforeInstallPromptEvent' in window) {
+            setIsInstallable(true);
+          }
+        }, 3000);
+
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
+        
+        return () => {
+          clearTimeout(timeout);
+          window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
+        };
+      } else {
+        // Para iOS, sempre mostrar como instalável se não estiver em standalone
         setIsInstallable(true);
-        console.log('PWA: iOS detectado - instruções manuais necessárias');
+        console.log('PWA: iOS detectado - botão de instalação habilitado');
       }
     }
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
     window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
@@ -59,44 +82,60 @@ export const usePWA = () => {
   }, []);
 
   const installPWA = async (): Promise<{ success: boolean; isIOS: boolean; message?: string }> => {
+    console.log('PWA: Tentativa de instalação iniciada', { isIOS, deferredPrompt });
+
     if (isIOS) {
-      // Para iOS, retorna informações para mostrar instruções manuais
+      console.log('PWA: Dispositivo iOS detectado');
       return { 
         success: false, 
         isIOS: true,
-        message: 'Para instalar no iPhone:\n1. Toque no botão de compartilhar (ícone da caixa com seta)\n2. Role para baixo e toque em "Adicionar à Tela de Início"\n3. Toque em "Adicionar" no canto superior direito'
+        message: 'Para instalar no iPhone/iPad:\n\n1. Toque no botão "Compartilhar" (□↗) na barra inferior do Safari\n2. Role para baixo e toque em "Adicionar à Tela de Início"\n3. Toque em "Adicionar" no canto superior direito\n\nO app aparecerá na sua tela inicial!'
       };
     }
 
+    // Para Android e outros dispositivos
     if (!deferredPrompt) {
-      // Se não há prompt disponível para Android/outros browsers
+      console.log('PWA: Nenhum prompt de instalação disponível');
+      
+      // Verifica se o app já está instalado
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        return { 
+          success: false, 
+          isIOS: false,
+          message: 'O app já está instalado!'
+        };
+      }
+
+      // Instruções para instalação manual no Android
       return { 
         success: false, 
         isIOS: false,
-        message: 'Instalação não disponível neste navegador ou app já instalado'
+        message: 'Para instalar:\n\n1. Toque no menu (⋮) do navegador\n2. Toque em "Instalar app" ou "Adicionar à tela inicial"\n3. Confirme a instalação\n\nSe não aparecer a opção, seu navegador pode não suportar PWA.'
       };
     }
 
     try {
-      // Mostra o prompt de instalação para Android
+      console.log('PWA: Mostrando prompt de instalação');
       await deferredPrompt.prompt();
       
-      // Aguarda a escolha do usuário
       const { outcome } = await deferredPrompt.userChoice;
+      console.log(`PWA: Resposta do usuário: ${outcome}`);
       
-      console.log(`PWA: User response: ${outcome}`);
-      
-      // Limpa o prompt salvo
       setDeferredPrompt(null);
       
       if (outcome === 'accepted') {
         setIsInstallable(false);
+        return { success: true, isIOS: false };
+      } else {
+        return { success: false, isIOS: false, message: 'Instalação cancelada pelo usuário' };
       }
-      
-      return { success: outcome === 'accepted', isIOS: false };
     } catch (error) {
       console.error('PWA: Erro durante instalação:', error);
-      return { success: false, isIOS: false, message: 'Erro durante a instalação' };
+      return { 
+        success: false, 
+        isIOS: false, 
+        message: 'Erro durante a instalação. Tente novamente ou use a instalação manual do navegador.' 
+      };
     }
   };
 
