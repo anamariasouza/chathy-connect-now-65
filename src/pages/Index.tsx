@@ -33,6 +33,7 @@ const Index = () => {
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [showMobileChatWindow, setShowMobileChatWindow] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [audioEnabled, setAudioEnabled] = useState(true);
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -94,6 +95,10 @@ const Index = () => {
     }
   };
 
+  const handleAudioToggle = () => {
+    setAudioEnabled(!audioEnabled);
+  };
+
   const renderMainContent = () => {
     switch (activeTab) {
       case 'chats':
@@ -149,13 +154,13 @@ const Index = () => {
       case 'feed':
         return (
           <div className="pt-20 md:pt-0">
-            <FeedView onViewProfile={handleViewContactProfile} />
+            <FeedView onViewProfile={handleViewContactProfile} audioEnabled={audioEnabled} />
           </div>
         );
       case 'lives':
         return (
           <div className="pt-20 md:pt-0">
-            <LivesView onViewProfile={handleViewContactProfile} />
+            <LivesView onViewProfile={handleViewContactProfile} audioEnabled={audioEnabled} />
           </div>
         );
       case 'games':
@@ -167,7 +172,7 @@ const Index = () => {
       default:
         return (
           <div className="pt-20 md:pt-0">
-            <FeedView onViewProfile={handleViewContactProfile} />
+            <FeedView onViewProfile={handleViewContactProfile} audioEnabled={audioEnabled} />
           </div>
         );
     }
@@ -175,7 +180,12 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex bg-gray-900 relative transition-colors duration-300">
-      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <Sidebar 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
+        audioEnabled={audioEnabled}
+        onAudioToggle={handleAudioToggle}
+      />
       <div className="flex-1 md:ml-20 md:pt-0">
         {renderMainContent()}
       </div>

@@ -111,33 +111,19 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
   const [newVideoDescription, setNewVideoDescription] = useState('');
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [userInteracted, setUserInteracted] = useState(false);
-  const [youtubeApiReady, setYoutubeApiReady] = useState(false);
   const [currentVisibleVideo, setCurrentVisibleVideo] = useState<string>('');
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const iframeRefs = useRef<Map<string, HTMLIFrameElement>>(new Map());
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const playedVideos = useRef<Set<string>>(new Set());
 
-  // Inicializar API do YouTube
+  // Detectar primeira interação do usuário
   useEffect(() => {
-    if (!window.YT) {
-      const tag = document.createElement('script');
-      tag.src = 'https://www.youtube.com/iframe_api';
-      const firstScriptTag = document.getElementsByTagName('script')[0];
-      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
-      
-      window.onYouTubeIframeAPIReady = () => {
-        setYoutubeApiReady(true);
-        console.log('YouTube API carregada');
-      };
-    } else {
-      setYoutubeApiReady(true);
-    }
-
     const handleFirstInteraction = () => {
       if (!userInteracted) {
         setUserInteracted(true);
-        console.log('Primeira interação do usuário detectada');
+        console.log('Primeira interação do usuário detectada no Feed');
       }
     };
 
@@ -151,42 +137,59 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
         document.removeEventListener(event, handleFirstInteraction);
       });
     };
-  }, []);
+  }, [userInteracted]);
 
-  // Configurar Intersection Observer para controle de reprodução
+  // Configurar Intersection Observer
   useEffect(() => {
-    if (!observerRef.current) {
-      observerRef.current = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            const postId = entry.target.getAttribute('data-post-id');
-            if (postId) {
-              const post = posts.find(p => p.id === postId);
-              if (post?.youtubeVideoId) {
-                if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
-                  // Vídeo entrou na tela - pausar o anterior e reproduzir este
-                  if (currentVisibleVideo && currentVisibleVideo !== postId) {
-                    pauseVideo(currentVisibleVideo);
-                  }
-                  setCurrentVisibleVideo(postId);
-                  if (userInteracted) {
-                    playVideoFromStart(postId);
-                  }
-                } else if (!entry.isIntersecting && currentVisibleVideo === postId) {
-                  // Vídeo saiu da tela - pausar
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const postId = entry.target.getAttribute('data-post-id');
+          if (postId) {
+            const post = posts.find(p => p.id === postId);
+            if (post?.youtubeVideoId) {
+              if (entry.isIntersecting && entry.intersectionRatio > 0.7) {
+                // Vídeo entrou na tela com mais de 70% visível
+                if (currentVisibleVideo && currentVisibleVideo !== postId) {
+                  pauseVideo(currentVisibleVideo);
+                  console.log('Pausando vídeo anterior:', currentVisibleVideo);
+                }
+                setCurrentVisibleVideo(postId);
+                if (userInteracted) {
+                  playVideoFromStart(postId);
+                  console.log('Iniciando reprodução do vídeo:', postId);
+                }
+              } else if (!entry.isIntersecting || entry.intersectionRatio < 0.3) {
+                // Vídeo saiu da tela ou está menos de 30% visível
+                if (currentVisibleVideo === postId) {
                   pauseVideo(postId);
                   setCurrentVisibleVideo('');
+                  console.log('Pausando vídeo que saiu de tela:', postId);
                 }
               }
             }
-          });
-        },
-        {
-          threshold: [0, 0.5, 1], // Múltiplos thresholds para melhor controle
-          rootMargin: '0px'
-        }
-      );
-    }
+          }
+        });
+      },
+      {
+        threshold: [0, 0.3, 0.7, 1],
+        rootMargin: '-10% 0px -10% 0px'
+      }
+    );
+
+    // Observar todos os posts com vídeo
+    const videoElements = document.querySelectorAll('[data-post-id]');
+    videoElements.forEach(el => {
+      const postId = el.getAttribute('data-post-id');
+      const post = posts.find(p => p.id === postId);
+      if (post?.youtubeVideoId && observerRef.current) {
+        observerRef.current.observe(el);
+      }
+    });
 
     return () => {
       if (observerRef.current) {
@@ -199,27 +202,27 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
     const iframe = iframeRefs.current.get(postId);
     if (iframe && userInteracted) {
       try {
-        // Comandos para reproduzir do início
-        const commands = [
-          '{"event":"command","func":"seekTo","args":[0,true]}', // Voltar ao início
-          '{"event":"command","func":"playVideo","args":""}', // Reproduzir
-        ];
+        console.log('Enviando comandos para reproduzir vídeo:', postId, 'Audio:', audioEnabled);
         
-        // Configurar áudio baseado na preferência
-        if (audioEnabled) {
-          commands.push('{"event":"command","func":"unMute","args":""}');
-          commands.push('{"event":"command","func":"setVolume","args":"50"}');
-        } else {
-          commands.push('{"event":"command","func":"mute","args":""}');
-        }
+        // Comandos sequenciais para garantir reprodução do início
+        setTimeout(() => {
+          iframe.contentWindow?.postMessage('{"event":"command","func":"seekTo","args":[0,true]}', '*');
+        }, 100);
         
-        commands.forEach((command, index) => {
-          setTimeout(() => {
-            iframe.contentWindow?.postMessage(command, '*');
-          }, index * 200);
-        });
+        setTimeout(() => {
+          if (audioEnabled) {
+            iframe.contentWindow?.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+            iframe.contentWindow?.postMessage('{"event":"command","func":"setVolume","args":[50]}', '*');
+          } else {
+            iframe.contentWindow?.postMessage('{"event":"command","func":"mute","args":""}', '*');
+          }
+        }, 300);
         
-        console.log('Vídeo reproduzindo do início:', postId);
+        setTimeout(() => {
+          iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+        }, 500);
+        
+        playedVideos.current.add(postId);
       } catch (error) {
         console.log('Erro ao reproduzir vídeo:', error);
       }
@@ -238,24 +241,25 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
     }
   };
 
-  // Efeito para controlar áudio quando a preferência muda
+  // Controlar áudio quando a preferência muda
   useEffect(() => {
-    if (currentVisibleVideo) {
+    if (currentVisibleVideo && userInteracted) {
       const iframe = iframeRefs.current.get(currentVisibleVideo);
       if (iframe) {
         try {
           if (audioEnabled) {
             iframe.contentWindow?.postMessage('{"event":"command","func":"unMute","args":""}', '*');
-            iframe.contentWindow?.postMessage('{"event":"command","func":"setVolume","args":"50"}', '*');
+            iframe.contentWindow?.postMessage('{"event":"command","func":"setVolume","args":[50]}', '*');
           } else {
             iframe.contentWindow?.postMessage('{"event":"command","func":"mute","args":""}', '*');
           }
+          console.log('Áudio alterado para:', audioEnabled ? 'ligado' : 'desligado');
         } catch (error) {
           console.log('Erro ao controlar áudio:', error);
         }
       }
     }
-  }, [audioEnabled, currentVisibleVideo]);
+  }, [audioEnabled, currentVisibleVideo, userInteracted]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -441,11 +445,6 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
             key={post.id} 
             className="h-screen w-full snap-start relative flex items-center justify-center"
             data-post-id={post.id}
-            ref={(el) => {
-              if (el && observerRef.current) {
-                observerRef.current.observe(el);
-              }
-            }}
           >
             {/* Conteúdo de Vídeo/Imagem */}
             <div className="absolute inset-0 flex items-center justify-center">
@@ -455,7 +454,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
                     ref={(iframe) => iframe && handleIframeLoad(post.id, iframe)}
                     width="100%"
                     height="100%"
-                    src={`https://www.youtube.com/embed/${post.youtubeVideoId}?autoplay=0&mute=${audioEnabled ? 0 : 1}&loop=1&playlist=${post.youtubeVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&start=0&end=0&cc_load_policy=0&disablekb=1&fs=0&iv_load_policy=3&autohide=1&color=white&theme=dark&vq=hd720`}
+                    src={`https://www.youtube.com/embed/${post.youtubeVideoId}?autoplay=0&mute=1&loop=1&playlist=${post.youtubeVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&start=0&end=0&cc_load_policy=0&disablekb=1&fs=0&iv_load_policy=3&autohide=1&color=white&theme=dark&vq=hd720`}
                     title={`Vídeo de ${post.user}`}
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
