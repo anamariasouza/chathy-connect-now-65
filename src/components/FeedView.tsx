@@ -166,13 +166,11 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
     }
   };
 
-  // Nova função para pausar vídeo ao clicar
+  // Função corrigida para pausar vídeo ao clicar (sem reiniciar)
   const handleVideoClick = (postId: string) => {
     console.log('Clique no vídeo detectado:', postId);
     pauseVideo(postId);
-    if (currentVisibleVideo === postId) {
-      setCurrentVisibleVideo('');
-    }
+    setCurrentVisibleVideo('');
   };
 
   // Configurar Intersection Observer
