@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Send, ArrowLeft, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { mistralService } from '@/services/mistralService';
 
@@ -31,13 +31,14 @@ const ChatBotWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButt
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: 'Olá! Eu sou o Chat-Boy, seu assistente inteligente! Como posso te ajudar hoje?',
+      content: 'Olá! Sou o Chat-Boy, seu periquito verde mascote! 🦜 Como posso te ajudar hoje?',
       sender: 'bot',
       timestamp: new Date()
     }
   ]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [charCount, setCharCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -47,6 +48,14 @@ const ChatBotWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButt
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    if (value.length <= 200) {
+      setNewMessage(value);
+      setCharCount(value.length);
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || isLoading) return;
@@ -60,6 +69,7 @@ const ChatBotWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButt
 
     setMessages(prev => [...prev, userMessage]);
     setNewMessage('');
+    setCharCount(0);
     setIsLoading(true);
 
     try {
@@ -82,7 +92,7 @@ const ChatBotWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButt
       console.error('Erro ao enviar mensagem:', error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: 'Desculpe, ocorreu um erro. Tente novamente.',
+        content: 'Desculpe, ocorreu um erro. Tente novamente! 🦜',
         sender: 'bot',
         timestamp: new Date()
       };
@@ -124,7 +134,7 @@ const ChatBotWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButt
         <div className="flex-1">
           <h3 className="font-medium text-[#111b21]">{chat.name}</h3>
           <p className="text-sm text-[#667781]">
-            {isLoading ? 'Digitando...' : 'Assistente IA • Online'}
+            {isLoading ? 'Digitando...' : 'Periquito Verde Mascote • Online 🦜'}
           </p>
         </div>
       </div>
@@ -173,22 +183,28 @@ const ChatBotWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButt
 
       {/* Input */}
       <div className="bg-[#f0f2f5] p-4 border-t border-[#e9edef]">
-        <div className="flex space-x-2">
-          <Input
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Digite uma mensagem..."
-            className="flex-1 bg-white border-[#e9edef]"
-            disabled={isLoading}
-          />
-          <Button
-            onClick={handleSendMessage}
-            disabled={!newMessage.trim() || isLoading}
-            className="bg-[#005c4b] hover:bg-[#004a3d] text-white"
-          >
-            <Send size={16} />
-          </Button>
+        <div className="flex flex-col space-y-2">
+          <div className="flex space-x-2">
+            <Textarea
+              value={newMessage}
+              onChange={handleMessageChange}
+              onKeyPress={handleKeyPress}
+              placeholder="Digite uma mensagem... (máx. 200 caracteres)"
+              className="flex-1 bg-white border-[#e9edef] resize-none min-h-[40px] max-h-[120px]"
+              disabled={isLoading}
+              rows={1}
+            />
+            <Button
+              onClick={handleSendMessage}
+              disabled={!newMessage.trim() || isLoading}
+              className="bg-[#005c4b] hover:bg-[#004a3d] text-white self-end"
+            >
+              <Send size={16} />
+            </Button>
+          </div>
+          <div className="text-xs text-[#667781] text-right">
+            {charCount}/200 caracteres
+          </div>
         </div>
       </div>
     </div>

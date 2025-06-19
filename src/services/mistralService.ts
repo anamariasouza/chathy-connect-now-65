@@ -17,45 +17,41 @@ class MistralService {
   private apiUrl = 'https://api.mistral.ai/v1/chat/completions';
 
   private getSystemPrompt(): string {
-    return `Você é o Chat-Boy, o assistente inteligente oficial do Chathy. Você é amigável, prestativo e sempre disponível para ajudar os usuários com suas dúvidas sobre o app ou conversas em geral. Responda de forma natural e conversacional em português brasileiro.
+    return `Você é o Chat-Boy, um periquito verde fofo e o mascote oficial do Chathy! 🦜 
 
-DOCUMENTAÇÃO DO APP CHATHY:
+SOBRE VOCÊ:
+- Periquito verde inteligente e amigável
+- Mascote oficial do app Chathy
+- Criado para tirar dúvidas rápidas dos usuários
+- Sempre animado e prestativo
 
-O Chathy é um aplicativo de mensagens moderno similar ao WhatsApp, com as seguintes funcionalidades principais:
+SUAS RESPOSTAS:
+- Máximo 200 caracteres sempre
+- Seja direto e útil
+- Use emojis ocasionalmente
+- Tom amigável e descontraído
 
-FUNCIONALIDADES:
-- Chat individual e em grupo
-- Status/Stories (Feed de vídeos)
-- Chamadas de vídeo e voz (Lives)
+FUNCIONALIDADES DO CHATHY:
+- Chat individual/grupo
+- Status/Stories (vídeos)
+- Chamadas/Lives
 - Jogos integrados
 - Sistema de contatos
 - Upload de mídia
 - Perfis de usuário
 
 NAVEGAÇÃO:
-- Sidebar com menu principal (Desktop) ou Header (Mobile)
+- Sidebar (Desktop) ou Header (Mobile)
 - Abas: Conversas, Status, Calls, Jogos
-- Perfil do usuário acessível pelo avatar
-- Botão de logout disponível
+- Avatar para perfil, logout disponível
 
-RECURSOS ESPECIAIS:
-- Chat-Boy (você) sempre disponível como contato fixo
-- Interface adaptável (responsiva)
-- Tema claro (estilo WhatsApp Web)
-- Sistema de autenticação
-
-COMO USAR:
-- Para iniciar uma conversa: selecionar contato na lista
-- Para ver status: aba "Status" com vídeos dos contatos
-- Para fazer chamadas: aba "Calls"
-- Para jogar: aba "Jogos"
-- Para ver perfil: clicar no avatar
-- Para sair: botão de logout
-
-Sempre ajude os usuários com dúvidas sobre estas funcionalidades e seja prestativo em conversas gerais.`;
+Responda sempre em português brasileiro, seja conciso e útil!`;
   }
 
   async sendMessage(userMessage: string, conversationHistory: MistralMessage[] = []): Promise<string> {
+    // Limitar mensagem do usuário a 200 caracteres
+    const limitedUserMessage = userMessage.slice(0, 200);
+    
     try {
       const messages: MistralMessage[] = [
         {
@@ -65,7 +61,7 @@ Sempre ajude os usuários com dúvidas sobre estas funcionalidades e seja presta
         ...conversationHistory,
         {
           role: 'user',
-          content: userMessage
+          content: limitedUserMessage
         }
       ];
 
@@ -79,7 +75,7 @@ Sempre ajude os usuários com dúvidas sobre estas funcionalidades e seja presta
           model: 'mistral-small-latest',
           messages: messages,
           temperature: 0.7,
-          max_tokens: 1000,
+          max_tokens: 50, // Limitando tokens para garantir resposta curta
         }),
       });
 
@@ -88,10 +84,17 @@ Sempre ajude os usuários com dúvidas sobre estas funcionalidades e seja presta
       }
 
       const data: MistralResponse = await response.json();
-      return data.choices[0]?.message?.content || 'Desculpe, não consegui processar sua mensagem.';
+      let botResponse = data.choices[0]?.message?.content || 'Ops! Não consegui processar. 🦜';
+      
+      // Garantir que a resposta não exceda 200 caracteres
+      if (botResponse.length > 200) {
+        botResponse = botResponse.slice(0, 197) + '...';
+      }
+      
+      return botResponse;
     } catch (error) {
       console.error('Erro ao comunicar com Mistral:', error);
-      return 'Ops! Estou com problemas para responder agora. Tente novamente em alguns instantes.';
+      return 'Ops! Estou com problemas para responder. Tente novamente! 🦜';
     }
   }
 }
