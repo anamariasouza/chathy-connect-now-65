@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Send, ArrowLeft, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -210,28 +209,23 @@ const ChatBotWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButt
 
       {/* Input */}
       <div className="bg-[#f0f2f5] p-4 border-t border-[#e9edef]">
-        <div className="flex flex-col space-y-2">
-          <div className="flex space-x-2">
-            <Textarea
-              value={newMessage}
-              onChange={handleMessageChange}
-              onKeyPress={handleKeyPress}
-              placeholder="Digite uma mensagem... (máx. 200 caracteres)"
-              className="flex-1 bg-white border-[#e9edef] resize-none min-h-[40px] max-h-[120px]"
-              disabled={isLoading}
-              rows={1}
-            />
-            <Button
-              onClick={handleSendMessage}
-              disabled={!newMessage.trim() || isLoading}
-              className="bg-[#005c4b] hover:bg-[#004a3d] text-white self-end"
-            >
-              <Send size={16} />
-            </Button>
-          </div>
-          <div className="text-xs text-[#667781] text-right">
-            {charCount}/200 caracteres
-          </div>
+        <div className="flex space-x-2">
+          <Textarea
+            value={newMessage}
+            onChange={handleMessageChange}
+            onKeyPress={handleKeyPress}
+            placeholder="Digite uma mensagem... (máx. 200 caracteres)"
+            className="flex-1 bg-white border-[#e9edef] resize-none min-h-[40px] max-h-[120px]"
+            disabled={isLoading}
+            rows={1}
+          />
+          <Button
+            onClick={handleSendMessage}
+            disabled={!newMessage.trim() || isLoading}
+            className="bg-[#005c4b] hover:bg-[#004a3d] text-white self-end"
+          >
+            <Send size={16} />
+          </Button>
         </div>
       </div>
     </div>
