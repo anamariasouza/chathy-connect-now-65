@@ -34,14 +34,26 @@ const GroupDetailsPopup = ({
     onClose();
   };
 
+  // Mapear participantes para suas fotos
+  const getParticipantAvatar = (participantName: string) => {
+    const avatarMap: { [key: string]: string } = {
+      'Maria Silva': '/lovable-uploads/dd9738c9-e44d-4130-86fc-a762359e3a4e.png',
+      'Pedro Santos': '/lovable-uploads/6278072d-3af7-4137-a3ab-0b4239621600.png',
+      'Ana Costa': '/lovable-uploads/0e775d7a-2c40-49d5-83a9-620db5ffef64.png',
+      'João Silva': '/lovable-uploads/2063ea8d-c7f2-4ae4-a21f-d5955bc1f9b3.png'
+    };
+    return avatarMap[participantName] || '';
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <div className="flex items-center space-x-3">
             <Avatar className="h-12 w-12">
+              <AvatarImage src={groupAvatar} alt={groupName} />
               <AvatarFallback className="bg-purple-500 text-white text-lg">
-                {groupAvatar}
+                <Users size={20} />
               </AvatarFallback>
             </Avatar>
             <div>
@@ -76,6 +88,7 @@ const GroupDetailsPopup = ({
                   onClick={() => handleParticipantClick(participant)}
                 >
                   <Avatar className="h-8 w-8">
+                    <AvatarImage src={getParticipantAvatar(participant)} alt={participant} />
                     <AvatarFallback className="bg-chathy-primary text-white text-sm">
                       {participant.charAt(0)}
                     </AvatarFallback>

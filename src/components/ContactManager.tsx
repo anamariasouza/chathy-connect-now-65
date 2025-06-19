@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Plus, Users, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -35,7 +36,7 @@ const ContactManager = ({ onContactSelect, onViewProfile, onStartChat }: Contact
     {
       id: 'group1',
       name: 'Grupo Família',
-      avatar: 'GF',
+      avatar: '/lovable-uploads/acb4c601-9598-4c2a-9e33-0fb1a5cbe212.png',
       username: 'grupofamilia',
       isOnline: true,
       isGroup: true,
@@ -44,7 +45,7 @@ const ContactManager = ({ onContactSelect, onViewProfile, onStartChat }: Contact
     {
       id: 'group2',
       name: 'Trabalho Dev',
-      avatar: 'TD',
+      avatar: '/lovable-uploads/ad3eed74-11c0-4afc-86c2-ab8ad73056e2.png',
       username: 'trabalhodev',
       isOnline: true,
       isGroup: true,
@@ -53,28 +54,28 @@ const ContactManager = ({ onContactSelect, onViewProfile, onStartChat }: Contact
     {
       id: '1',
       name: 'Maria Silva',
-      avatar: 'M',
+      avatar: '/lovable-uploads/dd9738c9-e44d-4130-86fc-a762359e3a4e.png',
       username: 'mariasilva',
       isOnline: true
     },
     {
       id: '2',
       name: 'Pedro Santos',
-      avatar: 'P',
+      avatar: '/lovable-uploads/6278072d-3af7-4137-a3ab-0b4239621600.png',
       username: 'pedrosantos',
       isOnline: false
     },
     {
       id: '3',
       name: 'Ana Costa',
-      avatar: 'A',
+      avatar: '/lovable-uploads/0e775d7a-2c40-49d5-83a9-620db5ffef64.png',
       username: 'anacosta',
       isOnline: true
     },
     {
       id: '4',
       name: 'João Silva',
-      avatar: 'J',
+      avatar: '/lovable-uploads/2063ea8d-c7f2-4ae4-a21f-d5955bc1f9b3.png',
       username: 'joaosilva',
       isOnline: true
     }
@@ -132,13 +133,10 @@ const ContactManager = ({ onContactSelect, onViewProfile, onStartChat }: Contact
                 onClick={(e) => handleAvatarClick(contact, e)}
               >
                 <Avatar className="h-12 w-12">
-                  {contact.isBot ? (
-                    <AvatarImage src={contact.avatar} alt={contact.name} />
-                  ) : (
-                    <AvatarFallback className={`${contact.isGroup ? 'bg-purple-500' : contact.isBot ? 'bg-green-500' : 'bg-chathy-primary'} text-white`}>
-                      {contact.isBot ? <Bot size={20} /> : contact.avatar}
-                    </AvatarFallback>
-                  )}
+                  <AvatarImage src={contact.avatar} alt={contact.name} />
+                  <AvatarFallback className={`${contact.isGroup ? 'bg-purple-500' : contact.isBot ? 'bg-green-500' : 'bg-chathy-primary'} text-white`}>
+                    {contact.isBot ? <Bot size={20} /> : contact.isGroup ? <Users size={20} /> : contact.name.charAt(0)}
+                  </AvatarFallback>
                 </Avatar>
                 {contact.isBot && (
                   <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full flex items-center justify-center">

@@ -27,7 +27,7 @@ export const contactProfiles: ContactProfile[] = [
     followers: 2340,
     following: 567,
     posts: 89,
-    avatar: 'M',
+    avatar: '/lovable-uploads/dd9738c9-e44d-4130-86fc-a762359e3a4e.png',
     username: 'mariasilva',
     isOnline: true
   },
@@ -42,7 +42,7 @@ export const contactProfiles: ContactProfile[] = [
     followers: 1890,
     following: 423,
     posts: 67,
-    avatar: 'P',
+    avatar: '/lovable-uploads/6278072d-3af7-4137-a3ab-0b4239621600.png',
     username: 'pedrosantos',
     isOnline: false
   },
@@ -57,7 +57,7 @@ export const contactProfiles: ContactProfile[] = [
     followers: 3456,
     following: 789,
     posts: 156,
-    avatar: 'A',
+    avatar: '/lovable-uploads/0e775d7a-2c40-49d5-83a9-620db5ffef64.png',
     username: 'anacosta',
     isOnline: true
   },
@@ -72,7 +72,7 @@ export const contactProfiles: ContactProfile[] = [
     followers: 4567,
     following: 234,
     posts: 123,
-    avatar: 'J',
+    avatar: '/lovable-uploads/2063ea8d-c7f2-4ae4-a21f-d5955bc1f9b3.png',
     username: 'joaosilva',
     isOnline: true
   }
