@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Heart, MessageCircle, Share, MoreVertical, Upload, Link } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -164,7 +163,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
           if (postId) {
             const post = posts.find(p => p.id === postId);
             if (post?.youtubeVideoId) {
-              if (entry.isIntersecting && entry.intersectionRatio > 0.8) {
+              if (entry.isIntersecting && entry.intersectionRatio > 0.7) {
                 // Vídeo entrou na tela com mais de 80% visível
                 console.log('Vídeo entrando na tela:', postId, 'Ratio:', entry.intersectionRatio);
                 
@@ -177,9 +176,9 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
                   if (userInteracted) {
                     playVideoFromStart(postId);
                   }
-                }, 200);
+                }, 300);
                 
-              } else if (!entry.isIntersecting || entry.intersectionRatio < 0.5) {
+              } else if (!entry.isIntersecting || entry.intersectionRatio < 0.3) {
                 // Vídeo saiu da tela ou está menos de 50% visível
                 console.log('Vídeo saindo da tela:', postId, 'Ratio:', entry.intersectionRatio);
                 
@@ -193,8 +192,8 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
         });
       },
       {
-        threshold: [0, 0.5, 0.8, 1],
-        rootMargin: '-5% 0px -5% 0px'
+        threshold: [0, 0.3, 0.7, 1],
+        rootMargin: '-10% 0px -10% 0px'
       }
     );
 
@@ -236,7 +235,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
         ];
         
         commands.forEach((command, index) => {
-          setTimeout(command, index * 300);
+          setTimeout(command, index * 200);
         });
         
       } catch (error) {
@@ -314,7 +313,24 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
     setCarouselApis(prev => new Map(prev.set(postId, api)));
     
     const updateCurrentSlide = () => {
-      setCurrentSlides(prev => new Map(prev.set(postId, api.selectedScrollSnap())));
+      const newSlideIndex = api.selectedScrollSnap();
+      const previousSlideIndex = currentSlides.get(postId) || 0;
+      
+      // Se mudou de slide, pausar todos os vídeos
+      if (newSlideIndex !== previousSlideIndex) {
+        console.log(`Carrossel ${postId}: mudança de slide ${previousSlideIndex} -> ${newSlideIndex}`);
+        pauseAllVideos();
+        
+        // Aguardar um pouco e tentar reproduzir o vídeo visível atual
+        setTimeout(() => {
+          const currentPost = posts.find(p => p.id === postId);
+          if (currentPost?.youtubeVideoId && currentVisibleVideo === postId) {
+            playVideoFromStart(postId);
+          }
+        }, 500);
+      }
+      
+      setCurrentSlides(prev => new Map(prev.set(postId, newSlideIndex)));
     };
     
     updateCurrentSlide();
