@@ -165,11 +165,12 @@ const FeedView = ({ onViewProfile, audioEnabled = true, onAudioToggle, uploadDia
   const [newVideoLink, setNewVideoLink] = useState('');
   const [newVideoDescription, setNewVideoDescription] = useState('');
   const [userInteracted, setUserInteracted] = useState(false);
-  const [currentVisibleVideo, setCurrentVisibleVideo] = useState<string>('');
+  const [currentPlayingVideo, setCurrentPlayingVideo] = useState<string>('');
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const iframeRefs = useRef<Map<string, HTMLIFrameElement>>(new Map());
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const playbackAttempts = useRef<Map<string, number>>(new Map());
 
   // Detectar primeira interação do usuário
   useEffect(() => {
@@ -192,19 +193,65 @@ const FeedView = ({ onViewProfile, audioEnabled = true, onAudioToggle, uploadDia
     };
   }, [userInteracted]);
 
-  // Pausar todos os vídeos
+  // Pausar todos os vídeos de forma mais eficiente
   const pauseAllVideos = () => {
-    iframeRefs.current.forEach((iframe, postId) => {
+    if (currentPlayingVideo && iframeRefs.current.has(currentPlayingVideo)) {
+      const iframe = iframeRefs.current.get(currentPlayingVideo);
       try {
-        iframe.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-        console.log('Pausando vídeo:', postId);
+        iframe?.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+        console.log('Pausando vídeo:', currentPlayingVideo);
       } catch (error) {
-        console.log('Erro ao pausar vídeo:', postId, error);
+        console.log('Erro ao pausar vídeo:', currentPlayingVideo, error);
       }
-    });
+    }
+    setCurrentPlayingVideo('');
   };
 
-  // Configurar Intersection Observer
+  // Reproduzir vídeo específico
+  const playVideo = (postId: string) => {
+    const iframe = iframeRefs.current.get(postId);
+    if (!iframe || !userInteracted) return;
+
+    // Evitar tentativas excessivas de reprodução
+    const attempts = playbackAttempts.current.get(postId) || 0;
+    if (attempts > 3) {
+      console.log('Muitas tentativas de reprodução para:', postId);
+      return;
+    }
+
+    playbackAttempts.current.set(postId, attempts + 1);
+
+    // Pausar outros vídeos primeiro
+    if (currentPlayingVideo && currentPlayingVideo !== postId) {
+      pauseAllVideos();
+    }
+
+    try {
+      console.log('Iniciando reprodução do vídeo:', postId);
+      
+      // Configurar volume baseado na preferência
+      if (audioEnabled) {
+        iframe.contentWindow?.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+        iframe.contentWindow?.postMessage('{"event":"command","func":"setVolume","args":[50]}', '*');
+      } else {
+        iframe.contentWindow?.postMessage('{"event":"command","func":"mute","args":""}', '*');
+      }
+      
+      // Reproduzir vídeo
+      iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+      setCurrentPlayingVideo(postId);
+      
+      // Resetar contador de tentativas após sucesso
+      setTimeout(() => {
+        playbackAttempts.current.set(postId, 0);
+      }, 2000);
+      
+    } catch (error) {
+      console.log('Erro ao reproduzir vídeo:', error);
+    }
+  };
+
+  // Configurar Intersection Observer simplificado
   useEffect(() => {
     if (observerRef.current) {
       observerRef.current.disconnect();
@@ -214,132 +261,49 @@ const FeedView = ({ onViewProfile, audioEnabled = true, onAudioToggle, uploadDia
       (entries) => {
         entries.forEach((entry) => {
           const postId = entry.target.getAttribute('data-post-id');
-          if (postId) {
-            const post = posts.find(p => p.id === postId);
+          if (!postId) return;
+
+          const post = posts.find(p => p.id === postId);
+          
+          if (entry.isIntersecting && entry.intersectionRatio > 0.8) {
+            console.log('Post visível:', postId);
             
-            if (entry.isIntersecting && entry.intersectionRatio > 0.7) {
-              console.log('Post entrando na tela:', postId);
-              
-              // Pausar todos os vídeos primeiro
-              pauseAllVideos();
-              
-              // Se o post atual tem vídeo, reproduzir após um delay
-              if (post?.youtubeVideoId) {
-                setTimeout(() => {
-                  setCurrentVisibleVideo(postId);
-                  playVideoFromStart(postId);
-                }, 500);
-              } else {
-                setCurrentVisibleVideo('');
-              }
-              
-            } else if (!entry.isIntersecting || entry.intersectionRatio < 0.3) {
-              console.log('Post saindo da tela:', postId);
-              
-              // Se era um vídeo que estava tocando, pausar
-              if (post?.youtubeVideoId && currentVisibleVideo === postId) {
-                pauseVideo(postId);
-                setCurrentVisibleVideo('');
-              }
+            if (post?.youtubeVideoId && postId !== currentPlayingVideo) {
+              // Aguardar um pouco antes de reproduzir
+              setTimeout(() => {
+                playVideo(postId);
+              }, 500);
             }
           }
         });
       },
       {
-        threshold: [0, 0.3, 0.7, 1],
-        rootMargin: '-10% 0px -10% 0px'
+        threshold: [0.8],
+        rootMargin: '0px'
       }
     );
 
     // Observar todos os posts
-    const postElements = document.querySelectorAll('[data-post-id]');
-    postElements.forEach(el => {
-      if (observerRef.current) {
-        observerRef.current.observe(el);
-      }
-    });
+    setTimeout(() => {
+      const postElements = document.querySelectorAll('[data-post-id]');
+      postElements.forEach(el => {
+        if (observerRef.current) {
+          observerRef.current.observe(el);
+        }
+      });
+    }, 100);
 
     return () => {
       if (observerRef.current) {
         observerRef.current.disconnect();
       }
     };
-  }, [posts, currentVisibleVideo]);
-
-  const playVideoFromStart = (postId: string) => {
-    const iframe = iframeRefs.current.get(postId);
-    if (iframe) {
-      try {
-        console.log('Tentando reproduzir vídeo:', postId, 'Audio habilitado:', audioEnabled);
-        
-        // Comandos sequenciais para garantir reprodução
-        setTimeout(() => {
-          iframe.contentWindow?.postMessage('{"event":"command","func":"seekTo","args":[0,true]}', '*');
-        }, 100);
-        
-        setTimeout(() => {
-          if (audioEnabled) {
-            iframe.contentWindow?.postMessage('{"event":"command","func":"unMute","args":""}', '*');
-            iframe.contentWindow?.postMessage('{"event":"command","func":"setVolume","args":[50]}', '*');
-          } else {
-            iframe.contentWindow?.postMessage('{"event":"command","func":"mute","args":""}', '*');
-          }
-        }, 300);
-        
-        setTimeout(() => {
-          iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
-          console.log('Comando de reprodução enviado para:', postId);
-        }, 500);
-        
-      } catch (error) {
-        console.log('Erro ao reproduzir vídeo:', error);
-      }
-    }
-  };
-
-  const pauseVideo = (postId: string) => {
-    const iframe = iframeRefs.current.get(postId);
-    if (iframe) {
-      try {
-        iframe.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-        console.log('Vídeo pausado com sucesso:', postId);
-      } catch (error) {
-        console.log('Erro ao pausar vídeo:', postId, error);
-      }
-    }
-  };
-
-  // Controle simples de scroll
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!containerRef.current) return;
-      
-      const container = containerRef.current;
-      const scrollTop = container.scrollTop;
-      const itemHeight = container.clientHeight;
-      const newIndex = Math.round(scrollTop / itemHeight);
-      
-      if (newIndex !== currentPostIndex && newIndex >= 0 && newIndex < posts.length) {
-        console.log('Mudança de post via scroll:', currentPostIndex, '->', newIndex);
-        setCurrentPostIndex(newIndex);
-        
-        // Pausar todos os vídeos ao mudar de post
-        pauseAllVideos();
-        setCurrentVisibleVideo('');
-      }
-    };
-
-    const container = containerRef.current;
-    if (container) {
-      container.addEventListener('scroll', handleScroll, { passive: true });
-      return () => container.removeEventListener('scroll', handleScroll);
-    }
-  }, [currentPostIndex, posts.length]);
+  }, [posts, currentPlayingVideo, userInteracted]);
 
   // Controlar áudio quando a preferência muda
   useEffect(() => {
-    if (currentVisibleVideo && userInteracted) {
-      const iframe = iframeRefs.current.get(currentVisibleVideo);
+    if (currentPlayingVideo && userInteracted) {
+      const iframe = iframeRefs.current.get(currentPlayingVideo);
       if (iframe) {
         try {
           if (audioEnabled) {
@@ -354,7 +318,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true, onAudioToggle, uploadDia
         }
       }
     }
-  }, [audioEnabled, currentVisibleVideo, userInteracted]);
+  }, [audioEnabled, currentPlayingVideo, userInteracted]);
 
   const setCarouselApi = (postId: string, api: CarouselApi) => {
     if (!api) return;
@@ -362,17 +326,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true, onAudioToggle, uploadDia
     setCarouselApis(prev => new Map(prev.set(postId, api)));
     
     const updateCurrentSlide = () => {
-      const newSlideIndex = api.selectedScrollSnap();
-      const previousSlideIndex = currentSlides.get(postId) || 0;
-      
-      // Se mudou de slide no carrossel, pausar todos os vídeos
-      if (newSlideIndex !== previousSlideIndex) {
-        console.log(`Carrossel ${postId}: mudança de slide ${previousSlideIndex} -> ${newSlideIndex}`);
-        pauseAllVideos();
-        setCurrentVisibleVideo('');
-      }
-      
-      setCurrentSlides(prev => new Map(prev.set(postId, newSlideIndex)));
+      setCurrentSlides(prev => new Map(prev.set(postId, api.selectedScrollSnap())));
     };
     
     updateCurrentSlide();
@@ -451,42 +405,26 @@ const FeedView = ({ onViewProfile, audioEnabled = true, onAudioToggle, uploadDia
 
   const handleVideoClick = (postId: string) => {
     console.log('Clique no vídeo detectado:', postId);
-    const iframe = iframeRefs.current.get(postId);
-    if (iframe) {
-      if (currentVisibleVideo === postId) {
-        pauseVideo(postId);
-        setCurrentVisibleVideo('');
-      } else {
-        setCurrentVisibleVideo(postId);
-        playVideoFromStart(postId);
-      }
-    }
+    
     if (!userInteracted) {
       setUserInteracted(true);
+    }
+
+    if (currentPlayingVideo === postId) {
+      pauseAllVideos();
+    } else {
+      playVideo(postId);
     }
   };
 
   const handleIframeLoad = (postId: string, iframe: HTMLIFrameElement) => {
     iframeRefs.current.set(postId, iframe);
     console.log('Iframe carregado para post:', postId);
-    
-    // Se este é o post visível na tela, tentar reproduzir
-    setTimeout(() => {
-      const postElement = document.querySelector(`[data-post-id="${postId}"]`);
-      if (postElement) {
-        const rect = postElement.getBoundingClientRect();
-        const isVisible = rect.top >= 0 && rect.top < window.innerHeight * 0.7;
-        if (isVisible) {
-          setCurrentVisibleVideo(postId);
-          playVideoFromStart(postId);
-        }
-      }
-    }, 1000);
   };
 
   return (
     <div className="fixed inset-0 bg-black">
-      {/* Upload Button - posicionado 5px abaixo da sidebar no canto superior direito */}
+      {/* Upload Button */}
       <div className="fixed top-5 right-4 z-50 md:top-21">
         <Button 
           onClick={() => onUploadDialogChange?.(true)}
@@ -567,7 +505,7 @@ const FeedView = ({ onViewProfile, audioEnabled = true, onAudioToggle, uploadDia
                     ref={(iframe) => iframe && handleIframeLoad(post.id, iframe)}
                     width="100%"
                     height="100%"
-                    src={`https://www.youtube.com/embed/${post.youtubeVideoId}?enablejsapi=1&autoplay=1&mute=1&loop=1&playlist=${post.youtubeVideoId}&controls=1&showinfo=0&rel=0&modestbranding=1&playsinline=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}`}
+                    src={`https://www.youtube.com/embed/${post.youtubeVideoId}?enablejsapi=1&autoplay=0&mute=1&loop=1&playlist=${post.youtubeVideoId}&controls=1&showinfo=0&rel=0&modestbranding=1&playsinline=1&origin=${window.location.origin}`}
                     title={`Vídeo de ${post.user}`}
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
