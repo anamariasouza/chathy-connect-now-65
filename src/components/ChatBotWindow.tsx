@@ -10,8 +10,12 @@ import { useConversationHistory } from '@/hooks/useConversationHistory';
 interface Message {
   id: string;
   content: string;
-  sender: 'user' | 'bot';
+  sender: string;
   timestamp: Date;
+  isOwn: boolean;
+  type?: 'text' | 'image' | 'video' | 'audio' | 'file';
+  fileUrl?: string;
+  fileName?: string;
 }
 
 interface Chat {
@@ -48,7 +52,8 @@ const ChatBotWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButt
           id: '1',
           content: 'Olá! Sou o Chat-Boy, seu mascote! Como posso te ajudar hoje?',
           sender: 'bot',
-          timestamp: new Date()
+          timestamp: new Date(),
+          isOwn: false
         };
         initializeConversation(chat.id, [welcomeMessage]);
         setMessages([welcomeMessage]);
@@ -79,7 +84,8 @@ const ChatBotWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButt
       id: Date.now().toString(),
       content: newMessage.trim(),
       sender: 'user',
-      timestamp: new Date()
+      timestamp: new Date(),
+      isOwn: true
     };
 
     // Adicionar mensagem do usuário
@@ -101,7 +107,8 @@ const ChatBotWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButt
         id: (Date.now() + 1).toString(),
         content: botResponse,
         sender: 'bot',
-        timestamp: new Date()
+        timestamp: new Date(),
+        isOwn: false
       };
 
       setMessages(prev => [...prev, botMessage]);
@@ -112,7 +119,8 @@ const ChatBotWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButt
         id: (Date.now() + 1).toString(),
         content: 'Desculpe, ocorreu um erro. Tente novamente!',
         sender: 'bot',
-        timestamp: new Date()
+        timestamp: new Date(),
+        isOwn: false
       };
       setMessages(prev => [...prev, errorMessage]);
       addMessage(chat.id, errorMessage);
