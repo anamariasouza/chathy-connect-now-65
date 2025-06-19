@@ -31,7 +31,7 @@ const ChatBotWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButt
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: 'Olá! Sou o Chat-Boy, seu periquito verde mascote! 🦜 Como posso te ajudar hoje?',
+      content: 'Olá! Sou o Chat-Boy, seu mascote! Como posso te ajudar hoje?',
       sender: 'bot',
       timestamp: new Date()
     }
@@ -92,7 +92,7 @@ const ChatBotWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButt
       console.error('Erro ao enviar mensagem:', error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: 'Desculpe, ocorreu um erro. Tente novamente! 🦜',
+        content: 'Desculpe, ocorreu um erro. Tente novamente!',
         sender: 'bot',
         timestamp: new Date()
       };
@@ -134,7 +134,7 @@ const ChatBotWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButt
         <div className="flex-1">
           <h3 className="font-medium text-[#111b21]">{chat.name}</h3>
           <p className="text-sm text-[#667781]">
-            {isLoading ? 'Digitando...' : 'Periquito Verde Mascote • Online 🦜'}
+            {isLoading ? 'Digitando...' : 'Mascote Verde • Online'}
           </p>
         </div>
       </div>

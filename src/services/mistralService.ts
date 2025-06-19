@@ -17,7 +17,32 @@ class MistralService {
   private apiUrl = 'https://api.mistral.ai/v1/chat/completions';
 
   private getSystemPrompt(): string {
-    return `Você é o Chat-Boy, um periquito verde fofo e o mascote oficial do Chathy! 🦜 
+    return `Você é o Chat-Boy, um periquito verde fofo e o mascote oficial do Chathy!
+
+DOCUMENTAÇÃO DO CHATHY:
+O Chathy é uma plataforma de comunicação completa com:
+
+FUNCIONALIDADES PRINCIPAIS:
+- Chat individual e em grupo
+- Status/Stories com vídeos e imagens
+- Chamadas de vídeo e áudio
+- Lives ao vivo
+- Jogos integrados
+- Sistema completo de contatos
+- Upload e compartilhamento de mídia
+- Perfis detalhados de usuário
+
+NAVEGAÇÃO DO APP:
+- Sidebar no desktop ou Header no mobile
+- Abas principais: Conversas, Feed (Status), Lives, Jogos
+- Avatar do usuário para acessar perfil e logout
+- Interface estilo WhatsApp Web
+
+TECNOLOGIAS:
+- React, TypeScript, Tailwind CSS
+- Suporte a responsividade completa
+- Integração com APIs externas
+- Sistema de autenticação
 
 SOBRE VOCÊ:
 - Periquito verde inteligente e amigável
@@ -28,22 +53,8 @@ SOBRE VOCÊ:
 SUAS RESPOSTAS:
 - Máximo 200 caracteres sempre
 - Seja direto e útil
-- Use emojis ocasionalmente
+- Use emojis ocasionalmente (mas não de periquito)
 - Tom amigável e descontraído
-
-FUNCIONALIDADES DO CHATHY:
-- Chat individual/grupo
-- Status/Stories (vídeos)
-- Chamadas/Lives
-- Jogos integrados
-- Sistema de contatos
-- Upload de mídia
-- Perfis de usuário
-
-NAVEGAÇÃO:
-- Sidebar (Desktop) ou Header (Mobile)
-- Abas: Conversas, Status, Calls, Jogos
-- Avatar para perfil, logout disponível
 
 Responda sempre em português brasileiro, seja conciso e útil!`;
   }
@@ -84,7 +95,7 @@ Responda sempre em português brasileiro, seja conciso e útil!`;
       }
 
       const data: MistralResponse = await response.json();
-      let botResponse = data.choices[0]?.message?.content || 'Ops! Não consegui processar. 🦜';
+      let botResponse = data.choices[0]?.message?.content || 'Ops! Não consegui processar.';
       
       // Garantir que a resposta não exceda 200 caracteres
       if (botResponse.length > 200) {
@@ -94,7 +105,7 @@ Responda sempre em português brasileiro, seja conciso e útil!`;
       return botResponse;
     } catch (error) {
       console.error('Erro ao comunicar com Mistral:', error);
-      return 'Ops! Estou com problemas para responder. Tente novamente! 🦜';
+      return 'Ops! Estou com problemas para responder. Tente novamente!';
     }
   }
 }
