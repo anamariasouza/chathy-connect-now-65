@@ -162,30 +162,35 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
           const postId = entry.target.getAttribute('data-post-id');
           if (postId) {
             const post = posts.find(p => p.id === postId);
-            if (post?.youtubeVideoId) {
-              if (entry.isIntersecting && entry.intersectionRatio > 0.7) {
-                // Vídeo entrou na tela com mais de 80% visível
-                console.log('Vídeo entrando na tela:', postId, 'Ratio:', entry.intersectionRatio);
-                
-                // Pausar todos os outros vídeos primeiro
-                pauseAllVideos();
-                
-                // Aguardar um pouco e então reproduzir o novo vídeo
+            
+            if (entry.isIntersecting && entry.intersectionRatio > 0.7) {
+              // Post entrou na tela com mais de 70% visível
+              console.log('Post entrando na tela:', postId, 'Ratio:', entry.intersectionRatio);
+              
+              // Pausar todos os vídeos primeiro
+              pauseAllVideos();
+              
+              // Se o post atual tem vídeo, reproduzir após um delay
+              if (post?.youtubeVideoId) {
                 setTimeout(() => {
                   setCurrentVisibleVideo(postId);
                   if (userInteracted) {
                     playVideoFromStart(postId);
                   }
                 }, 300);
-                
-              } else if (!entry.isIntersecting || entry.intersectionRatio < 0.3) {
-                // Vídeo saiu da tela ou está menos de 50% visível
-                console.log('Vídeo saindo da tela:', postId, 'Ratio:', entry.intersectionRatio);
-                
-                if (currentVisibleVideo === postId) {
-                  pauseVideo(postId);
-                  setCurrentVisibleVideo('');
-                }
+              } else {
+                // Se não tem vídeo, limpar o vídeo visível atual
+                setCurrentVisibleVideo('');
+              }
+              
+            } else if (!entry.isIntersecting || entry.intersectionRatio < 0.3) {
+              // Post saiu da tela ou está menos de 30% visível
+              console.log('Post saindo da tela:', postId, 'Ratio:', entry.intersectionRatio);
+              
+              // Se era um vídeo que estava tocando, pausar
+              if (post?.youtubeVideoId && currentVisibleVideo === postId) {
+                pauseVideo(postId);
+                setCurrentVisibleVideo('');
               }
             }
           }
@@ -197,12 +202,10 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
       }
     );
 
-    // Observar todos os posts com vídeo
-    const videoElements = document.querySelectorAll('[data-post-id]');
-    videoElements.forEach(el => {
-      const postId = el.getAttribute('data-post-id');
-      const post = posts.find(p => p.id === postId);
-      if (post?.youtubeVideoId && observerRef.current) {
+    // Observar todos os posts (com e sem vídeo)
+    const postElements = document.querySelectorAll('[data-post-id]');
+    postElements.forEach(el => {
+      if (observerRef.current) {
         observerRef.current.observe(el);
       }
     });
@@ -290,8 +293,9 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
         console.log('Mudança de post via scroll:', currentPostIndex, '->', newIndex);
         setCurrentPostIndex(newIndex);
         
-        // Pausar todos os vídeos antes de mudar
+        // Pausar todos os vídeos ao mudar de post
         pauseAllVideos();
+        setCurrentVisibleVideo('');
         
         container.scrollTo({
           top: newIndex * itemHeight,
@@ -316,18 +320,11 @@ const FeedView = ({ onViewProfile, audioEnabled = true }: FeedViewProps) => {
       const newSlideIndex = api.selectedScrollSnap();
       const previousSlideIndex = currentSlides.get(postId) || 0;
       
-      // Se mudou de slide, pausar todos os vídeos
+      // Se mudou de slide no carrossel, pausar todos os vídeos
       if (newSlideIndex !== previousSlideIndex) {
         console.log(`Carrossel ${postId}: mudança de slide ${previousSlideIndex} -> ${newSlideIndex}`);
         pauseAllVideos();
-        
-        // Aguardar um pouco e tentar reproduzir o vídeo visível atual
-        setTimeout(() => {
-          const currentPost = posts.find(p => p.id === postId);
-          if (currentPost?.youtubeVideoId && currentVisibleVideo === postId) {
-            playVideoFromStart(postId);
-          }
-        }, 500);
+        setCurrentVisibleVideo('');
       }
       
       setCurrentSlides(prev => new Map(prev.set(postId, newSlideIndex)));
