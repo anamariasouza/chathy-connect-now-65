@@ -61,6 +61,30 @@
     @apply bg-[#f0f2f5] text-[#111b21];
     font-family: "Segoe UI", Helvetica, Arial, sans-serif;
   }
+
+  /* Prevent zoom on iOS Safari when focusing input fields */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  /* Additional mobile input styling */
+  @media screen and (max-width: 768px) {
+    input,
+    textarea,
+    select {
+      font-size: 16px !important;
+      transform: scale(1);
+      zoom: 1;
+    }
+  }
 }
 
 /* WhatsApp Web specific styles */

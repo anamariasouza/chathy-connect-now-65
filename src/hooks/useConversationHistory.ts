@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 interface Message {
   id: string;
   content: string;
-  sender: 'user' | 'bot' | string;
+  sender: 'user' | 'bot';
   timestamp: Date;
   type?: 'text' | 'image' | 'video' | 'audio' | 'file';
   fileUrl?: string;
