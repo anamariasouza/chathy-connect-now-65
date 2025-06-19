@@ -122,7 +122,6 @@ const Sidebar = ({ activeTab, onTabChange, audioEnabled = true, onAudioToggle }:
               alt="Chathy Logo" 
               className="w-8 h-8 object-contain"
             />
-            <h1 className="text-lg font-normal text-white font-baloo">Chathy</h1>
           </div>
           
           <div className="flex items-center space-x-1">
