@@ -61,6 +61,7 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -247,16 +248,22 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
 
   // Audio recording functions
   const startRecording = async () => {
+    if (isRecording) return;
+    
     try {
+      console.log('Iniciando gravação...');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
       const audioChunks: BlobPart[] = [];
       
       recorder.ondataavailable = (event) => {
-        audioChunks.push(event.data);
+        if (event.data.size > 0) {
+          audioChunks.push(event.data);
+        }
       };
       
       recorder.onstop = () => {
+        console.log('Gravação finalizada, criando áudio...');
         const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
         const audioUrl = URL.createObjectURL(audioBlob);
         
@@ -272,9 +279,15 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
         
         setMessages(prev => [...prev, newMessage]);
         addMessage(chat!.id, newMessage);
-        stream.getTracks().forEach(track => track.stop());
+        
+        // Limpar stream
+        if (audioStream) {
+          audioStream.getTracks().forEach(track => track.stop());
+          setAudioStream(null);
+        }
       };
       
+      setAudioStream(stream);
       setMediaRecorder(recorder);
       recorder.start();
       setIsRecording(true);
@@ -290,12 +303,37 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
   };
 
   const stopRecording = () => {
+    console.log('Parando gravação...');
     if (mediaRecorder && isRecording) {
       mediaRecorder.stop();
       setIsRecording(false);
       setRecordingTime(0);
+      setMediaRecorder(null);
+      
       if (recordingTimerRef.current) {
         clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+    }
+  };
+
+  const cancelRecording = () => {
+    console.log('Cancelando gravação...');
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+      setIsRecording(false);
+      setRecordingTime(0);
+      setMediaRecorder(null);
+      
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+      
+      // Limpar stream sem salvar áudio
+      if (audioStream) {
+        audioStream.getTracks().forEach(track => track.stop());
+        setAudioStream(null);
       }
     }
   };
@@ -582,12 +620,31 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
       <div className="p-4 border-t border-gray-200 bg-white relative">
         {/* Recording indicator */}
         {isRecording && (
-          <div className="flex items-center justify-center p-2 bg-red-100 rounded-lg mb-2">
-            <div className="flex items-center space-x-2">
+          <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg mb-3 border border-red-200">
+            <div className="flex items-center space-x-3">
               <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
               <span className="text-red-600 text-sm font-medium">
-                Gravando... {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
+                Gravando áudio: {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
               </span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                onClick={cancelRecording}
+                variant="outline"
+                size="sm"
+                className="text-red-600 border-red-200 hover:bg-red-50"
+              >
+                <X size={16} />
+                Cancelar
+              </Button>
+              <Button
+                onClick={stopRecording}
+                size="sm"
+                className="bg-red-500 hover:bg-red-600 text-white"
+              >
+                <Square size={16} />
+                Parar e Enviar
+              </Button>
             </div>
           </div>
         )}
@@ -651,49 +708,50 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
           </div>
         )}
 
-        <div className="flex items-center space-x-2">
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
-          >
-            <Paperclip size={20} />
-          </Button>
-          <div className="flex-1 relative">
-            <Input
-              placeholder={chat.isGroup ? "Mensagem para o grupo..." : "Digite uma mensagem..."}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              className="pr-10 bg-gray-100 border-gray-300 text-black placeholder-gray-500"
-            />
+        {!isRecording && (
+          <div className="flex items-center space-x-2">
             <Button 
               variant="ghost" 
-              size="sm" 
-              className="absolute right-2 top-1/2 transform -translate-y-1/2"
-              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              size="sm"
+              onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
             >
-              <Smile size={16} />
+              <Paperclip size={20} />
             </Button>
+            <div className="flex-1 relative">
+              <Input
+                placeholder={chat.isGroup ? "Mensagem para o grupo..." : "Digite uma mensagem..."}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="pr-10 bg-gray-100 border-gray-300 text-black placeholder-gray-500"
+              />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              >
+                <Smile size={16} />
+              </Button>
+            </div>
+            {message.trim() ? (
+              <Button 
+                onClick={handleSendMessage}
+                className="bg-[#00a884] hover:bg-[#008069] text-white"
+              >
+                <Send size={20} />
+              </Button>
+            ) : (
+              <Button 
+                onClick={startRecording}
+                className="bg-[#00a884] hover:bg-[#008069] text-white"
+                disabled={isRecording}
+              >
+                <Mic size={20} />
+              </Button>
+            )}
           </div>
-          {message.trim() ? (
-            <Button 
-              onClick={handleSendMessage}
-              className="bg-[#00a884] hover:bg-[#008069] text-white"
-            >
-              <Send size={20} />
-            </Button>
-          ) : (
-            <Button 
-              onMouseDown={startRecording}
-              onMouseUp={stopRecording}
-              onMouseLeave={stopRecording}
-              className={`${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-[#00a884] hover:bg-[#008069]'} text-white`}
-            >
-              {isRecording ? <Square size={20} /> : <Mic size={20} />}
-            </Button>
-          )}
-        </div>
+        )}
 
         {/* Hidden file input */}
         <input
