@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Phone, Video, MoreVertical, Paperclip, Smile, X, Users, User } from 'lucide-react';
+import { Send, Phone, Video, MoreVertical, Paperclip, Smile, X, Users, User, Mic, Camera, FileText, Image, MicIcon, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
 import { contactProfiles } from '@/data/contactProfiles';
+import EmojiPicker from 'emoji-picker-react';
 
 interface Message {
   id: string;
@@ -11,6 +12,9 @@ interface Message {
   sender: string;
   time: string;
   isOwn: boolean;
+  type?: 'text' | 'image' | 'video' | 'audio' | 'file';
+  fileUrl?: string;
+  fileName?: string;
 }
 
 interface Chat {
@@ -35,7 +39,15 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [showParticipants, setShowParticipants] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
 
   // useEffect for mock messages
@@ -108,6 +120,105 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
     scrollToBottom();
   }, [messages]);
 
+  // Audio recording functions
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const audioChunks: BlobPart[] = [];
+      
+      recorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
+      };
+      
+      recorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        const newMessage: Message = {
+          id: Date.now().toString(),
+          text: 'Áudio',
+          sender: 'Você',
+          time: new Date().toLocaleTimeString('pt-BR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          }),
+          isOwn: true,
+          type: 'audio',
+          fileUrl: audioUrl
+        };
+        
+        setMessages(prev => [...prev, newMessage]);
+        stream.getTracks().forEach(track => track.stop());
+      };
+      
+      setMediaRecorder(recorder);
+      recorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+      
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Erro ao iniciar gravação:', error);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+      setIsRecording(false);
+      setRecordingTime(0);
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+      }
+    }
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video' | 'file') => {
+    const file = event.target.files?.[0];
+    if (file && chat) {
+      const fileUrl = URL.createObjectURL(file);
+      let messageText = '';
+      
+      switch (type) {
+        case 'image':
+          messageText = 'Foto';
+          break;
+        case 'video':
+          messageText = 'Vídeo';
+          break;
+        case 'file':
+          messageText = file.name;
+          break;
+      }
+      
+      const newMessage: Message = {
+        id: Date.now().toString(),
+        text: messageText,
+        sender: 'Você',
+        time: new Date().toLocaleTimeString('pt-BR', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        }),
+        isOwn: true,
+        type: type,
+        fileUrl: fileUrl,
+        fileName: file.name
+      };
+      
+      setMessages(prev => [...prev, newMessage]);
+      setShowAttachmentMenu(false);
+    }
+  };
+
+  const handleEmojiClick = (emojiObject: any) => {
+    setMessage(prev => prev + emojiObject.emoji);
+    setShowEmojiPicker(false);
+  };
+
   // handleSendMessage and handleKeyPress
   const handleSendMessage = () => {
     if (message.trim() && chat) {
@@ -154,6 +265,52 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
       console.log('Iniciando chat com:', participantName);
       // Aqui você pode implementar a lógica para iniciar o chat
     }
+  };
+
+  const renderMessage = (msg: Message) => {
+    if (msg.type === 'audio') {
+      return (
+        <div className="flex items-center space-x-2">
+          <MicIcon size={16} />
+          <audio controls src={msg.fileUrl} className="max-w-48">
+            Seu navegador não suporta áudio.
+          </audio>
+        </div>
+      );
+    }
+    
+    if (msg.type === 'image') {
+      return (
+        <div>
+          <img src={msg.fileUrl} alt="Imagem" className="max-w-48 rounded-lg mb-2" />
+          <p className="text-sm">{msg.text}</p>
+        </div>
+      );
+    }
+    
+    if (msg.type === 'video') {
+      return (
+        <div>
+          <video src={msg.fileUrl} controls className="max-w-48 rounded-lg mb-2">
+            Seu navegador não suporta vídeo.
+          </video>
+          <p className="text-sm">{msg.text}</p>
+        </div>
+      );
+    }
+    
+    if (msg.type === 'file') {
+      return (
+        <div className="flex items-center space-x-2">
+          <FileText size={16} />
+          <a href={msg.fileUrl} download={msg.fileName} className="text-blue-600 hover:underline">
+            {msg.fileName}
+          </a>
+        </div>
+      );
+    }
+    
+    return <p className="text-sm">{msg.text}</p>;
   };
 
   if (!chat) {
@@ -277,7 +434,7 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
                   {msg.sender}
                 </p>
               )}
-              <p className="text-sm">{msg.text}</p>
+              {renderMessage(msg)}
               <p className={`text-xs mt-1 ${
                 msg.isOwn ? 'text-green-100' : 'text-gray-500'
               }`}>
@@ -290,9 +447,84 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-gray-200 bg-white">
+      <div className="p-4 border-t border-gray-200 bg-white relative">
+        {/* Recording indicator */}
+        {isRecording && (
+          <div className="flex items-center justify-center p-2 bg-red-100 rounded-lg mb-2">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+              <span className="text-red-600 text-sm font-medium">
+                Gravando... {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Emoji Picker */}
+        {showEmojiPicker && (
+          <div className="absolute bottom-16 right-4 z-50">
+            <EmojiPicker onEmojiClick={handleEmojiClick} />
+          </div>
+        )}
+
+        {/* Attachment Menu */}
+        {showAttachmentMenu && (
+          <div className="absolute bottom-16 left-4 bg-white rounded-lg shadow-lg border p-2 z-40">
+            <div className="flex flex-col space-y-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center space-x-2 justify-start"
+                onClick={() => {
+                  fileInputRef.current?.click();
+                  setShowAttachmentMenu(false);
+                }}
+              >
+                <Image size={16} className="text-blue-500" />
+                <span>Foto ou Vídeo</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center space-x-2 justify-start"
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = '.pdf,.doc,.docx,.txt';
+                  input.onchange = (e) => handleFileUpload(e as any, 'file');
+                  input.click();
+                  setShowAttachmentMenu(false);
+                }}
+              >
+                <FileText size={16} className="text-purple-500" />
+                <span>Documento</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center space-x-2 justify-start"
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = 'audio/*';
+                  input.onchange = (e) => handleFileUpload(e as any, 'file');
+                  input.click();
+                  setShowAttachmentMenu(false);
+                }}
+              >
+                <MicIcon size={16} className="text-green-500" />
+                <span>Áudio</span>
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="sm">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
+          >
             <Paperclip size={20} />
           </Button>
           <div className="flex-1 relative">
@@ -301,24 +533,50 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="pr-10"
+              className="pr-10 bg-gray-100 border-gray-300 text-black placeholder-gray-500"
             />
             <Button 
               variant="ghost" 
               size="sm" 
               className="absolute right-2 top-1/2 transform -translate-y-1/2"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
             >
               <Smile size={16} />
             </Button>
           </div>
-          <Button 
-            onClick={handleSendMessage}
-            className="gradient-bg"
-            disabled={!message.trim()}
-          >
-            <Send size={20} />
-          </Button>
+          {message.trim() ? (
+            <Button 
+              onClick={handleSendMessage}
+              className="bg-[#00a884] hover:bg-[#008069] text-white"
+            >
+              <Send size={20} />
+            </Button>
+          ) : (
+            <Button 
+              onMouseDown={startRecording}
+              onMouseUp={stopRecording}
+              onMouseLeave={stopRecording}
+              className={`${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-[#00a884] hover:bg-[#008069]'} text-white`}
+            >
+              {isRecording ? <Square size={20} /> : <Mic size={20} />}
+            </Button>
+          )}
         </div>
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,video/*"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              const isVideo = file.type.startsWith('video/');
+              handleFileUpload(e, isVideo ? 'video' : 'image');
+            }
+          }}
+          className="hidden"
+        />
       </div>
     </div>
   );
