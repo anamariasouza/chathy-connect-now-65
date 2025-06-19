@@ -32,7 +32,8 @@ const Profile = () => {
     joinDate: '2024',
     followers: 1250,
     following: 345,
-    posts: 12
+    posts: 12,
+    avatar: '/lovable-uploads/acb4c601-9598-4c2a-9e33-0fb1a5cbe212.png'
   };
 
   const [profile, setProfile] = useState(defaultProfile);
@@ -43,10 +44,17 @@ const Profile = () => {
   useEffect(() => {
     const contactData = location.state?.contact as ContactProfile;
     if (contactData) {
-      setProfile(contactData);
-      setEditProfile(contactData);
+      setProfile({
+        ...contactData,
+        avatar: contactData.avatar
+      });
+      setEditProfile({
+        ...contactData,
+        avatar: contactData.avatar
+      });
       setIsOwnProfile(false);
       setIsEditing(false);
+      setProfileImage(contactData.avatar);
     } else {
       setIsOwnProfile(true);
       // Carregar dados salvos do próprio usuário
@@ -55,12 +63,14 @@ const Profile = () => {
       
       if (savedProfile) {
         const parsedProfile = JSON.parse(savedProfile);
-        setProfile(parsedProfile);
-        setEditProfile(parsedProfile);
+        setProfile({...parsedProfile, avatar: parsedProfile.avatar || defaultProfile.avatar});
+        setEditProfile({...parsedProfile, avatar: parsedProfile.avatar || defaultProfile.avatar});
       }
       
       if (savedProfileImage) {
         setProfileImage(savedProfileImage);
+      } else {
+        setProfileImage(defaultProfile.avatar);
       }
     }
   }, [location.state]);
@@ -277,9 +287,9 @@ const Profile = () => {
                     className="w-20 h-20 bg-chathy-primary rounded-full flex items-center justify-center text-white font-bold text-2xl overflow-hidden cursor-pointer"
                     onClick={handleProfileImageClick}
                   >
-                    {(profileImage && isOwnProfile) ? (
+                    {(profileImage || profile.avatar) ? (
                       <img 
-                        src={profileImage} 
+                        src={profileImage || profile.avatar} 
                         alt="Profile" 
                         className="w-full h-full object-cover"
                       />

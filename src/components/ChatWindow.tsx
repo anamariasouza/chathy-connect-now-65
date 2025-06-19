@@ -8,6 +8,7 @@ import EmojiPicker from 'emoji-picker-react';
 import ChatBotWindow from './ChatBotWindow';
 import GroupDetailsPopup from './GroupDetailsPopup';
 import { useConversationHistory } from '@/hooks/useConversationHistory';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface Message {
   id: string;
@@ -70,6 +71,21 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
   const { getMessages, addMessage, initializeConversation } = useConversationHistory();
+
+  // Função para obter avatar do usuário
+  const getContactAvatar = (contactName: string) => {
+    const contact = contactProfiles.find(profile => profile.name === contactName);
+    return contact?.avatar || '';
+  };
+
+  // Função para obter avatar do grupo
+  const getGroupAvatar = (groupName: string) => {
+    const groupAvatars = {
+      'Grupo Família': '/lovable-uploads/b3c79faf-b014-4557-b3f4-17410f8bbc27.png',
+      'Trabalho Dev': '/lovable-uploads/9b6d18e8-018e-44fd-91cc-9a90b0724788.png'
+    };
+    return groupAvatars[groupName as keyof typeof groupAvatars] || '';
+  };
 
   // useEffect for messages with localStorage
   useEffect(() => {
@@ -520,10 +536,18 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div 
-              className={`w-10 h-10 rounded-full ${chat.isGroup ? 'bg-purple-500' : 'bg-chathy-primary'} flex items-center justify-center text-white font-semibold ${chat.isGroup ? 'cursor-pointer hover:opacity-80' : ''}`}
+              className={`cursor-pointer ${chat.isGroup ? 'hover:opacity-80' : ''}`}
               onClick={chat.isGroup ? handleGroupAvatarClick : undefined}
             >
-              {chat.avatar}
+              <Avatar className="h-10 w-10">
+                <AvatarImage 
+                  src={chat.isGroup ? getGroupAvatar(chat.name) : getContactAvatar(chat.name)} 
+                  alt={chat.name} 
+                />
+                <AvatarFallback className={`${chat.isGroup ? 'bg-purple-500' : 'bg-chathy-primary'} text-white`}>
+                  {chat.isGroup ? <Users size={20} /> : chat.name.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
             </div>
             <div>
               <div className="flex items-center space-x-2">
@@ -585,9 +609,12 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
                   className="flex items-center space-x-2 p-2 hover:bg-white rounded-lg cursor-pointer transition-colors"
                   onClick={() => handleParticipantClick(participant)}
                 >
-                  <div className="w-8 h-8 bg-chathy-primary rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                    {participant.charAt(0)}
-                  </div>
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={getContactAvatar(participant)} alt={participant} />
+                    <AvatarFallback className="bg-chathy-primary text-white text-sm">
+                      {participant.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
                   <span className="text-sm text-gray-800">{participant}</span>
                   <User size={12} className="text-gray-400 ml-auto" />
                 </div>
