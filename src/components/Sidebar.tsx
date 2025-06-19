@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { MessageCircle, Play, Video, Gamepad2, LogOut, Volume2, VolumeX, Menu, MoreVertical, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -11,9 +10,10 @@ interface SidebarProps {
   audioEnabled?: boolean;
   onAudioToggle?: () => void;
   onUploadClick?: () => void;
+  onChatBoyClick?: () => void;
 }
 
-const Sidebar = ({ activeTab, onTabChange, audioEnabled = true, onAudioToggle, onUploadClick }: SidebarProps) => {
+const Sidebar = ({ activeTab, onTabChange, audioEnabled = true, onAudioToggle, onUploadClick, onChatBoyClick }: SidebarProps) => {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -38,6 +38,12 @@ const Sidebar = ({ activeTab, onTabChange, audioEnabled = true, onAudioToggle, o
     onTabChange(itemId);
   };
 
+  const handleLogoClick = () => {
+    navigate('/');
+    onTabChange('chats');
+    onChatBoyClick?.();
+  };
+
   // Verificar se deve mostrar o botão de áudio
   const shouldShowAudioButton = activeTab === 'feed' || activeTab === 'lives';
 
@@ -48,13 +54,17 @@ const Sidebar = ({ activeTab, onTabChange, audioEnabled = true, onAudioToggle, o
         {/* App logo and Profile section */}
         <div className="flex flex-col items-center space-y-3 mb-4">
           {/* App Logo */}
-          <div className="w-10 h-10 flex items-center justify-center">
+          <button
+            onClick={handleLogoClick}
+            className="w-10 h-10 flex items-center justify-center hover:bg-[#2a3942] rounded-lg transition-all duration-200"
+            title="Chat com Chat-Boy"
+          >
             <img 
               src="/lovable-uploads/dd9738c9-e44d-4130-86fc-a762359e3a4e.png" 
               alt="Chathy Logo" 
               className="w-8 h-8 object-contain"
             />
-          </div>
+          </button>
           
           {/* User Avatar */}
           <button
@@ -118,11 +128,17 @@ const Sidebar = ({ activeTab, onTabChange, audioEnabled = true, onAudioToggle, o
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-[#202c33] h-16">
         <div className="flex items-center justify-between px-4 h-full">
           <div className="flex items-center space-x-3">
-            <img 
-              src="/lovable-uploads/dd9738c9-e44d-4130-86fc-a762359e3a4e.png" 
-              alt="Chathy Logo" 
-              className="w-8 h-8 object-contain"
-            />
+            <button
+              onClick={handleLogoClick}
+              className="hover:bg-[#2a3942] p-1 rounded-lg transition-all duration-200"
+              title="Chat com Chat-Boy"
+            >
+              <img 
+                src="/lovable-uploads/dd9738c9-e44d-4130-86fc-a762359e3a4e.png" 
+                alt="Chathy Logo" 
+                className="w-8 h-8 object-contain"
+              />
+            </button>
           </div>
           
           <div className="flex items-center space-x-1">

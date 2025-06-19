@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
 import { contactProfiles } from '@/data/contactProfiles';
 import EmojiPicker from 'emoji-picker-react';
+import ChatBotWindow from './ChatBotWindow';
 
 interface Message {
   id: string;
@@ -36,6 +37,18 @@ interface ChatWindowProps {
 }
 
 const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton }: ChatWindowProps) => {
+  // Se for um chat com bot, usar o ChatBotWindow
+  if (chat.isBot) {
+    return (
+      <ChatBotWindow
+        chat={chat}
+        onToggleChatList={onToggleChatList}
+        isChatListVisible={isChatListVisible}
+        showBackButton={showBackButton}
+      />
+    );
+  }
+
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [showParticipants, setShowParticipants] = useState(false);

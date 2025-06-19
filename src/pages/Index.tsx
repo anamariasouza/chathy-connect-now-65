@@ -18,6 +18,7 @@ interface Chat {
   unread: number;
   avatar: string;
   isGroup: boolean;
+  isBot?: boolean;
 }
 
 interface Contact {
@@ -26,6 +27,7 @@ interface Contact {
   avatar: string;
   username: string;
   isOnline: boolean;
+  isBot?: boolean;
 }
 
 const Index = () => {
@@ -71,6 +73,8 @@ const Index = () => {
   };
 
   const handleViewContactProfile = (contact: Contact) => {
+    if (contact.isBot) return; // Não mostrar perfil para bots
+    
     const fullProfile = contactProfiles.find(profile => profile.id === contact.id);
     if (fullProfile) {
       navigate('/profile', { state: { contact: fullProfile } });
@@ -81,13 +85,31 @@ const Index = () => {
     const newChat: Chat = {
       id: contact.id,
       name: contact.name,
-      lastMessage: '',
+      lastMessage: contact.isBot ? 'Olá! Como posso te ajudar hoje?' : '',
       time: 'agora',
       unread: 0,
       avatar: contact.avatar,
-      isGroup: false
+      isGroup: false,
+      isBot: contact.isBot || false
     };
     setSelectedChat(newChat);
+    if (window.innerWidth < 768) {
+      setShowMobileChatWindow(true);
+    }
+  };
+
+  const handleChatBoyClick = () => {
+    const chatBoyChat: Chat = {
+      id: 'chatboy',
+      name: 'Chat-Boy',
+      lastMessage: 'Olá! Como posso te ajudar hoje?',
+      time: 'agora',
+      unread: 0,
+      avatar: '/lovable-uploads/4d705ce6-3586-480b-be91-7dea31336b49.png',
+      isGroup: false,
+      isBot: true
+    };
+    setSelectedChat(chatBoyChat);
     if (window.innerWidth < 768) {
       setShowMobileChatWindow(true);
     }
@@ -214,6 +236,7 @@ const Index = () => {
         audioEnabled={audioEnabled}
         onAudioToggle={handleAudioToggle}
         onUploadClick={handleUploadClick}
+        onChatBoyClick={handleChatBoyClick}
       />
       <div className="flex-1 md:ml-16">
         {renderMainContent()}
