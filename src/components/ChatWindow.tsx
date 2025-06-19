@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Send, Phone, Video, MoreVertical, Paperclip, Smile, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,6 +19,7 @@ interface Chat {
   unread: number;
   avatar: string;
   isGroup: boolean;
+  participants?: string[];
 }
 
 interface ChatWindowProps {
@@ -37,29 +37,60 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
   // useEffect for mock messages
   useEffect(() => {
     if (chat) {
-      const mockMessages: Message[] = [
-        {
-          id: '1',
-          text: 'Oi! Como você está?',
-          sender: chat.name,
-          time: '14:30',
-          isOwn: false
-        },
-        {
-          id: '2',
-          text: 'Estou bem, obrigado! E você?',
-          sender: 'Você',
-          time: '14:32',
-          isOwn: true
-        },
-        {
-          id: '3',
-          text: 'Também estou bem! Que bom te ver por aqui',
-          sender: chat.name,
-          time: '14:33',
-          isOwn: false
-        }
-      ];
+      let mockMessages: Message[] = [];
+      
+      if (chat.isGroup) {
+        // Mensagens para grupos
+        mockMessages = [
+          {
+            id: '1',
+            text: 'Oi pessoal! Como estão?',
+            sender: 'Maria Silva',
+            time: '14:30',
+            isOwn: false
+          },
+          {
+            id: '2',
+            text: 'Tudo bem por aqui!',
+            sender: 'Você',
+            time: '14:32',
+            isOwn: true
+          },
+          {
+            id: '3',
+            text: 'Vamos marcar um encontro?',
+            sender: 'Pedro Santos',
+            time: '14:33',
+            isOwn: false
+          }
+        ];
+      } else {
+        // Mensagens para contatos individuais
+        mockMessages = [
+          {
+            id: '1',
+            text: 'Oi! Como você está?',
+            sender: chat.name,
+            time: '14:30',
+            isOwn: false
+          },
+          {
+            id: '2',
+            text: 'Estou bem, obrigado! E você?',
+            sender: 'Você',
+            time: '14:32',
+            isOwn: true
+          },
+          {
+            id: '3',
+            text: 'Também estou bem! Que bom te ver por aqui',
+            sender: chat.name,
+            time: '14:33',
+            isOwn: false
+          }
+        ];
+      }
+      
       setMessages(mockMessages);
     }
   }, [chat]);
@@ -121,12 +152,23 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
       <div className="p-4 border-b border-gray-200 bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full bg-chathy-primary flex items-center justify-center text-white font-semibold">
+            <div className={`w-10 h-10 rounded-full ${chat.isGroup ? 'bg-purple-500' : 'bg-chathy-primary'} flex items-center justify-center text-white font-semibold`}>
               {chat.avatar}
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">{chat.name}</h3>
-              <p className="text-sm text-green-600">Online</p>
+              <div className="flex items-center space-x-2">
+                <h3 className="font-semibold text-gray-900">{chat.name}</h3>
+                {chat.isGroup && (
+                  <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded-full">
+                    Grupo
+                  </span>
+                )}
+              </div>
+              {chat.isGroup && chat.participants ? (
+                <p className="text-sm text-gray-500">{chat.participants.length} participantes</p>
+              ) : (
+                <p className="text-sm text-green-600">Online</p>
+              )}
             </div>
           </div>
           <div className="flex items-center space-x-2">
@@ -161,12 +203,15 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
             className={`flex ${msg.isOwn ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`chat-bubble p-3 rounded-2xl ${
+              className={`chat-bubble p-3 rounded-2xl max-w-xs ${
                 msg.isOwn
                   ? 'bg-chathy-primary text-white'
                   : 'bg-white text-gray-800 border border-gray-200'
               }`}
             >
+              {!msg.isOwn && chat.isGroup && (
+                <p className="text-xs font-semibold mb-1 text-blue-600">{msg.sender}</p>
+              )}
               <p className="text-sm">{msg.text}</p>
               <p className={`text-xs mt-1 ${
                 msg.isOwn ? 'text-green-100' : 'text-gray-500'
@@ -187,7 +232,7 @@ const ChatWindow = ({ chat, onToggleChatList, isChatListVisible, showBackButton 
           </Button>
           <div className="flex-1 relative">
             <Input
-              placeholder="Digite uma mensagem..."
+              placeholder={chat.isGroup ? "Mensagem para o grupo..." : "Digite uma mensagem..."}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyPress={handleKeyPress}
