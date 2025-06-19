@@ -41,8 +41,18 @@ const Sidebar = ({ activeTab, onTabChange, audioEnabled = true, onAudioToggle }:
     <>
       {/* Desktop Sidebar - WhatsApp Web Style */}
       <div className="hidden md:flex fixed left-0 top-0 z-50 w-16 h-full bg-[#202c33] flex-col items-center py-4 space-y-3">
-        {/* Profile section */}
+        {/* App logo and Profile section */}
         <div className="flex flex-col items-center space-y-3 mb-4">
+          {/* App Logo */}
+          <div className="w-10 h-10 flex items-center justify-center">
+            <img 
+              src="/lovable-uploads/dd9738c9-e44d-4130-86fc-a762359e3a4e.png" 
+              alt="Chathy Logo" 
+              className="w-8 h-8 object-contain"
+            />
+          </div>
+          
+          {/* User Avatar */}
           <button
             onClick={handleProfileClick}
             className="w-10 h-10 bg-[#00a884] rounded-full flex items-center justify-center text-white font-bold text-lg hover:bg-[#008069] transition-all duration-200"
@@ -107,7 +117,7 @@ const Sidebar = ({ activeTab, onTabChange, audioEnabled = true, onAudioToggle }:
               alt="Chathy Logo" 
               className="w-8 h-8 object-contain"
             />
-            <h1 className="text-lg font-normal text-white">Chathy</h1>
+            <h1 className="text-lg font-normal text-white font-baloo">Chathy</h1>
           </div>
           
           <div className="flex items-center space-x-1">
