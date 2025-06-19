@@ -169,7 +169,7 @@ const Login = () => {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <img 
-              src="/lovable-uploads/acb4c601-9598-4c2a-9e33-0fb1a5cbe212.png" 
+              src="/lovable-uploads/6278072d-3af7-4137-a3ab-0b4239621600.png" 
               alt="Chathy Logo" 
               className="w-32 h-32 object-contain"
             />
