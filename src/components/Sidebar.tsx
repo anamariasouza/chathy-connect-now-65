@@ -37,6 +37,9 @@ const Sidebar = ({ activeTab, onTabChange, audioEnabled = true, onAudioToggle }:
     onTabChange(itemId);
   };
 
+  // Verificar se deve mostrar o botão de áudio
+  const shouldShowAudioButton = activeTab === 'feed' || activeTab === 'lives';
+
   return (
     <>
       {/* Desktop Sidebar - WhatsApp Web Style */}
@@ -82,18 +85,20 @@ const Sidebar = ({ activeTab, onTabChange, audioEnabled = true, onAudioToggle }:
             </button>
           ))}
           
-          <button
-            onClick={onAudioToggle}
-            className={cn(
-              "w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200",
-              audioEnabled 
-                ? "bg-[#00a884] text-white"
-                : "text-[#aebac1] hover:bg-[#2a3942] hover:text-white"
-            )}
-            title={audioEnabled ? "Desativar som" : "Ativar som"}
-          >
-            {audioEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
-          </button>
+          {shouldShowAudioButton && (
+            <button
+              onClick={onAudioToggle}
+              className={cn(
+                "w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200",
+                audioEnabled 
+                  ? "bg-[#00a884] text-white"
+                  : "text-[#aebac1] hover:bg-[#2a3942] hover:text-white"
+              )}
+              title={audioEnabled ? "Desativar som" : "Ativar som"}
+            >
+              {audioEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+            </button>
+          )}
         </div>
         
         {/* Bottom actions */}
@@ -136,17 +141,19 @@ const Sidebar = ({ activeTab, onTabChange, audioEnabled = true, onAudioToggle }:
               </button>
             ))}
             
-            <button
-              onClick={onAudioToggle}
-              className={cn(
-                "p-2.5 rounded-full transition-all duration-200",
-                audioEnabled 
-                  ? "bg-[#00a884] text-white"
-                  : "text-[#aebac1] hover:bg-[#2a3942]"
-              )}
-            >
-              {audioEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
-            </button>
+            {shouldShowAudioButton && (
+              <button
+                onClick={onAudioToggle}
+                className={cn(
+                  "p-2.5 rounded-full transition-all duration-200",
+                  audioEnabled 
+                    ? "bg-[#00a884] text-white"
+                    : "text-[#aebac1] hover:bg-[#2a3942]"
+                )}
+              >
+                {audioEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+              </button>
+            )}
             
             <button
               onClick={handleProfileClick}

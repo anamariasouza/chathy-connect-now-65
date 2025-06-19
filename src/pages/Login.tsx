@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -166,11 +167,11 @@ const Login = () => {
       <div className="w-full max-w-md">
         {/* WhatsApp Web style header */}
         <div className="text-center mb-8">
-          <div className="whatsapp-header-gradient w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center">
+          <div className="flex items-center justify-center mb-4">
             <img 
-              src="/lovable-uploads/97e49b2b-0caf-467d-a8af-39923c0a7a77.png" 
+              src="/lovable-uploads/acb4c601-9598-4c2a-9e33-0fb1a5cbe212.png" 
               alt="Chathy Logo" 
-              className="w-12 h-12"
+              className="w-32 h-32 object-contain"
             />
           </div>
         </div>
