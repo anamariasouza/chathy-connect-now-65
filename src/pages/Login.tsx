@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Login = () => {
   const [emailPrefix, setEmailPrefix] = useState('');
@@ -582,10 +583,10 @@ const Login = () => {
 
       {/* Modal de Registro */}
       <Dialog open={showRegisterModal} onOpenChange={setShowRegisterModal}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] bg-white">
           <DialogHeader>
-            <DialogTitle className="text-[#111b21]">Criar nova conta</DialogTitle>
-            <DialogDescription className="text-[#667781]">
+            <DialogTitle className="text-[#111b21] text-lg font-semibold">Criar nova conta</DialogTitle>
+            <DialogDescription className="text-[#667781] text-sm">
               {!isRegisterCodeSent 
                 ? "Preencha os dados para criar sua conta"
                 : "Digite o código enviado para seu email"
@@ -595,8 +596,15 @@ const Login = () => {
           
           {!isRegisterCodeSent ? (
             <div className="space-y-4">
+              {/* Aviso sobre Gmail */}
+              <Alert className="bg-[#e7f3ff] border-[#00a884] border-l-4">
+                <AlertDescription className="text-[#111b21] text-sm font-medium">
+                  ⚠️ Apenas endereços de Gmail são permitidos para cadastro
+                </AlertDescription>
+              </Alert>
+              
               <div className="space-y-2">
-                <Label htmlFor="register-email" className="text-[#111b21] text-sm font-medium">Email</Label>
+                <Label htmlFor="register-email" className="text-[#111b21] text-sm font-semibold">Email</Label>
                 <div className="flex rounded-md border border-[#e9edef] bg-white overflow-hidden focus-within:border-[#00a884]">
                   <Input
                     id="register-email"
@@ -604,41 +612,41 @@ const Login = () => {
                     placeholder="seuemail"
                     value={registerEmail}
                     onChange={handleRegisterEmailChange}
-                    className="flex-1 border-0 bg-transparent text-[#111b21] placeholder-[#8696a0] focus:ring-0 focus:border-0 rounded-none"
+                    className="flex-1 border-0 bg-transparent text-[#111b21] placeholder-[#8696a0] focus:ring-0 focus:border-0 rounded-none font-medium"
                   />
-                  <div className="flex items-center px-3 bg-[#f0f2f5] text-[#667781] text-sm">
+                  <div className="flex items-center px-3 bg-[#f0f2f5] text-[#667781] text-sm font-medium">
                     @gmail.com
                   </div>
                 </div>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="register-password" className="text-[#111b21] text-sm font-medium">Senha</Label>
+                <Label htmlFor="register-password" className="text-[#111b21] text-sm font-semibold">Senha</Label>
                 <Input
                   id="register-password"
                   type="password"
                   placeholder="Mínimo 6 caracteres"
                   value={registerPassword}
                   onChange={(e) => setRegisterPassword(e.target.value)}
-                  className="bg-white border-[#e9edef] text-[#111b21] placeholder-[#8696a0] focus:border-[#00a884]"
+                  className="bg-white border-[#e9edef] text-[#111b21] placeholder-[#8696a0] focus:border-[#00a884] font-medium"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="confirm-password" className="text-[#111b21] text-sm font-medium">Confirmar Senha</Label>
+                <Label htmlFor="confirm-password" className="text-[#111b21] text-sm font-semibold">Confirmar Senha</Label>
                 <Input
                   id="confirm-password"
                   type="password"
                   placeholder="Digite a senha novamente"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="bg-white border-[#e9edef] text-[#111b21] placeholder-[#8696a0] focus:border-[#00a884]"
+                  className="bg-white border-[#e9edef] text-[#111b21] placeholder-[#8696a0] focus:border-[#00a884] font-medium"
                 />
               </div>
               
               <Button 
                 onClick={handleSendRegisterCode}
-                className="w-full bg-[#00a884] hover:bg-[#008069] text-white"
+                className="w-full bg-[#00a884] hover:bg-[#008069] text-white font-semibold"
                 disabled={isRegisterLoading}
               >
                 {isRegisterLoading ? 'Enviando código...' : 'Enviar código de verificação'}
@@ -647,14 +655,14 @@ const Login = () => {
           ) : (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="register-code" className="text-[#111b21] text-sm font-medium">Código de Verificação</Label>
+                <Label htmlFor="register-code" className="text-[#111b21] text-sm font-semibold">Código de Verificação</Label>
                 <Input
                   id="register-code"
                   type="text"
                   placeholder="Digite o código de 6 dígitos"
                   value={registerCode}
                   onChange={(e) => setRegisterCode(e.target.value)}
-                  className="bg-white border-[#e9edef] text-[#111b21] placeholder-[#8696a0] focus:border-[#00a884]"
+                  className="bg-white border-[#e9edef] text-[#111b21] placeholder-[#8696a0] focus:border-[#00a884] font-medium"
                   maxLength={6}
                 />
               </div>
@@ -663,14 +671,14 @@ const Login = () => {
                 <Button 
                   variant="outline"
                   onClick={() => setIsRegisterCodeSent(false)}
-                  className="flex-1"
+                  className="flex-1 border-[#e9edef] text-[#111b21] hover:bg-[#f0f2f5]"
                 >
                   <ArrowLeft size={16} className="mr-2" />
                   Voltar
                 </Button>
                 <Button 
                   onClick={handleVerifyRegisterCode}
-                  className="flex-1 bg-[#00a884] hover:bg-[#008069] text-white"
+                  className="flex-1 bg-[#00a884] hover:bg-[#008069] text-white font-semibold"
                 >
                   Verificar código
                 </Button>
@@ -682,10 +690,10 @@ const Login = () => {
 
       {/* Modal de Recuperação de Senha */}
       <Dialog open={showForgotPasswordModal} onOpenChange={setShowForgotPasswordModal}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] bg-white">
           <DialogHeader>
-            <DialogTitle className="text-[#111b21]">Recuperar senha</DialogTitle>
-            <DialogDescription className="text-[#667781]">
+            <DialogTitle className="text-[#111b21] text-lg font-semibold">Recuperar senha</DialogTitle>
+            <DialogDescription className="text-[#667781] text-sm">
               {!isForgotCodeSent 
                 ? "Digite seu email para receber o código de recuperação"
                 : "Digite o código e sua nova senha"
@@ -696,7 +704,7 @@ const Login = () => {
           {!isForgotCodeSent ? (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="forgot-email" className="text-[#111b21] text-sm font-medium">Email</Label>
+                <Label htmlFor="forgot-email" className="text-[#111b21] text-sm font-semibold">Email</Label>
                 <div className="flex rounded-md border border-[#e9edef] bg-white overflow-hidden focus-within:border-[#00a884]">
                   <Input
                     id="forgot-email"
@@ -704,9 +712,9 @@ const Login = () => {
                     placeholder="seuemail"
                     value={forgotEmail}
                     onChange={handleForgotEmailChange}
-                    className="flex-1 border-0 bg-transparent text-[#111b21] placeholder-[#8696a0] focus:ring-0 focus:border-0 rounded-none"
+                    className="flex-1 border-0 bg-transparent text-[#111b21] placeholder-[#8696a0] focus:ring-0 focus:border-0 rounded-none font-medium"
                   />
-                  <div className="flex items-center px-3 bg-[#f0f2f5] text-[#667781] text-sm">
+                  <div className="flex items-center px-3 bg-[#f0f2f5] text-[#667781] text-sm font-medium">
                     @gmail.com
                   </div>
                 </div>
@@ -714,7 +722,7 @@ const Login = () => {
               
               <Button 
                 onClick={handleSendForgotCode}
-                className="w-full bg-[#00a884] hover:bg-[#008069] text-white"
+                className="w-full bg-[#00a884] hover:bg-[#008069] text-white font-semibold"
                 disabled={isForgotLoading}
               >
                 {isForgotLoading ? 'Enviando código...' : 'Enviar código de recuperação'}
@@ -723,39 +731,39 @@ const Login = () => {
           ) : (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="forgot-code" className="text-[#111b21] text-sm font-medium">Código de Verificação</Label>
+                <Label htmlFor="forgot-code" className="text-[#111b21] text-sm font-semibold">Código de Verificação</Label>
                 <Input
                   id="forgot-code"
                   type="text"
                   placeholder="Digite o código de 6 dígitos"
                   value={forgotCode}
                   onChange={(e) => setForgotCode(e.target.value)}
-                  className="bg-white border-[#e9edef] text-[#111b21] placeholder-[#8696a0] focus:border-[#00a884]"
+                  className="bg-white border-[#e9edef] text-[#111b21] placeholder-[#8696a0] focus:border-[#00a884] font-medium"
                   maxLength={6}
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="new-password" className="text-[#111b21] text-sm font-medium">Nova Senha</Label>
+                <Label htmlFor="new-password" className="text-[#111b21] text-sm font-semibold">Nova Senha</Label>
                 <Input
                   id="new-password"
                   type="password"
                   placeholder="Mínimo 6 caracteres"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="bg-white border-[#e9edef] text-[#111b21] placeholder-[#8696a0] focus:border-[#00a884]"
+                  className="bg-white border-[#e9edef] text-[#111b21] placeholder-[#8696a0] focus:border-[#00a884] font-medium"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="confirm-new-password" className="text-[#111b21] text-sm font-medium">Confirmar Nova Senha</Label>
+                <Label htmlFor="confirm-new-password" className="text-[#111b21] text-sm font-semibold">Confirmar Nova Senha</Label>
                 <Input
                   id="confirm-new-password"
                   type="password"
                   placeholder="Digite a nova senha novamente"
                   value={confirmNewPassword}
                   onChange={(e) => setConfirmNewPassword(e.target.value)}
-                  className="bg-white border-[#e9edef] text-[#111b21] placeholder-[#8696a0] focus:border-[#00a884]"
+                  className="bg-white border-[#e9edef] text-[#111b21] placeholder-[#8696a0] focus:border-[#00a884] font-medium"
                 />
               </div>
               
@@ -763,14 +771,14 @@ const Login = () => {
                 <Button 
                   variant="outline"
                   onClick={() => setIsForgotCodeSent(false)}
-                  className="flex-1"
+                  className="flex-1 border-[#e9edef] text-[#111b21] hover:bg-[#f0f2f5]"
                 >
                   <ArrowLeft size={16} className="mr-2" />
                   Voltar
                 </Button>
                 <Button 
                   onClick={handleResetPassword}
-                  className="flex-1 bg-[#00a884] hover:bg-[#008069] text-white"
+                  className="flex-1 bg-[#00a884] hover:bg-[#008069] text-white font-semibold"
                 >
                   Alterar senha
                 </Button>
