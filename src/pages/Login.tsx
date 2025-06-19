@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -213,7 +212,7 @@ const Login = () => {
       value = value.replace('@gmail.com', '');
     }
     if (value.includes('@')) {
-      value = value.replace '@', '');
+      value = value.replace('@', '');
     }
     setEmailPrefix(value);
   };
