@@ -5,34 +5,47 @@
 
 @layer base {
   :root {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 142 76% 36%;
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 142.1 76.2% 36.3%;
     --primary-foreground: 355.7 100% 97.3%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 142 76% 36%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 142.1 76.2% 36.3%;
     --radius: 0.5rem;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --whatsapp-bg: #111b21;
+    --whatsapp-panel: #202c33;
+    --whatsapp-hover: #2a3942;
+    --whatsapp-border: #313d45;
+    --whatsapp-text: #e9edef;
+    --whatsapp-text-secondary: #8696a0;
+    --whatsapp-green: #00a884;
+    --whatsapp-green-dark: #008069;
+    --whatsapp-teal: #25d366;
+  }
+
+  .light {
+    --whatsapp-bg: #f0f2f5;
+    --whatsapp-panel: #ffffff;
+    --whatsapp-hover: #f5f6f6;
+    --whatsapp-border: #e9edef;
+    --whatsapp-text: #111b21;
+    --whatsapp-text-secondary: #667781;
+    --whatsapp-green: #00a884;
+    --whatsapp-green-dark: #008069;
+    --whatsapp-teal: #25d366;
   }
 
   * {
@@ -40,14 +53,78 @@
   }
   
   html {
-    color-scheme: dark;
+    color-scheme: light;
   }
   
   body {
-    @apply bg-gray-900 text-white;
+    @apply bg-[#f0f2f5] text-[#111b21];
+    font-family: "Segoe UI", Helvetica, Arial, sans-serif;
   }
 }
 
+/* WhatsApp Web specific styles */
+.whatsapp-bg {
+  background-color: var(--whatsapp-bg);
+}
+
+.whatsapp-panel {
+  background-color: var(--whatsapp-panel);
+}
+
+.whatsapp-hover:hover {
+  background-color: var(--whatsapp-hover);
+}
+
+.whatsapp-border {
+  border-color: var(--whatsapp-border);
+}
+
+.whatsapp-text {
+  color: var(--whatsapp-text);
+}
+
+.whatsapp-text-secondary {
+  color: var(--whatsapp-text-secondary);
+}
+
+.whatsapp-green {
+  background-color: var(--whatsapp-green);
+}
+
+.whatsapp-green-hover:hover {
+  background-color: var(--whatsapp-green-dark);
+}
+
+/* Chat bubbles */
+.message-sent {
+  background-color: #d9fdd3;
+  color: #111b21;
+}
+
+.message-received {
+  background-color: #ffffff;
+  color: #111b21;
+}
+
+/* Scrollbar styling */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(134, 150, 160, 0.3);
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(134, 150, 160, 0.5);
+}
+
+/* Remove existing dark mode styles */
 .chat-bubble {
   max-width: 70%;
   word-wrap: break-word;
@@ -62,10 +139,6 @@
   display: none;
 }
 
-.gradient-bg {
-  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
-}
-
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -73,47 +146,7 @@
   overflow: hidden;
 }
 
-@keyframes pulse-green {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-.animate-pulse-green {
-  animation: pulse-green 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes bounce-heart {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.2);
-  }
-}
-
-.animate-bounce-heart {
-  animation: bounce-heart 0.3s ease-in-out;
-}
-
-/* Estilo para scroll snap e rolagem magnética */
-.snap-y {
-  scroll-snap-type: y mandatory;
-}
-
-.snap-start {
-  scroll-snap-align: start;
-}
-
-/* Remover scrollbar para melhor experiência */
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+/* WhatsApp Web gradient for header */
+.whatsapp-header-gradient {
+  background: linear-gradient(to right, #00a884, #25d366);
 }

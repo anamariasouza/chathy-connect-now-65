@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
@@ -29,7 +28,7 @@ interface Contact {
 }
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState('feed');
+  const [activeTab, setActiveTab] = useState('chats');
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [showMobileChatWindow, setShowMobileChatWindow] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
@@ -43,11 +42,10 @@ const Index = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // Forçar modo escuro permanentemente
+  // Force light mode for WhatsApp Web style
   useEffect(() => {
-    document.documentElement.classList.add('dark');
-    // Remover classe light se existir
-    document.documentElement.classList.remove('light');
+    document.documentElement.classList.remove('dark');
+    document.documentElement.classList.add('light');
   }, []);
 
   if (!isAuthenticated) {
@@ -71,7 +69,6 @@ const Index = () => {
   };
 
   const handleViewContactProfile = (contact: Contact) => {
-    // Encontrar o perfil completo do contato
     const fullProfile = contactProfiles.find(profile => profile.id === contact.id);
     if (fullProfile) {
       navigate('/profile', { state: { contact: fullProfile } });
@@ -79,7 +76,6 @@ const Index = () => {
   };
 
   const handleStartChat = (contact: Contact) => {
-    // Criar um chat com este contato
     const newChat: Chat = {
       id: contact.id,
       name: contact.name,
@@ -103,11 +99,11 @@ const Index = () => {
     switch (activeTab) {
       case 'chats':
         return (
-          <div className="flex-1 p-4 bg-gray-900 transition-colors duration-300">
-            {/* Desktop Layout */}
-            <div className="hidden md:flex gap-4 h-full">
-              {/* Contacts Window */}
-              <div className="w-1/3 bg-gray-800 rounded-xl shadow-gray-900/50 overflow-hidden transition-colors duration-300">
+          <div className="flex-1 bg-[#f0f2f5] h-screen">
+            {/* Desktop Layout - WhatsApp Web Style */}
+            <div className="hidden md:flex h-full">
+              {/* Left Panel - Contacts */}
+              <div className="w-[30%] min-w-[300px] bg-white border-r border-[#e9edef] flex flex-col">
                 <ContactManager 
                   onContactSelect={handleContactSelect}
                   onViewProfile={handleViewContactProfile}
@@ -115,19 +111,38 @@ const Index = () => {
                 />
               </div>
               
-              {/* Messages Window */}
-              <div className="flex-1 bg-gray-800 rounded-xl shadow-gray-900/50 overflow-hidden transition-colors duration-300">
-                <ChatWindow 
-                  chat={selectedChat} 
-                  onToggleChatList={() => {}}
-                  isChatListVisible={true}
-                />
+              {/* Right Panel - Chat */}
+              <div className="flex-1 bg-[#efeae2] relative">
+                {selectedChat ? (
+                  <ChatWindow 
+                    chat={selectedChat} 
+                    onToggleChatList={() => {}}
+                    isChatListVisible={true}
+                  />
+                ) : (
+                  <div className="h-full flex items-center justify-center bg-[#f8f9fa]">
+                    <div className="text-center">
+                      <div className="w-80 h-80 mx-auto mb-8 opacity-10">
+                        <img 
+                          src="/lovable-uploads/97e49b2b-0caf-467d-a8af-39923c0a7a77.png" 
+                          alt="Chathy" 
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <h2 className="text-3xl font-light text-[#41525d] mb-4">Chathy Web</h2>
+                      <p className="text-[#667781] text-sm max-w-md mx-auto leading-relaxed">
+                        Envie e receba mensagens sem precisar manter seu telefone conectado.<br />
+                        Use o Chathy em até 4 dispositivos vinculados e 1 telefone ao mesmo tempo.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Mobile Layout - Centralized */}
-            <div className="md:hidden h-full flex items-center justify-center">
-              <div className="bg-gray-800 rounded-xl shadow-gray-900/50 overflow-hidden transition-colors duration-300 w-full max-w-md mx-4" style={{ height: '70vh' }}>
+            {/* Mobile Layout */}
+            <div className="md:hidden pt-16 h-full">
+              <div className="bg-white h-full">
                 <ContactManager 
                   onContactSelect={handleContactSelect}
                   onViewProfile={handleViewContactProfile}
@@ -135,17 +150,14 @@ const Index = () => {
                 />
               </div>
 
-              {/* Messages Popup - Only visible when contact is selected */}
               {showMobileChatWindow && selectedChat && (
-                <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
-                  <div className="bg-gray-800 rounded-xl shadow-2xl overflow-hidden transition-colors duration-300 w-full h-full max-w-md max-h-[80vh]">
-                    <ChatWindow 
-                      chat={selectedChat} 
-                      onToggleChatList={handleCloseMobileChat}
-                      isChatListVisible={false}
-                      showBackButton={true}
-                    />
-                  </div>
+                <div className="fixed inset-0 z-50 bg-white">
+                  <ChatWindow 
+                    chat={selectedChat} 
+                    onToggleChatList={handleCloseMobileChat}
+                    isChatListVisible={false}
+                    showBackButton={true}
+                  />
                 </div>
               )}
             </div>
@@ -153,13 +165,13 @@ const Index = () => {
         );
       case 'feed':
         return (
-          <div className="pt-20 md:pt-0">
+          <div className="pt-16 md:pt-0 bg-[#f0f2f5] min-h-screen">
             <FeedView onViewProfile={handleViewContactProfile} audioEnabled={audioEnabled} />
           </div>
         );
       case 'lives':
         return (
-          <div className="pt-20 md:pt-0">
+          <div className="pt-16 md:pt-0 bg-[#f0f2f5] min-h-screen">
             <LivesView onViewProfile={handleViewContactProfile} audioEnabled={audioEnabled} />
           </div>
         );
@@ -171,7 +183,7 @@ const Index = () => {
         return null;
       default:
         return (
-          <div className="pt-20 md:pt-0">
+          <div className="pt-16 md:pt-0 bg-[#f0f2f5] min-h-screen">
             <FeedView onViewProfile={handleViewContactProfile} audioEnabled={audioEnabled} />
           </div>
         );
@@ -179,14 +191,14 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-900 relative transition-colors duration-300">
+    <div className="min-h-screen flex bg-[#f0f2f5]">
       <Sidebar 
         activeTab={activeTab} 
         onTabChange={setActiveTab} 
         audioEnabled={audioEnabled}
         onAudioToggle={handleAudioToggle}
       />
-      <div className="flex-1 md:ml-20 md:pt-0">
+      <div className="flex-1 md:ml-16">
         {renderMainContent()}
       </div>
     </div>
