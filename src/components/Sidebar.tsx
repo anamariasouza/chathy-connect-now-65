@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { MessageCircle, Play, Video, Gamepad2, LogOut, Volume2, VolumeX, Menu, MoreVertical, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -43,9 +44,6 @@ const Sidebar = ({ activeTab, onTabChange, audioEnabled = true, onAudioToggle, o
     onTabChange('chats');
     onChatBoyClick?.();
   };
-
-  // Verificar se deve mostrar o botão de áudio
-  const shouldShowAudioButton = activeTab === 'feed' || activeTab === 'lives';
 
   return (
     <>
@@ -95,21 +93,6 @@ const Sidebar = ({ activeTab, onTabChange, audioEnabled = true, onAudioToggle, o
               )}
             </button>
           ))}
-          
-          {shouldShowAudioButton && (
-            <button
-              onClick={onAudioToggle}
-              className={cn(
-                "w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200",
-                audioEnabled 
-                  ? "bg-[#00a884] text-white"
-                  : "text-[#aebac1] hover:bg-[#2a3942] hover:text-white"
-              )}
-              title={audioEnabled ? "Desativar som" : "Ativar som"}
-            >
-              {audioEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
-            </button>
-          )}
         </div>
         
         {/* Bottom actions */}
@@ -157,31 +140,6 @@ const Sidebar = ({ activeTab, onTabChange, audioEnabled = true, onAudioToggle, o
               </button>
             ))}
             
-            {/* Botão de Upload - só aparece no feed no mobile */}
-            {activeTab === 'feed' && (
-              <button
-                onClick={onUploadClick}
-                className="p-2.5 rounded-full transition-all duration-200 bg-[#00a884] text-white hover:bg-[#008069]"
-                title="Adicionar Vídeo"
-              >
-                <Upload size={20} />
-              </button>
-            )}
-            
-            {shouldShowAudioButton && (
-              <button
-                onClick={onAudioToggle}
-                className={cn(
-                  "p-2.5 rounded-full transition-all duration-200",
-                  audioEnabled 
-                    ? "bg-[#00a884] text-white"
-                    : "text-[#aebac1] hover:bg-[#2a3942]"
-                )}
-              >
-                {audioEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
-              </button>
-            )}
-            
             <button
               onClick={handleProfileClick}
               className="w-8 h-8 bg-[#00a884] rounded-full flex items-center justify-center text-white font-bold text-sm ml-2 hover:bg-[#008069] transition-all duration-200"
@@ -189,7 +147,6 @@ const Sidebar = ({ activeTab, onTabChange, audioEnabled = true, onAudioToggle, o
               W
             </button>
             
-            {/* Botão de Logout - Mais visível no mobile */}
             <button
               onClick={handleLogout}
               className="p-2.5 rounded-full transition-all duration-200 text-[#aebac1] hover:bg-[#2a3942] hover:text-red-400 ml-1"

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Heart, MessageCircle, Share, MoreVertical, Upload, Link } from 'lucide-react';
+import { Heart, MessageCircle, Share, MoreVertical, Upload, Link, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -433,8 +433,8 @@ const FeedView = ({ onViewProfile, audioEnabled = true, uploadDialogOpen = false
 
   return (
     <div className="fixed inset-0 bg-black">
-      {/* Upload Button - só no desktop */}
-      <div className="absolute top-4 right-4 z-50 hidden md:block">
+      {/* Upload Button - posicionado 5px abaixo da sidebar no canto superior direito */}
+      <div className="fixed top-5 right-4 z-50 md:top-21">
         <Button 
           onClick={() => onUploadDialogChange?.(true)}
           className="bg-chathy-primary hover:bg-chathy-primary/90 rounded-full w-12 h-12 p-0"
@@ -583,13 +583,30 @@ const FeedView = ({ onViewProfile, audioEnabled = true, uploadDialogOpen = false
 
             {/* Ações do Lado Direito */}
             <div className="absolute right-4 bottom-32 flex flex-col space-y-6 z-10">
-              <div className="flex flex-col items-center">
+              <div className="flex flex-col items-center relative">
                 <button
                   onClick={() => handleViewProfile(post)}
                   className="w-12 h-12 rounded-full bg-chathy-primary flex items-center justify-center text-white font-semibold mb-2 hover:scale-110 transition-transform"
                 >
                   {post.avatar}
                 </button>
+                
+                {/* Botão de áudio posicionado sobre o avatar */}
+                {post.youtubeVideoId && (
+                  <button
+                    onClick={onAudioToggle}
+                    className={cn(
+                      "absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 border-2 border-black",
+                      audioEnabled 
+                        ? "bg-[#00a884] text-white"
+                        : "bg-gray-600 text-white"
+                    )}
+                    title={audioEnabled ? "Desativar som" : "Ativar som"}
+                  >
+                    {audioEnabled ? <Volume2 size={12} /> : <VolumeX size={12} />}
+                  </button>
+                )}
+                
                 <div className="w-6 h-6 bg-chathy-primary rounded-full flex items-center justify-center -mt-3 border-2 border-black">
                   <span className="text-black text-xs font-bold">+</span>
                 </div>
