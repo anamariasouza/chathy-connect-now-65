@@ -30,7 +30,7 @@ const ChatList = ({ onChatSelect, selectedChat }: ChatListProps) => {
       lastMessage: 'Oi! Como você está?',
       time: '14:30',
       unread: 2,
-      avatar: '/lovable-uploads/dd9738c9-e44d-4130-86fc-a762359e3a4e.png',
+      avatar: '/lovable-uploads/2694899a-ed7c-4d27-abc6-9722b9e5bf1c.png',
       isGroup: false
     },
     {
@@ -39,7 +39,7 @@ const ChatList = ({ onChatSelect, selectedChat }: ChatListProps) => {
       lastMessage: 'João: Vamos jantar hoje?',
       time: '13:45',
       unread: 5,
-      avatar: '/lovable-uploads/acb4c601-9598-4c2a-9e33-0fb1a5cbe212.png',
+      avatar: '/lovable-uploads/b3c79faf-b014-4557-b3f4-17410f8bbc27.png',
       isGroup: true
     },
     {
@@ -48,7 +48,7 @@ const ChatList = ({ onChatSelect, selectedChat }: ChatListProps) => {
       lastMessage: 'Perfeito! Obrigado pela ajuda',
       time: '12:20',
       unread: 0,
-      avatar: '/lovable-uploads/6278072d-3af7-4137-a3ab-0b4239621600.png',
+      avatar: '/lovable-uploads/b9c3df60-de8a-4271-907d-dfd93761ac3f.png',
       isGroup: false
     },
     {
@@ -57,7 +57,7 @@ const ChatList = ({ onChatSelect, selectedChat }: ChatListProps) => {
       lastMessage: 'Ana: Meeting às 15h',
       time: '11:30',
       unread: 1,
-      avatar: '/lovable-uploads/ad3eed74-11c0-4afc-86c2-ab8ad73056e2.png',
+      avatar: '/lovable-uploads/9b6d18e8-018e-44fd-91cc-9a90b0724788.png',
       isGroup: true
     }
   ];

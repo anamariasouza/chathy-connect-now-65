@@ -36,7 +36,7 @@ const ContactManager = ({ onContactSelect, onViewProfile, onStartChat }: Contact
     {
       id: 'group1',
       name: 'Grupo Família',
-      avatar: '/lovable-uploads/acb4c601-9598-4c2a-9e33-0fb1a5cbe212.png',
+      avatar: '/lovable-uploads/b3c79faf-b014-4557-b3f4-17410f8bbc27.png',
       username: 'grupofamilia',
       isOnline: true,
       isGroup: true,
@@ -45,7 +45,7 @@ const ContactManager = ({ onContactSelect, onViewProfile, onStartChat }: Contact
     {
       id: 'group2',
       name: 'Trabalho Dev',
-      avatar: '/lovable-uploads/ad3eed74-11c0-4afc-86c2-ab8ad73056e2.png',
+      avatar: '/lovable-uploads/9b6d18e8-018e-44fd-91cc-9a90b0724788.png',
       username: 'trabalhodev',
       isOnline: true,
       isGroup: true,
@@ -54,28 +54,28 @@ const ContactManager = ({ onContactSelect, onViewProfile, onStartChat }: Contact
     {
       id: '1',
       name: 'Maria Silva',
-      avatar: '/lovable-uploads/dd9738c9-e44d-4130-86fc-a762359e3a4e.png',
+      avatar: '/lovable-uploads/2694899a-ed7c-4d27-abc6-9722b9e5bf1c.png',
       username: 'mariasilva',
       isOnline: true
     },
     {
       id: '2',
       name: 'Pedro Santos',
-      avatar: '/lovable-uploads/6278072d-3af7-4137-a3ab-0b4239621600.png',
+      avatar: '/lovable-uploads/b9c3df60-de8a-4271-907d-dfd93761ac3f.png',
       username: 'pedrosantos',
       isOnline: false
     },
     {
       id: '3',
       name: 'Ana Costa',
-      avatar: '/lovable-uploads/0e775d7a-2c40-49d5-83a9-620db5ffef64.png',
+      avatar: '/lovable-uploads/5deded1d-8e0c-45ac-9406-da311468b1d3.png',
       username: 'anacosta',
       isOnline: true
     },
     {
       id: '4',
       name: 'João Silva',
-      avatar: '/lovable-uploads/2063ea8d-c7f2-4ae4-a21f-d5955bc1f9b3.png',
+      avatar: '/lovable-uploads/42c0170b-a517-45c3-b92f-9b7e8f6aac26.png',
       username: 'joaosilva',
       isOnline: true
     }
