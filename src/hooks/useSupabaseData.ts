@@ -78,14 +78,7 @@ export const useSupabaseData = () => {
         .select(`
           *,
           conversation_participants!inner (
-            user_id,
-            profiles!inner (
-              id, username, name, avatar_url, is_online
-            )
-          ),
-          messages (
-            content,
-            created_at
+            user_id
           )
         `)
         .order('created_at', { ascending: false });
@@ -95,20 +88,45 @@ export const useSupabaseData = () => {
         return [];
       }
 
-      return conversationsData?.map(conv => ({
-        id: conv.id,
-        name: conv.name,
-        type: conv.type,
-        avatar_url: conv.avatar_url,
-        participants: conv.conversation_participants?.map((p: any) => p.profiles) || [],
-        lastMessage: conv.messages?.[0]?.content || '',
-        lastMessageTime: conv.messages?.[0]?.created_at ? 
-          new Date(conv.messages[0].created_at).toLocaleTimeString('pt-BR', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          }) : '',
-        unreadCount: 0
-      })) || [];
+      // Para cada conversa, buscar os participantes e a última mensagem
+      const conversationsWithDetails = await Promise.all(
+        (conversationsData || []).map(async (conv) => {
+          // Buscar participantes
+          const { data: participantsData } = await supabase
+            .from('conversation_participants')
+            .select(`
+              profiles (
+                id, username, name, avatar_url, is_online
+              )
+            `)
+            .eq('conversation_id', conv.id);
+
+          // Buscar última mensagem
+          const { data: messagesData } = await supabase
+            .from('messages')
+            .select('content, created_at')
+            .eq('conversation_id', conv.id)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+          return {
+            id: conv.id,
+            name: conv.name,
+            type: conv.type,
+            avatar_url: conv.avatar_url,
+            participants: participantsData?.map((p: any) => p.profiles).filter(Boolean) || [],
+            lastMessage: messagesData?.[0]?.content || '',
+            lastMessageTime: messagesData?.[0]?.created_at ? 
+              new Date(messagesData[0].created_at).toLocaleTimeString('pt-BR', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              }) : '',
+            unreadCount: 0
+          };
+        })
+      );
+
+      return conversationsWithDetails;
     } catch (error) {
       console.error('Erro ao buscar conversas:', error);
       return [];
@@ -118,14 +136,9 @@ export const useSupabaseData = () => {
   // Buscar posts
   const fetchPosts = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: postsData, error } = await supabase
         .from('posts')
-        .select(`
-          *,
-          profiles!inner (
-            id, username, name, avatar_url
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -133,10 +146,23 @@ export const useSupabaseData = () => {
         return [];
       }
 
-      return data?.map(post => ({
-        ...post,
-        author: post.profiles
-      })) || [];
+      // Para cada post, buscar o autor
+      const postsWithAuthors = await Promise.all(
+        (postsData || []).map(async (post) => {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('id, username, name, avatar_url')
+            .eq('id', post.user_id)
+            .single();
+
+          return {
+            ...post,
+            author: profileData || undefined
+          };
+        })
+      );
+
+      return postsWithAuthors;
     } catch (error) {
       console.error('Erro ao buscar posts:', error);
       return [];
@@ -146,14 +172,9 @@ export const useSupabaseData = () => {
   // Buscar mensagens de uma conversa
   const fetchMessages = async (conversationId: string) => {
     try {
-      const { data, error } = await supabase
+      const { data: messagesData, error } = await supabase
         .from('messages')
-        .select(`
-          *,
-          profiles!inner (
-            id, username, name, avatar_url
-          )
-        `)
+        .select('*')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
 
@@ -162,10 +183,23 @@ export const useSupabaseData = () => {
         return [];
       }
 
-      return data?.map(message => ({
-        ...message,
-        sender: message.profiles
-      })) || [];
+      // Para cada mensagem, buscar o remetente
+      const messagesWithSenders = await Promise.all(
+        (messagesData || []).map(async (message) => {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('id, username, name, avatar_url')
+            .eq('id', message.user_id)
+            .single();
+
+          return {
+            ...message,
+            sender: profileData || undefined
+          };
+        })
+      );
+
+      return messagesWithSenders;
     } catch (error) {
       console.error('Erro ao buscar mensagens:', error);
       return [];
@@ -182,12 +216,7 @@ export const useSupabaseData = () => {
           user_id: userId,
           content: content
         })
-        .select(`
-          *,
-          profiles!inner (
-            id, username, name, avatar_url
-          )
-        `)
+        .select('*')
         .single();
 
       if (error) {
@@ -195,9 +224,16 @@ export const useSupabaseData = () => {
         return null;
       }
 
+      // Buscar o remetente
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('id, username, name, avatar_url')
+        .eq('id', data.user_id)
+        .single();
+
       return {
         ...data,
-        sender: data.profiles
+        sender: profileData || undefined
       };
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
@@ -216,12 +252,7 @@ export const useSupabaseData = () => {
           media_url: mediaUrl,
           media_type: mediaType || 'text'
         })
-        .select(`
-          *,
-          profiles!inner (
-            id, username, name, avatar_url
-          )
-        `)
+        .select('*')
         .single();
 
       if (error) {
@@ -229,9 +260,16 @@ export const useSupabaseData = () => {
         return null;
       }
 
+      // Buscar o autor
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('id, username, name, avatar_url')
+        .eq('id', data.user_id)
+        .single();
+
       return {
         ...data,
-        author: data.profiles
+        author: profileData || undefined
       };
     } catch (error) {
       console.error('Erro ao criar post:', error);

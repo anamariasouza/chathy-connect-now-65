@@ -116,11 +116,17 @@ const Index = () => {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      <Sidebar currentView={currentView} onViewChange={setCurrentView} />
+      <Sidebar 
+        activeTab={currentView} 
+        onTabChange={setCurrentView} 
+      />
       <main className="flex-1 flex flex-col overflow-hidden">
         {renderMainContent()}
       </main>
-      <ChatToggleButton onClick={toggleChatList} />
+      <ChatToggleButton 
+        isVisible={isChatListVisible} 
+        onToggle={toggleChatList} 
+      />
     </div>
   );
 };
