@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
-import SimpleLogin from '@/components/SimpleLogin';
+import { useAuth } from '@/hooks/useAuth';
+import Auth from '@/pages/Auth';
 import Sidebar from '@/components/Sidebar';
 import FeedView from '@/components/FeedView';
 import ChatList from '@/components/ChatList';
@@ -35,14 +35,25 @@ interface Contact {
 }
 
 const Index = () => {
-  const { currentUser, isAuthenticated, login } = useCurrentUser();
-  const [currentView, setCurrentView] = useState('feed');
+  const { user, loading } = useAuth();
+  const [currentView, setCurrentView] = useState('chats');
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [isChatListVisible, setIsChatListVisible] = useState(true);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f0f2f5]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00a884] mx-auto mb-4"></div>
+          <p className="text-[#667781]">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Se não estiver autenticado, mostrar tela de login
-  if (!isAuthenticated || !currentUser) {
-    return <SimpleLogin onLogin={login} />;
+  if (!user) {
+    return <Auth />;
   }
 
   const handleChatSelect = (chat: Chat) => {
@@ -65,7 +76,7 @@ const Index = () => {
       participants: contact.participants
     };
     setSelectedChat(chat);
-    setCurrentView('chat');
+    setCurrentView('chats');
     if (window.innerWidth < 768) {
       setIsChatListVisible(false);
     }
@@ -79,7 +90,7 @@ const Index = () => {
     switch (currentView) {
       case 'feed':
         return <FeedView />;
-      case 'chat':
+      case 'chats':
         return (
           <div className="flex h-full">
             {isChatListVisible && (
@@ -109,6 +120,8 @@ const Index = () => {
         return <StatusView />;
       case 'lives':
         return <LivesView />;
+      case 'games':
+        return <div className="flex-1 flex items-center justify-center text-gray-500">Jogos em breve...</div>;
       default:
         return <FeedView />;
     }
@@ -120,13 +133,15 @@ const Index = () => {
         activeTab={currentView} 
         onTabChange={setCurrentView} 
       />
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden ml-0 md:ml-16 pt-16 md:pt-0">
         {renderMainContent()}
       </main>
-      <ChatToggleButton 
-        isVisible={isChatListVisible} 
-        onToggle={toggleChatList} 
-      />
+      {currentView === 'chats' && (
+        <ChatToggleButton 
+          isVisible={isChatListVisible} 
+          onToggle={toggleChatList} 
+        />
+      )}
     </div>
   );
 };

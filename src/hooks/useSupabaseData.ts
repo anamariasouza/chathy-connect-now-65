@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Profile {
   id: string;
@@ -17,7 +18,7 @@ interface Conversation {
   name: string | null;
   type: string;
   avatar_url: string | null;
-  participants?: Profile[];
+  participants: Profile[];
   lastMessage?: string;
   lastMessageTime?: string;
   unreadCount?: number;
@@ -28,7 +29,7 @@ interface Message {
   content: string | null;
   user_id: string;
   created_at: string;
-  sender?: Profile;
+  sender: Profile;
 }
 
 interface Post {
@@ -41,7 +42,7 @@ interface Post {
   likes_count: number | null;
   comments_count: number | null;
   shares_count: number | null;
-  author?: Profile;
+  author: Profile;
 }
 
 export const useSupabaseData = () => {
@@ -49,6 +50,7 @@ export const useSupabaseData = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   // Buscar perfis dos usuários
   const fetchProfiles = async () => {
@@ -70,8 +72,10 @@ export const useSupabaseData = () => {
     }
   };
 
-  // Buscar conversas
+  // Buscar conversas do usuário atual
   const fetchConversations = async () => {
+    if (!user) return [];
+    
     try {
       const { data: conversationsData, error } = await supabase
         .from('conversations')
@@ -81,6 +85,7 @@ export const useSupabaseData = () => {
             user_id
           )
         `)
+        .eq('conversation_participants.user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -96,7 +101,7 @@ export const useSupabaseData = () => {
             .from('conversation_participants')
             .select(`
               profiles (
-                id, username, name, avatar_url, is_online
+                id, username, name, avatar_url, is_online, email, bio
               )
             `)
             .eq('conversation_id', conv.id);
@@ -109,12 +114,14 @@ export const useSupabaseData = () => {
             .order('created_at', { ascending: false })
             .limit(1);
 
+          const participants = participantsData?.map((p: any) => p.profiles).filter(Boolean) || [];
+
           return {
             id: conv.id,
             name: conv.name,
             type: conv.type,
             avatar_url: conv.avatar_url,
-            participants: participantsData?.map((p: any) => p.profiles).filter(Boolean) || [],
+            participants,
             lastMessage: messagesData?.[0]?.content || '',
             lastMessageTime: messagesData?.[0]?.created_at ? 
               new Date(messagesData[0].created_at).toLocaleTimeString('pt-BR', { 
@@ -151,13 +158,21 @@ export const useSupabaseData = () => {
         (postsData || []).map(async (post) => {
           const { data: profileData } = await supabase
             .from('profiles')
-            .select('id, username, name, avatar_url')
+            .select('*')
             .eq('id', post.user_id)
             .single();
 
           return {
             ...post,
-            author: profileData || undefined
+            author: profileData || {
+              id: post.user_id,
+              username: 'unknown',
+              name: 'Usuário Desconhecido',
+              email: '',
+              avatar_url: '/lovable-uploads/42c0170b-a517-45c3-b92f-9b7e8f6aac26.png',
+              bio: null,
+              is_online: false
+            }
           };
         })
       );
@@ -188,13 +203,21 @@ export const useSupabaseData = () => {
         (messagesData || []).map(async (message) => {
           const { data: profileData } = await supabase
             .from('profiles')
-            .select('id, username, name, avatar_url')
+            .select('*')
             .eq('id', message.user_id)
             .single();
 
           return {
             ...message,
-            sender: profileData || undefined
+            sender: profileData || {
+              id: message.user_id,
+              username: 'unknown',
+              name: 'Usuário Desconhecido',
+              email: '',
+              avatar_url: '/lovable-uploads/42c0170b-a517-45c3-b92f-9b7e8f6aac26.png',
+              bio: null,
+              is_online: false
+            }
           };
         })
       );
@@ -207,13 +230,15 @@ export const useSupabaseData = () => {
   };
 
   // Enviar mensagem
-  const sendMessage = async (conversationId: string, userId: string, content: string) => {
+  const sendMessage = async (conversationId: string, content: string) => {
+    if (!user) return null;
+    
     try {
       const { data, error } = await supabase
         .from('messages')
         .insert({
           conversation_id: conversationId,
-          user_id: userId,
+          user_id: user.id,
           content: content
         })
         .select('*')
@@ -224,16 +249,24 @@ export const useSupabaseData = () => {
         return null;
       }
 
-      // Buscar o remetente
+      // Buscar o perfil do remetente
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('id, username, name, avatar_url')
-        .eq('id', data.user_id)
+        .select('*')
+        .eq('id', user.id)
         .single();
 
       return {
         ...data,
-        sender: profileData || undefined
+        sender: profileData || {
+          id: user.id,
+          username: 'unknown',
+          name: 'Você',
+          email: user.email || '',
+          avatar_url: '/lovable-uploads/42c0170b-a517-45c3-b92f-9b7e8f6aac26.png',
+          bio: null,
+          is_online: true
+        }
       };
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
@@ -242,12 +275,14 @@ export const useSupabaseData = () => {
   };
 
   // Criar post
-  const createPost = async (userId: string, content: string, mediaUrl?: string, mediaType?: string) => {
+  const createPost = async (content: string, mediaUrl?: string, mediaType?: string) => {
+    if (!user) return null;
+    
     try {
       const { data, error } = await supabase
         .from('posts')
         .insert({
-          user_id: userId,
+          user_id: user.id,
           content: content,
           media_url: mediaUrl,
           media_type: mediaType || 'text'
@@ -260,16 +295,24 @@ export const useSupabaseData = () => {
         return null;
       }
 
-      // Buscar o autor
+      // Buscar o perfil do autor
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('id, username, name, avatar_url')
-        .eq('id', data.user_id)
+        .select('*')
+        .eq('id', user.id)
         .single();
 
       return {
         ...data,
-        author: profileData || undefined
+        author: profileData || {
+          id: user.id,
+          username: 'unknown',
+          name: 'Você',
+          email: user.email || '',
+          avatar_url: '/lovable-uploads/42c0170b-a517-45c3-b92f-9b7e8f6aac26.png',
+          bio: null,
+          is_online: true
+        }
       };
     } catch (error) {
       console.error('Erro ao criar post:', error);
@@ -279,6 +322,11 @@ export const useSupabaseData = () => {
 
   // Carregar todos os dados
   const loadData = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     try {
       const [profilesData, conversationsData, postsData] = await Promise.all([
@@ -299,7 +347,7 @@ export const useSupabaseData = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [user]);
 
   return {
     profiles,
