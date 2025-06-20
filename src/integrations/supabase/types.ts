@@ -9,7 +9,327 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      comments: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          post_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          post_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          post_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_participants: {
+        Row: {
+          conversation_id: string
+          id: string
+          joined_at: string | null
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          id?: string
+          joined_at?: string | null
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          id?: string
+          joined_at?: string | null
+          role?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_participants_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          name: string | null
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name?: string | null
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name?: string | null
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      friendships: {
+        Row: {
+          accepted_at: string | null
+          created_at: string | null
+          friend_id: string
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string | null
+          friend_id: string
+          id?: string
+          status: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string | null
+          friend_id?: string
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      likes: {
+        Row: {
+          created_at: string | null
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string | null
+          conversation_id: string
+          created_at: string | null
+          file_name: string | null
+          file_size: number | null
+          id: string
+          is_read: boolean | null
+          media_thumbnail: string | null
+          media_type: string | null
+          media_url: string | null
+          reply_to: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          conversation_id: string
+          created_at?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          id?: string
+          is_read?: boolean | null
+          media_thumbnail?: string | null
+          media_type?: string | null
+          media_url?: string | null
+          reply_to?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          conversation_id?: string
+          created_at?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          id?: string
+          is_read?: boolean | null
+          media_thumbnail?: string | null
+          media_type?: string | null
+          media_url?: string | null
+          reply_to?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_reply_to_fkey"
+            columns: ["reply_to"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          comments_count: number | null
+          content: string | null
+          created_at: string | null
+          id: string
+          is_live: boolean | null
+          likes_count: number | null
+          live_viewers: number | null
+          media_thumbnail: string | null
+          media_type: string | null
+          media_url: string | null
+          shares_count: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          comments_count?: number | null
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          is_live?: boolean | null
+          likes_count?: number | null
+          live_viewers?: number | null
+          media_thumbnail?: string | null
+          media_type?: string | null
+          media_url?: string | null
+          shares_count?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          comments_count?: number | null
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          is_live?: boolean | null
+          likes_count?: number | null
+          live_viewers?: number | null
+          media_thumbnail?: string | null
+          media_type?: string | null
+          media_url?: string | null
+          shares_count?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          email: string
+          followers_count: number | null
+          following_count: number | null
+          id: string
+          is_online: boolean | null
+          join_date: string | null
+          last_seen: string | null
+          location: string | null
+          name: string
+          phone: string | null
+          posts_count: number | null
+          updated_at: string | null
+          username: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          email: string
+          followers_count?: number | null
+          following_count?: number | null
+          id: string
+          is_online?: boolean | null
+          join_date?: string | null
+          last_seen?: string | null
+          location?: string | null
+          name: string
+          phone?: string | null
+          posts_count?: number | null
+          updated_at?: string | null
+          username: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          email?: string
+          followers_count?: number | null
+          following_count?: number | null
+          id?: string
+          is_online?: boolean | null
+          join_date?: string | null
+          last_seen?: string | null
+          location?: string | null
+          name?: string
+          phone?: string | null
+          posts_count?: number | null
+          updated_at?: string | null
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
