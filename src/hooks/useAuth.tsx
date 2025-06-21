@@ -7,9 +7,12 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isAuthenticated: boolean;
   signUp: (email: string, password: string, metadata?: any) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  logout: () => Promise<void>;
+  checkAuth: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,6 +21,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const checkAuth = () => {
+    // Force re-check authentication state
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+  };
 
   useEffect(() => {
     // Set up auth state listener
@@ -30,11 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
 
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    checkAuth();
 
     return () => subscription.unsubscribe();
   }, []);
@@ -67,14 +75,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await supabase.auth.signOut();
   };
 
+  const logout = async () => {
+    await signOut();
+  };
+
+  const isAuthenticated = !!user && !!session;
+
   return (
     <AuthContext.Provider value={{ 
       user, 
       session, 
-      loading, 
+      loading,
+      isAuthenticated,
       signUp, 
       signIn, 
-      signOut 
+      signOut,
+      logout,
+      checkAuth
     }}>
       {children}
     </AuthContext.Provider>
